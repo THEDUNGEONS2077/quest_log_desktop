@@ -10,7 +10,9 @@
     "lint": "eslint .",
     "test": "TZ=Europe/London vitest run",
     "check": "npm run typecheck && npm run lint && npm test",
-    "e2e": "node e2e/desktop.mjs"
+    "e2e": "node e2e/desktop.mjs",
+    "e2e:pages": "node e2e/pages.mjs",
+    "deploy": "scripts/deploy.sh"
   },
   "dependencies": {
     "idb-keyval": "^6.3.0",

@@ -2,10 +2,9 @@
  * lib/changelog.ts: reads CHANGELOG.md into entries for the in-app
  * "What's new" screen (PLAN §9.19).
  *
- * Layer: pure lib, with no imports, so scripts/gen-changelog.mjs can load
- * it straight from Node (Node strips the types). The script writes the
- * result to assets/changelog.json, which the app bundles; a test checks
- * that file is up to date with CHANGELOG.md.
+ * Layer: pure lib, with no imports. Copied from the phone app, where it
+ * feeds "What's new"; on desktop, its test checks that CHANGELOG.md's
+ * newest entry matches package.json's version.
  *
  * Each section looks like:
  *

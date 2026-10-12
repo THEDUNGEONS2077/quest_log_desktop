@@ -3,7 +3,8 @@
  *
  * Layer: UI. One window listener. Keys typed into a field never reach it
  * (fields stop their own keys), and it ignores anything aimed at an input
- * in any case. Most shortcuts act on the selected task.
+ * in any case. Esc in a field leaves it (a capture listener), so the
+ * shortcuts work straight after. Most shortcuts act on the selected task.
  */
 import { useEffect } from 'react';
 
