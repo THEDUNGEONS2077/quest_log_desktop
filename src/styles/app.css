@@ -145,17 +145,26 @@ mark {
   position: absolute;
   inset: 0;
   z-index: 0;
-  /* Clips the passing band here, not the panel (whose corner brackets sit on its edge). */
+  /* Clips the lines and the passing band here, not the panel (whose corner brackets sit on its edge). */
   overflow: hidden;
   border-radius: inherit;
-  background: repeating-linear-gradient(to bottom, rgba(57, 255, 20, 0.045) 0 1px, transparent 1px 3px);
   pointer-events: none;
+}
+/* The lines: a layer one line-pitch (3 px) taller than the panel, sliding
+   down by that pitch and starting over, which reads as an endless drift.
+   Moved with a transform, so the GPU does it: nothing is repainted. */
+.masthead-scan::before {
+  content: '';
+  position: absolute;
+  inset: -3px 0 0;
+  background: repeating-linear-gradient(to bottom, rgba(57, 255, 20, 0.045) 0 1px, transparent 1px 3px);
   animation: scan-drift 1.8s linear infinite;
   animation-play-state: var(--loops);
+  will-change: transform;
 }
 @keyframes scan-drift {
   to {
-    background-position: 0 3px;
+    transform: translateY(3px);
   }
 }
 /* The refresh band: a soft brighter strip that passes down every 7 s, then rests out of sight. */
@@ -233,10 +242,10 @@ mark {
   0% {
     transform: scale(1);
   }
+  /* Scale and colour only: an animated glow (text-shadow) would lay the title out every frame. */
   30% {
     transform: scale(1.6);
     color: #fff;
-    text-shadow: 0 0 14px rgba(57, 255, 20, 0.95);
   }
   100% {
     transform: scale(1);
@@ -249,115 +258,149 @@ mark {
 .brand:hover .brand-name {
   text-shadow: var(--glow-text-bright);
 }
-.brand-status {
-  display: flex;
-  gap: 6px;
-  color: var(--text-dim);
-  font-size: var(--fs-small);
-  letter-spacing: 1px;
-}
-.brand-status b {
-  color: var(--text-bright);
-}
-.brand-status .sep {
-  color: var(--line);
-}
-
-/* The XP gauge: 20 segments; a green gradient fill with a bright leading
-   edge, a sheen sweeping across it every few seconds, and a flash on a gain. */
+/* The XP bar: a thin line, a soft green fill and a small glowing tip; the
+   numbers beneath. Fill and tip move by transform (the fraction is --xp, set
+   inline), so nothing is laid out again while they glide. */
 .xp {
   display: flex;
   flex-direction: column;
-  gap: 5px;
-  margin-top: 4px;
+  gap: 2px;
+  margin-top: 6px;
 }
 .xp-track {
   position: relative;
-  height: 12px;
-  border: var(--hairline) solid var(--line);
-  border-radius: var(--radius);
-  background: var(--bg);
-  box-shadow: var(--glow-faint);
-  overflow: hidden;
+  height: 10px;
 }
-/* The empty segments, faintly lit. */
-.xp-track::before {
-  content: '';
-  position: absolute;
-  inset: 2px;
-  background: var(--xp-wash);
-}
-/* The gaps between segments, drawn over everything so fill and track line up. */
-.xp-track::after {
-  content: '';
+/* The rail clips the fill, with room above and below for its glow. */
+.xp-rail {
   position: absolute;
   inset: 0;
-  z-index: 2;
-  background: repeating-linear-gradient(to right, transparent 0 calc(5% - 2px), var(--bg) calc(5% - 2px) 5%);
-  pointer-events: none;
+  overflow: hidden;
+}
+.xp-rail::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 4px;
+  height: 2px;
+  border-radius: 1px;
+  background: var(--line);
 }
 .xp-fill {
   position: absolute;
-  inset: 2px auto 2px 2px;
-  z-index: 1;
-  max-width: calc(100% - 4px);
-  background: linear-gradient(90deg, #1f8f2c, #34cc48 55%, var(--accent));
-  box-shadow: 0 0 10px rgba(57, 255, 20, 0.55);
-  transition: width var(--slow) var(--ease);
+  left: 0;
+  right: 0;
+  top: 4px;
+  height: 2px;
+  border-radius: 1px;
+  background: linear-gradient(90deg, rgba(47, 179, 68, 0.35), var(--accent));
+  box-shadow: 0 0 6px rgba(57, 255, 20, 0.45);
+  transform: translateX(calc((var(--xp) - 1) * 100%));
+  transition: transform var(--slow) var(--ease);
 }
-/* The sheen: a soft highlight that sweeps left to right, then rests off the end. */
-.xp-fill::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(100deg, transparent 35%, rgba(230, 255, 225, 0.55) 50%, transparent 65%) no-repeat;
-  background-size: 300% 100%;
-  background-position: 150% 0;
-  animation: xp-sheen 4s var(--ease) infinite;
-  animation-play-state: var(--loops);
+/* The finished level's bar (full), fading away as the new level starts. */
+.xp-fill.spent {
+  transform: none;
+  animation: fade-out calc(var(--slow) * 1.5) var(--ease) forwards;
 }
-@keyframes xp-sheen {
-  0% {
-    background-position: 150% 0;
-  }
-  45%,
-  100% {
-    background-position: -50% 0;
+/* A new level's fill grows in from nothing. */
+.xp-fill.grow {
+  animation: xp-fill-grow var(--slow) var(--ease);
+}
+@keyframes xp-fill-grow {
+  from {
+    transform: translateX(-100%);
   }
 }
-/* The leading edge: a bright line where the fill ends. */
-.xp-fill::after {
-  content: '';
-  position: absolute;
-  top: -2px;
-  right: -1px;
-  bottom: -2px;
-  width: 2px;
-  background: var(--text-bright);
-  box-shadow: 0 0 6px 1px var(--accent);
-}
-.xp-flash {
+/* The tip rides at the end of the fill. */
+.xp-tip {
   position: absolute;
   inset: 0;
-  z-index: 3;
-  background: rgba(182, 255, 176, 0.55);
   pointer-events: none;
-  animation: xp-flash calc(var(--slow) * 2.5) var(--ease-exit) forwards;
+  transform: translateX(calc(var(--xp) * 100%));
+  transition: transform var(--slow) var(--ease);
 }
-@keyframes xp-flash {
-  to {
+.xp-tip.grow {
+  animation: xp-tip-grow var(--slow) var(--ease);
+}
+@keyframes xp-tip-grow {
+  from {
+    transform: translateX(0);
     opacity: 0;
   }
 }
+.xp-tip-dot {
+  position: absolute;
+  left: -2.5px;
+  top: 2.5px;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--text-bright);
+  box-shadow: 0 0 5px 1px rgba(57, 255, 20, 0.7);
+}
+/* The accent on a gain: a soft halo swells from the tip and fades, and the
+   tip itself gives a small pulse. */
+.xp-tip-dot::after {
+  content: '';
+  position: absolute;
+  inset: -6px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(57, 255, 20, 0.55), transparent 65%);
+  opacity: 0;
+}
+.xp-tip-dot.gain {
+  animation: xp-tip-pulse calc(var(--slow) * 2) var(--ease);
+}
+.xp-tip-dot.gain::after {
+  animation: xp-halo calc(var(--slow) * 3) var(--ease);
+}
+@keyframes xp-tip-pulse {
+  35% {
+    transform: scale(1.5);
+  }
+}
+@keyframes xp-halo {
+  0% {
+    opacity: 0;
+    transform: scale(0.4);
+  }
+  25% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: scale(2.2);
+  }
+}
 .xp-numbers {
-  display: flex;
-  justify-content: space-between;
   font-size: var(--fs-small);
   letter-spacing: 0.5px;
 }
-.xp-numbers b {
+.xp-into {
+  position: relative;
+  /* A box of its own, so the glowing copy lines up exactly over the digits. */
+  display: inline-block;
   color: var(--text-bright);
-  text-shadow: var(--glow-text);
+}
+/* The number brightens for a moment on a gain: an accent copy on top fades
+   in and out (animating the text's own colour or glow would lay it out
+   again every frame). */
+.xp-into-glow {
+  position: absolute;
+  top: 0;
+  left: 0;
+  color: var(--accent);
+  text-shadow: var(--glow-text-bright);
+  opacity: 0;
+  pointer-events: none;
+  animation: xp-into-glow calc(var(--slow) * 3) var(--ease);
+}
+@keyframes xp-into-glow {
+  20% {
+    opacity: 1;
+  }
 }
 
 /* Sections: a heading that minimizes its items, divided from the next. */
@@ -871,9 +914,10 @@ textarea.title {
 }
 .meter-fill {
   position: absolute;
-  inset: 0 auto 0 0;
+  inset: 0;
   background: var(--xp-wash);
-  transition: width var(--slow) var(--ease);
+  transform: translateX(calc((var(--p) - 1) * 100%));
+  transition: transform var(--slow) var(--ease);
 }
 .meter-text {
   position: relative;
@@ -969,26 +1013,26 @@ textarea.title {
 /* A scan line sweeps the row behind its content, then fades. */
 .scan {
   position: absolute;
-  inset: 0 auto 0 0;
-  width: 100%;
+  inset: 0;
   pointer-events: none;
-  background: linear-gradient(to right, rgba(57, 255, 20, 0.12), rgba(57, 255, 20, 0.12));
+  background: rgba(57, 255, 20, 0.12);
   border-right: 2px solid var(--accent);
   box-shadow: var(--glow-bright);
-  transform-origin: left;
+  /* Slides in from the left (the row clips it), then fades: transform and
+     opacity only, so the GPU runs it. */
   animation: scan calc(var(--slow) * 2) var(--ease) forwards;
 }
 @keyframes scan {
   0% {
-    clip-path: inset(0 100% 0 0);
+    transform: translateX(-100%);
     opacity: 1;
   }
   50% {
-    clip-path: inset(0 0 0 0);
+    transform: translateX(0);
     opacity: 1;
   }
   100% {
-    clip-path: inset(0 0 0 0);
+    transform: translateX(0);
     opacity: 0;
   }
 }
@@ -1041,9 +1085,30 @@ textarea.title {
 
 /* --- Detail pane -------------------------------------------------------- */
 .detail {
+  position: relative;
+  overflow: hidden;
   border-left: var(--hairline) solid var(--line);
-  overflow-y: auto;
   background: var(--bg);
+}
+/* The full pane: fixed at the pane's width (clipped, not squeezed, while the
+   column changes), scrolling on its own. */
+.detail-full {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: min(var(--detail), 100vw);
+  overflow-y: auto;
+  transition:
+    opacity var(--base) var(--ease),
+    transform var(--base) var(--ease);
+}
+.detail.minimized .detail-full {
+  opacity: 0;
+  transform: translateX(16px);
+  visibility: hidden;
+  transition:
+    opacity var(--fast) var(--ease-exit),
+    transform var(--base) var(--ease-exit),
+    visibility 0s var(--base);
 }
 .empty-detail {
   display: flex;
@@ -1054,18 +1119,27 @@ textarea.title {
 .detail-head-empty {
   justify-content: flex-end;
 }
-/* Minimized: one full-height button, « at the top, DETAILS written downwards. */
-.detail-min {
-  overflow: hidden;
-}
+/* Minimized: one full-height button, « at the top, DETAILS written downwards.
+   It fades in once the pane has mostly gone, and out at once when it returns. */
 .detail-min-btn {
+  position: absolute;
+  inset: 0 auto 0 0;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: var(--s-md);
-  width: 100%;
-  height: 100%;
+  width: var(--detail-min);
   padding: var(--s-md) 0;
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity var(--fast) var(--ease),
+    visibility 0s var(--fast);
+}
+.detail.minimized .detail-min-btn {
+  opacity: 1;
+  visibility: visible;
+  transition: opacity var(--base) var(--ease) var(--fast);
 }
 .detail-min-btn:hover {
   background: var(--surface);
@@ -1447,6 +1521,45 @@ input.area-name {
     transform: translate(-50%, 16px);
   }
 }
+/* Leaving: back down and out (app/Toast.tsx keeps it for --base). */
+.toast.leaving {
+  animation: toast-out var(--base) var(--ease-exit) forwards;
+}
+@keyframes toast-out {
+  to {
+    opacity: 0;
+    transform: translate(-50%, 12px);
+  }
+}
+/* A closed menu or dialog fades out quickly instead of vanishing (app/usePresence.ts). */
+.menu-layer.leaving .menu {
+  animation: fade-out var(--fast) var(--ease-exit) forwards;
+}
+.dialog-layer.leaving {
+  animation: fade-out var(--fast) var(--ease-exit) forwards;
+}
+.dialog-layer.leaving .dialog {
+  animation: sink var(--fast) var(--ease-exit) forwards;
+}
+@keyframes fade-out {
+  to {
+    opacity: 0;
+  }
+}
+@keyframes sink {
+  to {
+    transform: translateY(4px);
+  }
+}
+/* The dialog's backdrop fades in with it. */
+.dialog-layer {
+  animation: fade-in var(--base) var(--ease);
+}
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+}
 
 /* --- Pages --------------------------------------------------------------- */
 .page-body {
@@ -1515,7 +1628,10 @@ input.area-name {
     z-index: 20;
     width: min(var(--detail), 100vw);
     transform: translateX(100%);
-    transition: transform var(--base) var(--ease);
+    /* Width too (minimizing): only this overlay is laid out, its contents are fixed-width. */
+    transition:
+      transform var(--base) var(--ease),
+      width var(--base) var(--ease);
   }
   .has-selection .detail {
     transform: none;
@@ -1593,6 +1709,7 @@ input.area-name {
 }
 .drop-line {
   position: absolute;
+  top: 0;
   right: var(--s-lg);
   height: 2px;
   margin-top: -1px;
@@ -1602,7 +1719,10 @@ input.area-name {
 }
 .drag-ghost {
   position: fixed;
+  top: 0;
+  left: 0;
   z-index: 60;
+  will-change: transform;
   max-width: 320px;
   padding: var(--s-xs) var(--s-sm);
   border: var(--hairline) solid var(--accent);

@@ -1,7 +1,7 @@
 {
   "name": "quest_log_desktop",
   "private": true,
-  "version": "0.3.1",
+  "version": "0.4.0",
   "type": "module",
   "scripts": {
     "dev": "vite --host 127.0.0.1",
@@ -12,7 +12,8 @@
     "check": "npm run typecheck && npm run lint && npm test",
     "e2e": "node e2e/desktop.mjs",
     "e2e:pages": "node e2e/pages.mjs",
-    "deploy": "scripts/deploy.sh"
+    "deploy": "scripts/deploy.sh",
+    "e2e:motion": "node e2e/motion.mjs"
   },
   "dependencies": {
     "idb-keyval": "^6.3.0",

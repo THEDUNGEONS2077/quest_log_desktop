@@ -91,6 +91,7 @@ Imports only go down this list.
 - **`npm run e2e`** (after `npm run build`):
   - Playwright walks the whole app at 1440×900 against `dist/` (14 paths);
   - screenshots go to `e2e/screenshots/` (git-ignored).
+- **`npm run e2e:motion`** (after `npm run build`): runs each animation at 4× CPU slowdown and prints dropped frames and layout/style work per scenario (no assertions: for comparing before and after; `MOTION_DIST` measures another build).
 - **`npm run e2e:pages`** (after a build with `QUESTLOG_BASE=/quest_log_desktop/`): checks the Pages build at its sub-path (asset URLs, manifest scope, service worker scope, offline reload).
 - **Servers:** both scripts start `serve` themselves on 127.0.0.1 (ports 8141 / 8142) and always stop it.
 

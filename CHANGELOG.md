@@ -2,6 +2,18 @@
 
 quest_log desktop. Each version gets one section, newest first. The heading's build number is shown in Settings and written into backups.
 
+## 0.4.0 (build 5)
+
+A cleaner title panel and smoother motion everywhere.
+
+- **The title panel is just `<level>_quest_log` and the XP bar.** The level and streak line is gone.
+- **A new, minimal XP bar.** A thin line with a soft green fill and a small glowing tip, with your XP underneath. Earning XP swells a soft halo from the tip and makes the number glow for a moment. When you level up, the bar runs to the end, the level number pops, and the full bar fades while the new level fills in from zero.
+- **Every animation is smoother.** The motion was measured on a deliberately slowed-down computer and tuned until nothing skips frames:
+  - the XP bar, quest progress meters, the completion sweep and dragged tasks now move without the page laying itself out again on every frame;
+  - minimizing the details pane no longer snaps: the pane fades and slides away, clipped rather than squeezed, while the strip fades in;
+  - the message at the bottom slides away instead of vanishing, and closing a menu or dialog fades it out;
+  - the moving scanlines in the title panel no longer keep repainting it in the background.
+
 ## 0.3.1 (build 4)
 
 - **The title block's scanlines move.** They drift slowly down, and a soft band of light passes over now and then, like an old CRT screen. This replaces the blinking cursor. With Reduce Motion on, they stay still.

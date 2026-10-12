@@ -94,41 +94,41 @@ export function DetailPane() {
     s.page === null && s.ui.view === 'list' && s.ui.category !== 'all' && s.tasks.areas.some((a) => a.id === s.ui.category) ? s.ui.category : null,
   );
   const actions = useActions();
-  if (collapsed) {
-    // Minimized: a strip with « to bring it back (the whole strip is the button,
-    // an easy target at the window's edge). A dot shows a task is selected.
-    return (
-      <aside className="detail detail-min" aria-label="Task details (minimized)">
-        <button type="button" className="detail-min-btn" aria-label="Show details (D)" title="Show details (D)" onClick={actions.toggleDetail}>
-          <span className="icon-btn" aria-hidden>
-            {G.showPane}
-          </span>
-          <span className="detail-min-label">DETAILS{task && task.deletedAt === null ? ' •' : ''}</span>
-        </button>
-      </aside>
-    );
-  }
-  if (!id || !task || task.deletedAt !== null) {
-    if (areaShown) {
-      return (
-        <aside className="detail" aria-label="Area details">
-          <AreaDetails key={areaShown} id={areaShown} />
-        </aside>
-      );
-    }
-    return (
-      <aside className="detail empty-detail" aria-label="Task details">
+  const live = !!id && !!task && task.deletedAt === null;
+  let content: ReactNode;
+  let label = 'Task details';
+  if (live) {
+    content = <Details key={task.id} task={task} onClose={() => actions.select(null)} />;
+  } else if (areaShown) {
+    content = <AreaDetails key={areaShown} id={areaShown} />;
+    label = 'Area details';
+  } else {
+    content = (
+      <div className="empty-detail">
         <div className="detail-head detail-head-empty">
           <MinimizeButton />
         </div>
         <p className="dim">{'> SELECT A TASK TO SEE ITS DETAILS.'}</p>
         <p className="dim small">Click a task. Double-click (or Enter) edits its title. Right-click for more.</p>
-      </aside>
+      </div>
     );
   }
+  // Both the full pane and the minimized strip stay rendered and cross-fade.
+  // The full pane keeps its width while the column narrows, so it's clipped,
+  // never squeezed: nothing reflows or snaps mid-animation. The hidden one is
+  // inert (nothing in it can be focused or clicked).
   return (
-    <aside className="detail" aria-label="Task details">
-      <Details key={task.id} task={task} onClose={() => actions.select(null)} />
+    <aside className={cx('detail', collapsed && 'minimized')} aria-label={collapsed ? `${label} (minimized)` : label}>
+      <div className="detail-full" inert={collapsed}>
+        {content}
+      </div>
+      {/* The strip: the whole of it is the button, an easy target at the window's edge. A dot shows a task is selected. */}
+      <button type="button" className="detail-min-btn" aria-label="Show details (D)" title="Show details (D)" onClick={actions.toggleDetail} inert={!collapsed}>
+        <span className="icon-btn" aria-hidden>
+          {G.showPane}
+        </span>
+        <span className="detail-min-label">DETAILS{live ? ' •' : ''}</span>
+      </button>
     </aside>
   );
 }

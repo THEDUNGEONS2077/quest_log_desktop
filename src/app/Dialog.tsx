@@ -5,12 +5,16 @@
  * of choices, and CANCEL / OK. Enter confirms, Esc cancels, a click on the
  * dimmed backdrop cancels.
  */
-import { type FormEvent, useState } from 'react';
+import { type FormEvent, useRef, useState } from 'react';
 
 import type { DialogState } from './menu';
+import { useReleaseFocus } from './usePresence';
 
-export function Dialog({ dialog, onClose }: { dialog: DialogState; onClose: () => void }) {
+/** The dialog; `leaving` while it fades out after closing (app/usePresence.ts). */
+export function Dialog({ dialog, onClose, leaving = false }: { dialog: DialogState; onClose: () => void; leaving?: boolean }) {
   const [value, setValue] = useState(dialog.input?.value ?? dialog.choices?.[0]?.value ?? '');
+  const layer = useRef<HTMLDivElement>(null);
+  useReleaseFocus(layer, leaving);
   const submit = (e: FormEvent) => {
     e.preventDefault();
     if (dialog.input && !value.trim()) return;
@@ -18,7 +22,7 @@ export function Dialog({ dialog, onClose }: { dialog: DialogState; onClose: () =
     dialog.onOk(value);
   };
   return (
-    <div className="dialog-layer" onMouseDown={onClose}>
+    <div ref={layer} className={leaving ? 'dialog-layer leaving' : 'dialog-layer'} onMouseDown={onClose} inert={leaving}>
       <form
         className="dialog"
         role="dialog"
@@ -27,6 +31,7 @@ export function Dialog({ dialog, onClose }: { dialog: DialogState; onClose: () =
         onSubmit={submit}
         onMouseDown={(e) => e.stopPropagation()}
         onKeyDown={(e) => {
+          if (leaving) return; // closing: keys belong to the app again
           if (e.key === 'Escape') onClose();
           e.stopPropagation();
         }}

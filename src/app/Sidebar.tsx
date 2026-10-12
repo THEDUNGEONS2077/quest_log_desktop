@@ -4,8 +4,8 @@
  *
  *   ┌───────────────────────────┐
  *   │ <7>_quest_log             │  ← the title block, over drifting scanlines
- *   │ LVL 07 · STREAK 4D · ×1.15│
- *   │ [▰▰▰▰▰▰▰▱▱▱▱▱] 34/125 XP   │  ← the XP gauge (sheen, pulse on a gain)
+ *   │ ━━━━━━━━━●──────────      │  ← the XP bar: a thin fill with a glowing tip
+ *   │ 34 / 125 XP               │
  *   └───────────────────────────┘
  *   ▾ VIEWS                         ← each section minimizes to its heading
  *     ◉ TODAY            5
@@ -34,9 +34,9 @@
  * The selected entry has the faint glow (DESIGN.md: the glow marks what's
  * selected).
  */
-import { type FormEvent, type ReactNode, useMemo, useState } from 'react';
+import { type CSSProperties, type FormEvent, type ReactNode, useEffect, useMemo, useState } from 'react';
 
-import { currentDayStreak, dayMultiplier, levelInfo } from '@/lib/xp';
+import { levelInfo } from '@/lib/xp';
 import type { SidebarSection } from '@/store/uiState';
 import { useActions, useAppStore, useSelectors } from '@/store/react';
 
@@ -207,29 +207,43 @@ export function Sidebar() {
 
 /**
  * The title block: `<level>_quest_log` over slowly drifting scanlines (with
- * a faint refresh band passing down now and then, like an old CRT), a status line
- * (level, day streak and its XP multiplier), and the XP gauge. The gauge is
- * segmented, its fill a green gradient with a bright leading edge and a
- * sheen that sweeps across now and then; an XP gain flashes it, and a level
- * up pops the level number. (Reduce Motion: no sweep, blink or flash.)
- * Clicking the title shows TODAY.
+ * a faint refresh band passing down now and then, like an old CRT), and the
+ * XP bar under it.
+ *
+ * The XP bar is one thin line: a soft green fill with a small glowing tip,
+ * and the XP numbers beneath. Its pop is in the accents: an XP gain swells
+ * the tip's glow and brightens the number for a moment; a level up runs the
+ * fill to the end, pops the level number, and the new level's fill grows in
+ * from zero. Everything moves with transforms and opacity only (no layout
+ * per frame); with Reduce Motion it changes at once. Clicking the title
+ * shows TODAY.
  */
 function Masthead() {
-  const progress = useAppStore((s) => s.tasks.progress);
+  const xp = useAppStore((s) => s.tasks.progress.xp);
   const actions = useActions();
-  const now = useMinute();
-  const { level, into, needed, fraction } = levelInfo(progress.xp);
-  const streak = currentDayStreak(progress, now);
-  // Count gains and level-ups as they happen (the previous-props pattern), so
-  // their animations replay each time but never on the first render.
-  const [seen, setSeen] = useState({ xp: progress.xp, level });
+  const { level, into, needed, fraction } = levelInfo(xp);
+  // Gains and level-ups as they happen (the previous-props pattern), so their
+  // accents replay each time but never on the first render.
+  const [seen, setSeen] = useState({ xp, level });
   const [gains, setGains] = useState(0);
   const [levelUps, setLevelUps] = useState(0);
-  if (seen.xp !== progress.xp) {
-    if (progress.xp > seen.xp) setGains(gains + 1);
-    if (level > seen.level) setLevelUps(levelUps + 1);
-    setSeen({ xp: progress.xp, level });
+  // A level up first runs the old fill to the end (`filling`), then the new
+  // level's fill grows in (a fresh element, keyed by `levelUps`).
+  const [filling, setFilling] = useState(false);
+  if (seen.xp !== xp) {
+    if (xp > seen.xp) setGains(gains + 1);
+    if (level > seen.level) {
+      setLevelUps(levelUps + 1);
+      setFilling(true);
+    }
+    setSeen({ xp, level });
   }
+  useEffect(() => {
+    if (!filling) return;
+    const t = setTimeout(() => setFilling(false), LEVEL_FILL_MS);
+    return () => clearTimeout(t);
+  }, [filling]);
+  const shown = filling ? 1 : fraction;
 
   return (
     <header className="masthead">
@@ -242,35 +256,45 @@ function Masthead() {
         <span className="brand-bracket">{'>'}</span>
         <span className="brand-name">_quest_log</span>
       </button>
-      <p className="brand-status">
-        <span>LVL {String(level).padStart(2, '0')}</span>
-        <span className="sep">·</span>
-        {streak > 0 ? (
-          <span title={`${streak}-day streak: completions earn ×${dayMultiplier(streak).toFixed(2)} XP`}>
-            STREAK <b>{streak}D</b> <span className="accent">×{dayMultiplier(streak).toFixed(2)}</span>
-          </span>
-        ) : (
-          <span title="Complete something today to start a streak">NO STREAK</span>
-        )}
-      </p>
       <div className="xp" title={`Level ${level}: ${into} of ${needed} XP to level ${level + 1}`}>
-        <div className="xp-track" role="progressbar" aria-label="XP to the next level" aria-valuemin={0} aria-valuemax={needed} aria-valuenow={into}>
-          <div className="xp-fill" style={{ width: `${Math.max(fraction * 100, into > 0 ? 2 : 0)}%` }} />
-          {gains > 0 && <span key={gains} className="xp-flash" aria-hidden />}
+        <div
+          className="xp-track"
+          role="progressbar"
+          aria-label={`XP to level ${level + 1}`}
+          aria-valuemin={0}
+          aria-valuemax={needed}
+          aria-valuenow={into}
+          style={{ '--xp': shown } as CSSProperties}
+        >
+          {/* A fresh fill per level, so a new level grows in from zero instead of shrinking back. */}
+          <span className="xp-rail">
+            {/* The finished level's full bar fades out while the new one grows in under it. */}
+            {!filling && levelUps > 0 && <span key={`spent-${levelUps}`} className="xp-fill spent" />}
+            <span key={filling ? levelUps - 1 : levelUps} className={cx('xp-fill', !filling && levelUps > 0 && 'grow')} />
+          </span>
+          <span key={`tip-${filling ? levelUps - 1 : levelUps}`} className={cx('xp-tip', !filling && levelUps > 0 && 'grow')}>
+            <span key={gains} className={cx('xp-tip-dot', gains > 0 && 'gain')} />
+          </span>
         </div>
         <div className="xp-numbers">
-          <span>
-            <b>{into}</b>
-            <span className="dim">/{needed} XP</span>
+          <span className="xp-into">
+            {into}
+            {/* The accent on a gain: a glowing copy over the number that fades in and out (opacity only: no layout). */}
+            {gains > 0 && (
+              <span key={gains} className="xp-into-glow" aria-hidden>
+                {into}
+              </span>
+            )}
           </span>
-          <span className="dim">
-            {needed - into} TO LVL {level + 1}
-          </span>
+          <span className="dim"> / {needed} XP</span>
         </div>
       </div>
     </header>
   );
 }
+
+/** How long a level up's fill takes to reach the end before the new level starts (≈ --slow + a beat). */
+const LEVEL_FILL_MS = 420;
 
 /**
  * One sidebar section: a heading (click to minimize or open; the count and,

@@ -27,7 +27,11 @@ import { Dialog } from './Dialog';
 import { type DialogState, type OpenMenuState, OverlayContext } from './menu';
 import { Sidebar } from './Sidebar';
 import { Toast } from './Toast';
+import { usePresence } from './usePresence';
 import { useShortcuts } from './useShortcuts';
+
+/** How long a closed menu or dialog stays to fade out (matches --fast in theme.css). */
+const EXIT_MS = 120;
 
 export function App() {
   const bundle = useStoreBundle();
@@ -50,6 +54,9 @@ export function App() {
   }
 
   useShortcuts(bundle, menu !== null || dialog !== null);
+  // Menus and dialogs fade out briefly after closing instead of vanishing.
+  const shownMenu = usePresence(menu, EXIT_MS);
+  const shownDialog = usePresence(dialog, EXIT_MS);
 
   const overlays = useMemo(
     () => ({ openMenuAt: (x: number, y: number, target: OpenMenuState['target']) => setMenu({ x, y, target }), openDialog: setDialog }),
@@ -67,8 +74,8 @@ export function App() {
         <DetailPane />
         <div className="drawer-scrim" onClick={() => setDrawer(false)} aria-hidden />
       </div>
-      {menu && <ContextMenu menu={menu} onClose={() => setMenu(null)} />}
-      {dialog && <Dialog dialog={dialog} onClose={() => setDialog(null)} />}
+      {shownMenu.shown && <ContextMenu menu={shownMenu.shown} leaving={shownMenu.leaving} onClose={() => setMenu(null)} />}
+      {shownDialog.shown && <Dialog dialog={shownDialog.shown} leaving={shownDialog.leaving} onClose={() => setDialog(null)} />}
       <Toast />
     </OverlayContext.Provider>
   );

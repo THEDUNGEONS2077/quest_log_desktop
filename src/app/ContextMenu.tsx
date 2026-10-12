@@ -20,13 +20,16 @@ import { useActions, useAppStore } from '@/store/react';
 import { cx } from './cx';
 import { G } from './glyphs';
 import { confirmDeleteForever, type MenuItem, type OpenMenuState, useOpenDialog } from './menu';
+import { useReleaseFocus } from './usePresence';
 
 interface Props {
   menu: OpenMenuState;
   onClose: () => void;
+  /** Closing: it fades out and ignores the pointer (app/usePresence.ts). */
+  leaving?: boolean;
 }
 
-export function ContextMenu({ menu, onClose }: Props) {
+export function ContextMenu({ menu, onClose, leaving = false }: Props) {
   const box = useRef<HTMLDivElement>(null);
   const [pos, setPos] = useState({ left: menu.x, top: menu.y });
 
@@ -39,7 +42,10 @@ export function ContextMenu({ menu, onClose }: Props) {
     el.querySelector<HTMLButtonElement>('button:not(:disabled)')?.focus();
   }, [menu]);
 
+  useReleaseFocus(box, leaving);
+
   const onKeyDown = (e: KeyboardEvent) => {
+    if (leaving) return; // closing: keys belong to the app again
     e.stopPropagation();
     if (e.key === 'Escape') onClose();
     if (e.key !== 'ArrowDown' && e.key !== 'ArrowUp') return;
@@ -50,7 +56,7 @@ export function ContextMenu({ menu, onClose }: Props) {
   };
 
   return (
-    <div className="menu-layer" onMouseDown={onClose} onContextMenu={(e) => e.preventDefault()}>
+    <div className={cx('menu-layer', leaving && 'leaving')} onMouseDown={onClose} onContextMenu={(e) => e.preventDefault()} inert={leaving}>
       <div ref={box} className="menu" role="menu" style={pos} onMouseDown={(e) => e.stopPropagation()} onKeyDown={onKeyDown}>
         {'task' in menu.target && <TaskItems id={menu.target.task} close={onClose} />}
         {'area' in menu.target && <AreaItems id={menu.target.area} close={onClose} />}

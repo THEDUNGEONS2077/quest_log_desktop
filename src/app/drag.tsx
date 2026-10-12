@@ -125,10 +125,11 @@ export function DragArea({ children }: { children: ReactNode }) {
     <DragContext.Provider value={{ start, dragging: drag?.hidden ?? EMPTY }}>
       <div ref={box} className={drag ? 'drag-area dragging' : 'drag-area'}>
         {children}
-        {line && <div className="drop-line" style={{ top: line.top, left: line.left }} aria-hidden />}
+        {/* Placed by transform (no layout as the pointer moves); `left` only changes with the depth. */}
+        {line && <div className="drop-line" style={{ left: line.left, transform: `translateY(${line.top}px)` }} aria-hidden />}
       </div>
       {drag && (
-        <div className="drag-ghost" style={{ left: drag.x + 12, top: drag.y + 8 }} aria-hidden>
+        <div className="drag-ghost" style={{ transform: `translate3d(${drag.x + 12}px, ${drag.y + 8}px, 0)` }} aria-hidden>
           {title || 'Untitled'}
           {drag.hidden.size > 1 && <span className="dim"> +{drag.hidden.size - 1}</span>}
         </div>

@@ -16,6 +16,10 @@ The same terminal look as the phone app (the phone's `DESIGN.md` is the source),
   - Sizes: `--fs-title` 22, `--fs-display` 18, `--fs-body` 14, `--fs-quest` 13, `--fs-meta` 12, `--fs-small` 11.
   - Labels and headings are UPPERCASE with letter spacing; task titles keep their case.
 - **Space:** `--s-xs` 4, `--s-sm` 8, `--s-md` 12, `--s-lg` 16, `--s-xl` 24. Also `--indent` 20 per nesting level, `--radius` 2, `--hairline` 1.
+- **Motion rules** (animation pass 2026-10-12, measured with `npm run e2e:motion`):
+  - animate only `transform` and `opacity`; the GPU runs them without laying anything out. Widths are moved by `translateX` inside a clipping box (the XP bar, the quest meter), and glows that must change get an overlay whose opacity changes (an animated `text-shadow` lays the text out every frame);
+  - nothing appears or disappears in one frame: the toast, menus and dialogs animate out (`usePresence`), the details pane cross-fades with its strip, and its content is clipped, never squeezed, while the column changes;
+  - the few size animations left (a completed quest closing its gap, a sidebar section folding, the details column) change one track of a grid, so the browser lays out only what moved.
 - **Motion:**
   - durations: `--fast` 120 ms, `--base` 200 ms, `--slow` 320 ms;
   - curves: `--ease` (out-cubic) for entering, `--ease-exit` (in-cubic) for leaving;
@@ -41,8 +45,7 @@ The same terminal look as the phone app (the phone's `DESIGN.md` is the source),
 - **Three columns** in a CSS grid (`--sidebar`, flexible, `--detail`), separated by hairlines.
 - **The sidebar** opens with the masthead: a lit `--surface` panel with faint scanlines that drift slowly down (and a soft refresh band passing every 7 s), a green glow from the top-left corner and two accent corner brackets. In it:
   - `<level>_quest_log`; the level pops on a level up;
-  - a status line (LVL, day streak and its XP multiplier);
-  - the XP gauge: 20 segments, a green gradient fill with a bright leading edge, a sheen sweeping across every 4 s, and a flash on each gain.
+  - the XP bar: a 2 px line with a soft green fill and a small glowing tip, `into / needed XP` beneath. Its pop is in the accents: a gain swells a halo from the tip and brightens the number; a level up runs the fill to the end, pops the level number, and the full bar fades while the new level grows in from zero.
   Below it come the sections VIEWS, AREAS, ARCHIVE and SYSTEM. Each heading minimizes its section (the body folds; remembered in `ui.sidebarCollapsed`), with a dot when a minimized section holds what's shown. Between sections is a hairline divider that fades at both ends and is lit in the middle. The endless loops (scanlines, sheen) pause under Reduce Motion (`--loops`).
 - **The detail pane minimizes** (`»` or `D`) to a `--detail-min` (40 px) strip with `«` and a vertical DETAILS label; the columns glide (`--base`). It's remembered (`ui.detailCollapsed`).
 - **Under 1100 px wide:** the detail pane slides over the list from the right while a task is selected.

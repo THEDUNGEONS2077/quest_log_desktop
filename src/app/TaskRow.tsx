@@ -16,7 +16,7 @@
  * (CSS transitions on the row's wrapper, timed like the phone's LINGER_MS),
  * before it moves to COMPLETED.
  */
-import { memo, type ReactNode, useEffect, useState } from 'react';
+import { type CSSProperties, memo, type ReactNode, useEffect, useState } from 'react';
 
 import { formatDue, isOverdue } from '@/lib/dates';
 import type { Row } from '@/lib/flatten';
@@ -96,7 +96,8 @@ export function QuestMeter({ task, done, total }: { task: Task; done: number; to
   const xp = baseXp(task, subtasks, now);
   return (
     <span className="meter" title={`${done} of ${total} done. Completing it earns ${xp} XP`}>
-      <span className="meter-fill" style={{ width: `${total ? (done / total) * 100 : 0}%` }} />
+      {/* Moved by transform (--p, 0–1), so ticking an objective glides it without layout. */}
+      <span className="meter-fill" style={{ '--p': total ? done / total : 0 } as CSSProperties} />
       <span className="meter-text">
         {done}/{total} <span className="meter-xp">· +{xp} XP</span>
       </span>
