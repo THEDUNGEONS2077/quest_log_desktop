@@ -133,7 +133,8 @@ mark {
   flex-direction: column;
   gap: 6px;
   margin-bottom: var(--s-xs);
-  padding: var(--s-md) var(--s-md) var(--s-md);
+  /* Content on the same edges as the rows below (--nav-x in from the box, less the border). */
+  padding: var(--s-md) calc(var(--nav-x) - var(--hairline));
   border: var(--hairline) solid var(--line);
   border-radius: var(--radius);
   background:
@@ -426,10 +427,12 @@ mark {
 .nav-section-head {
   display: flex;
   align-items: center;
-  gap: var(--s-xs);
+  gap: var(--s-sm);
   width: 100%;
-  min-height: 26px;
-  padding-right: var(--s-sm);
+  min-height: var(--row);
+  /* The rows' grid: caret in the icon column, the title on the label column. */
+  padding: 0 var(--nav-x);
+  border: var(--hairline) solid transparent;
   border-radius: var(--radius);
   color: var(--text-dim);
   font-size: var(--fs-small);
@@ -441,6 +444,7 @@ mark {
   color: var(--accent);
 }
 .nav-section-head .caret {
+  width: var(--nav-icon);
   font-size: 14px;
   color: var(--accent);
   opacity: 0.7;
@@ -495,8 +499,8 @@ mark {
   align-items: center;
   gap: var(--s-sm);
   width: 100%;
-  min-height: 32px;
-  padding: 0 var(--s-sm);
+  min-height: var(--row);
+  padding: 0 var(--nav-x);
   border: var(--hairline) solid transparent;
   border-radius: var(--radius);
   color: var(--text);
@@ -515,7 +519,9 @@ mark {
   box-shadow: var(--glow-faint);
 }
 .nav-item .nav-glyph {
-  width: 16px;
+  flex: none;
+  width: var(--nav-icon);
+  text-align: center;
   color: var(--accent);
   text-shadow: var(--glow-text);
 }
@@ -536,11 +542,13 @@ mark {
 .nav-item.on .count {
   color: var(--accent);
 }
-.nav-item.area {
-  padding-left: 0;
+/* An area's caret sits in the icon column. */
+.nav-item.area .caret {
+  width: var(--nav-icon);
 }
+/* An area's projects: one step (--s-md) in from the area's label column. */
 .nav-item.project {
-  padding-left: calc(var(--s-sm) + 24px);
+  padding-left: calc(var(--nav-x) + var(--nav-icon) + var(--s-sm) + var(--s-md));
   font-weight: 400;
   letter-spacing: 0;
   color: var(--text);
@@ -548,16 +556,19 @@ mark {
 .nav-item.add-area {
   color: var(--text-dim);
 }
-/* An archived area: indented under the ARCHIVE heading, quieter than a live one. */
+/* An archived area: on the label column, under the ARCHIVE heading's title; quieter than a live one. */
 .nav-item.archived-area {
-  padding-left: calc(var(--s-sm) + 24px);
+  padding-left: calc(var(--nav-x) + var(--nav-icon) + var(--s-sm));
   color: var(--text-dim);
 }
 .nav-item.archived-area.on {
   color: var(--text-bright);
 }
 .nav-empty {
-  padding: var(--s-xs) var(--s-sm) var(--s-xs) calc(var(--s-sm) + 24px);
+  display: flex;
+  align-items: center;
+  min-height: var(--row);
+  padding: 0 var(--nav-x) 0 calc(var(--nav-x) + var(--nav-icon) + var(--s-sm));
   font-size: var(--fs-small);
 }
 .nav-item.add-area:hover {
@@ -576,7 +587,7 @@ mark {
 .caret {
   display: inline-flex;
   justify-content: center;
-  width: 24px;
+  width: var(--caret);
   flex: none;
   color: var(--text);
   font-size: 15px;
@@ -625,7 +636,10 @@ mark {
 }
 .switch-btn {
   position: relative;
-  padding: var(--s-xs) var(--s-sm);
+  display: inline-flex;
+  align-items: center;
+  height: var(--control);
+  padding: 0 var(--s-sm);
   color: var(--text-dim);
   font-size: var(--fs-small);
   letter-spacing: 0.5px;
@@ -646,10 +660,11 @@ mark {
 }
 .icon-btn {
   display: inline-flex;
+  flex: none;
   align-items: center;
   justify-content: center;
-  width: 30px;
-  height: 30px;
+  width: var(--control);
+  height: var(--control);
   border: var(--hairline) solid var(--line);
   border-radius: var(--radius);
   color: var(--accent);
@@ -659,7 +674,12 @@ mark {
   background: var(--surface);
 }
 .text-btn {
-  padding: var(--s-xs) var(--s-sm);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s-xs);
+  height: var(--control);
+  padding: 0 var(--s-md);
   border: var(--hairline) solid var(--line);
   border-radius: var(--radius);
   color: var(--text);
@@ -727,7 +747,9 @@ mark {
   align-items: flex-start;
   gap: var(--s-sm);
   margin: var(--s-md) var(--s-lg) var(--s-sm);
-  padding: var(--s-sm) var(--s-md);
+  /* The prompt on the rows' checkbox column, the text on their title column
+     (the box starts where a row's caret does). */
+  padding: var(--s-sm) var(--s-md) var(--s-sm) calc(var(--caret) + var(--s-sm) - var(--hairline));
   border: var(--hairline) solid var(--line);
   border-radius: var(--radius);
   background: var(--surface);
@@ -750,9 +772,15 @@ mark {
 .quick-add textarea::placeholder {
   color: var(--text-dim);
 }
+.quick-add > .prompt {
+  flex: none;
+  width: var(--check);
+  text-align: center;
+  line-height: var(--lh-body);
+}
 .quick-add .cursor {
   position: absolute;
-  left: calc(var(--s-md) + 2ch + var(--s-sm));
+  left: calc(var(--caret) + var(--s-sm) - var(--hairline) + var(--check) + var(--s-sm));
   top: var(--s-sm);
   margin-left: 9.5ch;
   color: var(--text-dim);
@@ -807,8 +835,17 @@ mark {
 .row.context {
   opacity: 0.5;
 }
+/* Caret and checkbox sit on the title's first line, centred on it. */
+.row > .caret,
+.row > .check {
+  height: var(--lh-body);
+  line-height: var(--lh-body);
+}
 .check {
   flex: none;
+  /* A fixed column, so titles start at the same x whatever the box shows ([ ] or [x]). */
+  width: var(--check);
+  text-align: center;
   color: var(--text);
   font-size: 15px;
   letter-spacing: -2px;
@@ -889,8 +926,10 @@ textarea.title {
 }
 .add-sub {
   flex: none;
-  width: 30px;
+  /* Square, centred on the title's first line (24 px on a 20 px line). */
+  width: 24px;
   height: 24px;
+  margin: -2px 0;
   border: var(--hairline) solid var(--line);
   border-radius: var(--radius);
   color: var(--accent);
@@ -962,7 +1001,7 @@ textarea.title {
   pointer-events: none;
 }
 .quick-add .float-chips {
-  left: var(--s-md);
+  left: calc(var(--caret) + var(--s-sm) - var(--hairline) + var(--check) + var(--s-sm));
 }
 .chips {
   display: flex;
@@ -1163,7 +1202,7 @@ textarea.title {
   display: flex;
   align-items: center;
   gap: var(--s-sm);
-  min-height: 40px;
+  min-height: var(--control);
 }
 .detail-path {
   flex: 1;
@@ -1174,6 +1213,11 @@ textarea.title {
   display: flex;
   align-items: flex-start;
   gap: var(--s-sm);
+}
+/* The checkbox centred on the title's first line (border + padding + 22 px line = 28). */
+.detail-title-row > .check {
+  height: 28px;
+  line-height: 28px;
 }
 .detail-title {
   flex: 1;
@@ -1208,8 +1252,11 @@ textarea.title {
   align-items: start;
   gap: var(--s-sm);
 }
+/* A label is as tall as a control and centred on its first one. */
 .field dt {
-  padding-top: 5px;
+  display: flex;
+  align-items: center;
+  min-height: var(--control);
   color: var(--text-dim);
   font-size: var(--fs-small);
   letter-spacing: 1px;
@@ -1219,7 +1266,7 @@ textarea.title {
 .setting select,
 .setting input,
 .dialog input {
-  min-height: 30px;
+  height: var(--control);
   padding: 0 var(--s-sm);
   border: var(--hairline) solid var(--line);
   border-radius: var(--radius);
@@ -1237,35 +1284,36 @@ textarea.title {
   border-color: var(--accent);
   box-shadow: var(--glow-faint);
 }
+/* Every control fills the control column, so the pane's right edge is one straight line. */
+.field dd > select,
+.field dd > input {
+  width: 100%;
+}
 .due-inputs {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
   gap: var(--s-sm);
 }
 .due-inputs input {
+  width: 100%;
   min-width: 0;
 }
-.due-inputs input[type='date'] {
-  flex: 1 1 140px;
-}
-.due-inputs input[type='time'] {
-  flex: 0 1 120px;
-}
+/* TODAY · TOMORROW · NEXT WEEK · CLEAR spread edge to edge under the inputs. */
 .presets {
   display: flex;
-  flex-wrap: wrap;
-  gap: var(--s-md);
-  margin-top: 6px;
+  justify-content: space-between;
+  align-items: center;
+  min-height: var(--control);
   font-size: var(--fs-small);
 }
+/* Priority: four equal buttons across the column. */
 .seg {
-  display: flex;
-  gap: var(--s-xs);
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--s-sm);
 }
 .seg-btn,
 .prio-btn {
-  min-width: 40px;
-  height: 28px;
+  height: var(--control);
   border: var(--hairline) solid var(--line);
   border-radius: var(--radius);
   color: var(--text);
@@ -1298,9 +1346,9 @@ textarea.title {
 }
 .objective {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: var(--s-sm);
-  padding: 3px 0;
+  min-height: 28px;
 }
 .objective.done .objective-title {
   color: var(--text-dim);
@@ -1311,7 +1359,13 @@ textarea.title {
   display: flex;
   align-items: center;
   gap: var(--s-sm);
-  padding: var(--s-xs) 0;
+  min-height: 28px;
+}
+/* The prompt in the checkbox column, the field on the objectives' title column. */
+.add-objective > .prompt {
+  flex: none;
+  width: var(--check);
+  text-align: center;
 }
 .add-objective input {
   flex: 1;
@@ -1351,7 +1405,9 @@ textarea.title {
 }
 /* The area view: its name, then its projects as quiet links. */
 input.area-name {
-  width: 100%;
+  /* The text, not the box, on the pane's edge: the box reaches out by its border and padding. */
+  width: calc(100% + 2 * (var(--hairline) + var(--s-xs)));
+  margin: 0 calc(-1 * (var(--hairline) + var(--s-xs)));
   font-weight: 700;
   text-transform: uppercase;
 }
@@ -1364,8 +1420,10 @@ input.area-name {
 }
 .area-project {
   display: flex;
+  align-items: center;
+  justify-content: space-between;
   gap: var(--s-sm);
-  padding: 4px 0;
+  min-height: 28px;
   color: var(--text);
   text-align: left;
 }
@@ -1379,10 +1437,16 @@ input.area-name {
   padding-top: var(--s-md);
   border-top: var(--hairline) solid var(--line);
 }
-.detail-actions,
 .button-row {
   display: flex;
   flex-wrap: wrap;
+  gap: var(--s-sm);
+}
+/* The pane's actions: equal columns across its full width. */
+.detail-actions {
+  display: grid;
+  grid-auto-columns: minmax(0, 1fr);
+  grid-auto-flow: column;
   gap: var(--s-sm);
 }
 
@@ -1417,17 +1481,30 @@ input.area-name {
     transform: translateY(4px);
   }
 }
+/* Menu rows share two columns: the glyph (--nav-icon, centred) and the label after --s-sm. */
 .menu-title {
-  padding: var(--s-sm) var(--s-md);
+  display: flex;
+  align-items: center;
+  gap: var(--s-sm);
+  min-height: var(--control);
+  max-width: 320px;
+  margin-bottom: var(--s-xs);
+  padding: 0 var(--s-md);
   color: var(--text-bright);
   border-bottom: var(--hairline) solid var(--line);
-  max-width: 320px;
+}
+.menu-title-text {
+  min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+/* Headings on the label column. */
 .menu-heading {
-  padding: var(--s-xs) var(--s-md) 0;
+  display: flex;
+  align-items: center;
+  min-height: var(--control);
+  padding: 0 var(--s-md) 0 calc(var(--s-md) + var(--nav-icon) + var(--s-sm));
   color: var(--text-dim);
   font-size: var(--fs-small);
   letter-spacing: 1px;
@@ -1438,10 +1515,17 @@ input.area-name {
   align-items: center;
   gap: var(--s-sm);
   width: 100%;
-  min-height: 30px;
+  min-height: var(--control);
   padding: 0 var(--s-md);
   text-align: left;
   color: var(--text);
+}
+/* Priority in the menu: four equal buttons from the label column to the edge. */
+.menu-row {
+  padding-block: var(--s-xs);
+}
+.menu-row .prio-btn {
+  flex: 1;
 }
 .menu-item:hover:not(:disabled),
 .menu-item:focus-visible {
@@ -1454,7 +1538,9 @@ input.area-name {
   color: var(--line);
 }
 .menu-glyph {
-  width: 18px;
+  flex: none;
+  width: var(--nav-icon);
+  text-align: center;
   color: var(--accent);
   text-shadow: var(--glow-text);
 }
@@ -1566,8 +1652,15 @@ input.area-name {
   display: flex;
   flex-direction: column;
   gap: var(--s-lg);
+  /* Full width, on the header's gutters: rows end where the header's ✕ does. Prose keeps a readable measure. */
   padding: var(--s-lg) var(--s-lg) var(--s-xl);
-  max-width: 760px;
+}
+.page-body p {
+  max-width: 68ch;
+}
+/* One-line notes (the version line) run the full width. */
+.page-body p.small {
+  max-width: none;
 }
 .page .section-title {
   padding-left: 0;
@@ -1582,8 +1675,19 @@ input.area-name {
   align-items: center;
   justify-content: space-between;
   gap: var(--s-lg);
-  min-height: 40px;
+  min-height: calc(var(--control) + var(--s-sm));
   border-bottom: var(--hairline) solid var(--line);
+}
+/* Every setting's control (and a snapshot's RESTORE) is one width: a straight right-hand column. */
+.setting > select,
+.setting > input,
+.setting > .text-btn {
+  flex: none;
+  width: var(--setting-control);
+}
+/* Page buttons share that width too (EXPORT / IMPORT …). */
+.page-body .button-row > .text-btn {
+  min-width: var(--setting-control);
 }
 .import-preview {
   display: flex;

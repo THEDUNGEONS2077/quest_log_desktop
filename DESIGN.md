@@ -16,6 +16,14 @@ The same terminal look as the phone app (the phone's `DESIGN.md` is the source),
   - Sizes: `--fs-title` 22, `--fs-display` 18, `--fs-body` 14, `--fs-quest` 13, `--fs-meta` 12, `--fs-small` 11.
   - Labels and headings are UPPERCASE with letter spacing; task titles keep their case.
 - **Space:** `--s-xs` 4, `--s-sm` 8, `--s-md` 12, `--s-lg` 16, `--s-xl` 24. Also `--indent` 20 per nesting level, `--radius` 2, `--hairline` 1.
+- **Alignment grid** (alignment pass 2026-10-12; tokens in `theme.css`):
+  - every button, input and select is `--control` (32 px) tall; sidebar rows and headings are `--row` (32 px), so the rhythm is even;
+  - sidebar: every row's content starts `--nav-x` (12 px) into its box, with an icon column of `--nav-icon` (16 px) and the label after `--s-sm`. Icons, carets, section headings, `+ AREA` and archived areas share those two columns. The title panel's content uses the same edges, and the counts end where the XP bar ends;
+  - list rows: `[caret 24][8][checkbox 20][8][title]`. One indent is a checkbox plus its gap (`--indent` 28 px), so a child's checkbox sits under its parent's title. Quick-add's `>` sits on the checkbox column and its text on the title column;
+  - details pane: an 88 px label column, each label centred on its first control. Every control fills the control column (one straight right edge). Priority is four equal cells, the date presets span edge to edge, and the pane's actions are equal columns;
+  - menus: a glyph column and a label column, which titles and headings share; menu priority buttons run to the edge;
+  - pages run full width on the header's gutters, so rows end under the header's ✕. Settings controls and page buttons are one width (`--setting-control`);
+  - spacing comes from the scale only (`--s-xs` 4 … `--s-xl` 24).
 - **Motion rules** (animation pass 2026-10-12, measured with `npm run e2e:motion`):
   - animate only `transform` and `opacity`; the GPU runs them without laying anything out. Widths are moved by `translateX` inside a clipping box (the XP bar, the quest meter), and glows that must change get an overlay whose opacity changes (an animated `text-shadow` lays the text out every frame);
   - nothing appears or disappears in one frame: the toast, menus and dialogs animate out (`usePresence`), the details pane cross-fades with its strip, and its content is clipped, never squeezed, while the column changes;

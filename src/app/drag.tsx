@@ -17,8 +17,10 @@ import { findTask } from '@/lib/taskMap';
 import { subtreeIds } from '@/lib/tree';
 import { useStoreBundle } from '@/store/react';
 
-/** The indent per level, in px (theme --indent). */
-const INDENT = 20;
+/** The indent per level, in px (theme --indent: --check 20 + --s-sm 8). */
+const INDENT = 28;
+/** Where a depth-0 title starts in a row (theme: --s-lg + --caret + --s-sm + --check + --s-sm): the drop line starts there. */
+const TITLE_X = 16 + 24 + 8 + 20 + 8;
 
 interface DragState {
   id: string;
@@ -91,7 +93,7 @@ export function DragArea({ children }: { children: ReactNode }) {
       const below = rows[target.gap];
       const y = below ? below.top : above ? above.top + above.height : 0;
       const origin = box.current.getBoundingClientRect();
-      const line = { top: y - origin.top, left: 16 + 56 + target.depth * INDENT };
+      const line = { top: y - origin.top, left: TITLE_X + target.depth * INDENT };
       update({ ...d, rows, x: e.clientX, y: e.clientY, target, line });
     };
     const up = () => {

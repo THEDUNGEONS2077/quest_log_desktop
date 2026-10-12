@@ -66,7 +66,12 @@
   --s-xl: 24px;
   --radius: 2px;
   --hairline: 1px;
-  --indent: 20px;
+  /* List rows: [caret 24][s-sm][checkbox 20][s-sm][title]. One level of
+     nesting is a checkbox plus its gap, so a child's checkbox sits exactly
+     under its parent's title (alignment pass 2026-10-12; was 20 px). */
+  --caret: 24px;
+  --check: 20px;
+  --indent: calc(var(--check) + var(--s-sm));
 
   /* Motion: durations and the two curves (arrive / leave). */
   --fast: 120ms;
@@ -82,6 +87,18 @@
   --detail: 380px;
   /* The detail pane minimized: a strip with its « button. */
   --detail-min: 40px;
+
+  /* Alignment grid (alignment pass 2026-10-12). Every button, input and
+     select is --control tall; sidebar rows are --row tall; a sidebar row's
+     content starts --nav-x in from its box, with an icon column of
+     --nav-icon and the label after --s-sm, so icons, carets, headings and
+     labels each share one column. */
+  --control: 32px;
+  --row: 32px;
+  --nav-x: 12px;
+  --nav-icon: 16px;
+  /* Settings: the width of every control in the right-hand column, and of page buttons. */
+  --setting-control: 200px;
 }
 
 /* Reduce Motion (the OS setting, or the app's, which sets data-reduce-motion). */

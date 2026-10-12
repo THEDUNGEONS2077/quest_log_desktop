@@ -117,7 +117,7 @@ try {
   });
 
   await path('areas: add, put a quest in it, rename and delete it from the right-hand pane, ARCHIVE, restore', async () => {
-    await nav('+ AREA').click();
+    await page.locator('.sidebar .add-area').click();
     await page.getByLabel('New area name').fill('Client ACME');
     await page.getByLabel('New area name').press('Enter');
     await see('> CLIENT ACME');
@@ -145,7 +145,7 @@ try {
     await nav('ALL QUESTS').click();
     await see('PITCH DECK');
     // Another area, deleted for good from ARCHIVE (right-click): its quest goes to Trash.
-    await nav('+ AREA').click();
+    await page.locator('.sidebar .add-area').click();
     await page.getByLabel('New area name').fill('Temp');
     await page.getByLabel('New area name').press('Enter');
     await addQuest('Scratch notes');

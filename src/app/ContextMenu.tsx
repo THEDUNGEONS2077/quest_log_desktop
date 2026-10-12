@@ -75,6 +75,16 @@ function Item({ glyph, label, onPick, disabled }: { glyph?: string; label: React
   );
 }
 
+/** The menu's title: its glyph in the items' glyph column, the text on their label column. */
+function MenuTitle({ glyph, text }: { glyph: string; text: string }) {
+  return (
+    <div className="menu-title">
+      <span className="menu-glyph">{glyph}</span>
+      <span className="menu-title-text">{text}</span>
+    </div>
+  );
+}
+
 function PlainItems({ items, close }: { items: MenuItem[]; close: () => void }) {
   return (
     <>
@@ -105,7 +115,7 @@ function TaskItems({ id, close }: { id: string; close: () => void }) {
   const dueAt = (days: number) => dueInDays(days, defaultTime);
   return (
     <>
-      <div className="menu-title">{G.prompt} {task.title || 'Untitled'}</div>
+      <MenuTitle glyph={G.prompt} text={task.title || 'Untitled'} />
       {(isQuest || hasChildren) && !task.done && <Item glyph={G.zoom} label="Open" onPick={run(() => actions.openProject(id))} />}
       <Item glyph={G.prompt} label="Edit title  (Enter)" onPick={run(() => actions.setEditing(id))} />
       {!task.done && <Item glyph={G.add} label="Add objective" onPick={run(() => actions.addSubtask(id))} />}
@@ -179,9 +189,7 @@ function AreaItems({ id, close }: { id: string; close: () => void }) {
   if (isArchived)
     return (
       <>
-        <div className="menu-title">
-          {G.archives} {name.toUpperCase()}
-        </div>
+        <MenuTitle glyph={G.archives} text={name.toUpperCase()} />
         {rename}
         <Item glyph={G.undo} label="Restore" onPick={() => (close(), actions.restoreArea(id))} />
         <Item glyph={G.delete} label="Delete forever…" onPick={() => (close(), confirmDeleteForever(openDialog, actions, id, name))} />
@@ -189,7 +197,7 @@ function AreaItems({ id, close }: { id: string; close: () => void }) {
     );
   return (
     <>
-      <div className="menu-title">{G.prompt} {name.toUpperCase()}</div>
+      <MenuTitle glyph={G.prompt} text={name.toUpperCase()} />
       {rename}
       <Item glyph="↑" label="Move up" disabled={index <= 0} onPick={() => (close(), actions.moveArea(id, index - 1))} />
       <Item glyph="↓" label="Move down" disabled={index >= areas.length - 1} onPick={() => (close(), actions.moveArea(id, index + 1))} />

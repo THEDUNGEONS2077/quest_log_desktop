@@ -2,6 +2,16 @@
 
 quest_log desktop. Each version gets one section, newest first. The heading's build number is shown in Settings and written into backups.
 
+## 0.4.1 (build 6)
+
+Everything lines up.
+
+- **One grid for the whole app.** Every button, field and menu row is the same height. Icons, checkboxes, titles and labels line up in shared columns, and spacing between elements is even.
+- **Sidebar:** section headings, items, `+ AREA` and the archive all start on the same columns, and the title panel lines up with them.
+- **The list:** the `> new quest` prompt sits over the checkboxes and its text over the titles. An objective's checkbox now sits exactly under its quest's title.
+- **The details pane:** every field fills the same width, so the right edge is one straight line. Priority is four equal buttons, and OPEN / COMPLETE / DELETE are equal thirds. The checkbox is centred on the title.
+- **Menus and Settings:** titles and headings line up with the items, and settings controls and backup buttons are all one width, ending exactly under the ✕.
+
 ## 0.4.0 (build 5)
 
 A cleaner title panel and smoother motion everywhere.

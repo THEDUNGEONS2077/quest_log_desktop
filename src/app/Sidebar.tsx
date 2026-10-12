@@ -154,12 +154,13 @@ export function Sidebar() {
           <NewArea onDone={() => setAdding(false)} />
         ) : (
           <button type="button" className="nav-item add-area" onClick={() => setAdding(true)}>
-            {G.add} AREA
+            <span className="nav-glyph">{G.add}</span>
+            <span className="nav-label">AREA</span>
           </button>
         )}
       </Section>
 
-      <Section {...section('archive')} title="ARCHIVE" glyph={G.archives} count={archived.length} active={showingIn(archived)} className="archive">
+      <Section {...section('archive')} title="ARCHIVE" count={archived.length} active={showingIn(archived)} className="archive">
         {archived.length ? (
           archived.map((a) => (
             <div
@@ -353,7 +354,7 @@ function NewArea({ onDone }: { onDone: () => void }) {
   };
   return (
     <form className="nav-item new-area" onSubmit={submit}>
-      <span className="prompt">{G.prompt}</span>
+      <span className="nav-glyph prompt">{G.prompt}</span>
       <input
         autoFocus
         value={name}
