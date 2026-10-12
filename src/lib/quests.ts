@@ -49,7 +49,7 @@ const NO_AREAS: ReadonlySet<string> = new Set();
 // One set per areas list (the list is replaced, never mutated, on every change).
 const archivedCache = new WeakMap<readonly Area[], ReadonlySet<string>>();
 
-/** The IDs of the areas in ARCHIVES (desktop; lib/areas.ts). */
+/** The IDs of the areas in ARCHIVE (desktop; lib/areas.ts). */
 export function archivedAreaIds(state: Pick<TasksState, 'areas'>): ReadonlySet<string> {
   let ids = archivedCache.get(state.areas);
   if (!ids) {

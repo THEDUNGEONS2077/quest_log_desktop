@@ -1,5 +1,5 @@
 /**
- * src/__tests__/lib/areas.test.ts: areas (lib/areas.ts), ARCHIVES, the
+ * src/__tests__/lib/areas.test.ts: areas (lib/areas.ts), ARCHIVE, the
  * repair of areas lost by 0.1.0, and how phone data and backups carry them.
  */
 import {
@@ -81,7 +81,7 @@ describe('areas', () => {
     expect(apply(createEmptyState(), replaceOp(createEmptyState(), desktop)!).state.areas.map((a) => a.id)).toContain('acme');
   });
 
-  describe('ARCHIVES', () => {
+  describe('ARCHIVE', () => {
     const NOW = new Date(2026, 9, 12, 12).getTime();
     const setup = () =>
       build([
@@ -99,7 +99,7 @@ describe('areas', () => {
       expect(flattenActive(r.state, { category: 'all' }).map((x) => x.id)).toEqual(['e']);
       expect(flattenCompleted(r.state, new Set(), 'all')).toEqual([]);
       expect(todayRows(r.state, NOW)).toEqual([]);
-      // Its own tab still shows it, so ARCHIVES can be looked through.
+      // Its own tab still shows it, so ARCHIVE can be looked through.
       expect(flattenActive(r.state, { category: 'misc' }).map((x) => x.id)).toContain('a');
       // A new quest under ALL never goes into an archived area.
       expect(categoryForNew('all', apply(s, archiveAreaOp(s, 'main', NOW)!).state.areas)).toBe('daily');
@@ -125,7 +125,7 @@ describe('areas', () => {
     it('delete forever: quests to Trash, moved to the first live area, area gone; one undo step', () => {
       const s0 = setup();
       const s = apply(s0, archiveAreaOp(s0, 'misc', NOW)!).state;
-      expect(deleteAreaForeverOp(s0, 'misc', NOW)).toBeNull(); // only from ARCHIVES
+      expect(deleteAreaForeverOp(s0, 'misc', NOW)).toBeNull(); // only from ARCHIVE
       const r = apply(s, deleteAreaForeverOp(s, 'misc', NOW)!);
       expect(r.state.areas.map((a) => a.id)).toEqual(['daily', 'main']);
       for (const id of ['a', 'b', 'c']) {

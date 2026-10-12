@@ -18,7 +18,7 @@ export const G = {
   delete: '✕',
   /** Minimize / bring back the detail pane. */
   hidePane: '»',
-  /** ARCHIVES, the folder of deleted areas. */
+  /** ARCHIVE, the folder of deleted areas. */
   archives: '⊟',
   showPane: '«',
   undo: '↩',

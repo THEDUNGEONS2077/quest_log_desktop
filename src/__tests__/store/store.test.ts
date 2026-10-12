@@ -179,6 +179,18 @@ describe('persistence wiring', () => {
     expect(relaunched.getState().ui.detailCollapsed).toBe(false);
   });
 
+  it('sidebar sections: ARCHIVE starts minimized, toggles are remembered, archiving an area opens ARCHIVE', () => {
+    const { store, kv } = makeStore();
+    expect(store.getState().ui.sidebarCollapsed).toEqual(['archive']);
+    const stop = installPersistence(store, kv, { listenAppState: false });
+    store.getState().toggleSidebarSection('areas');
+    stop();
+    const r = makeStore(kv).store;
+    expect(r.getState().ui.sidebarCollapsed).toEqual(['archive', 'areas']);
+    r.getState().archiveArea('misc');
+    expect(r.getState().ui.sidebarCollapsed).toEqual(['areas']);
+  });
+
   it('teardown flushes pending writes immediately', () => {
     const { store, kv } = makeStore();
     const stop = installPersistence(store, kv, { listenAppState: false });

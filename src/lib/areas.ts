@@ -11,10 +11,10 @@
  * phone backup lands in the right areas. 'daily' keeps its phone meaning:
  * a quest added there repeats daily (store quickAdd).
  *
- * Deleting an area sends it to ARCHIVES (2026-10-12) with its quests: it's
+ * Deleting an area sends it to ARCHIVE (2026-10-12) with its quests: it's
  * marked `archivedAt` and kept at the end of the list, after every live
  * area (so a live area's index in the list is its place in the sidebar).
- * From ARCHIVES it can be restored, or deleted for good: its quests go to
+ * From ARCHIVE it can be restored, or deleted for good: its quests go to
  * Trash, moved to the first live area so a restore from Trash has a home.
  */
 import { sequence } from './bulk';
@@ -36,7 +36,7 @@ export function liveAreas(state: TasksState): Area[] {
   return state.areas.filter((a) => a.archivedAt === undefined);
 }
 
-/** The areas in ARCHIVES, in the order they were archived. */
+/** The areas in ARCHIVE, in the order they were archived. */
 export function archivedAreas(state: TasksState): Area[] {
   return state.areas.filter((a) => a.archivedAt !== undefined);
 }
@@ -63,7 +63,7 @@ export function renameAreaOp(state: TasksState, id: AreaId, name: string): Op | 
 
 /**
  * Moves an area to `index` in the list (counted after it's taken out). A
- * live area stays among the live ones (before ARCHIVES). Null when nothing
+ * live area stays among the live ones (before ARCHIVE). Null when nothing
  * changes.
  */
 export function moveAreaOp(state: TasksState, id: AreaId, index: number): Op | null {
@@ -104,7 +104,7 @@ export function deleteAreaOp(state: TasksState, id: AreaId, into: AreaId): Op | 
 }
 
 /**
- * Deletes an area to ARCHIVES, with its quests, as of `at`. It moves to the
+ * Deletes an area to ARCHIVE, with its quests, as of `at`. It moves to the
  * end of the list. Null for an unknown or already archived area, or the
  * last live one (there's always one to add quests to).
  */

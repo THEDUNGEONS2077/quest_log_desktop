@@ -39,8 +39,9 @@ export function HelpPage() {
       <section className="help">
         <h2 className="section-title">HOW IT'S ORGANISED</h2>
         <p>
-          <b>Areas</b> are your groups of work (a client, a team, a part of the job). Make them with <b>{G.add} AREA</b> in the sidebar. Click one and the pane on the right
-          shows it: rename it there, or delete it (right-click works too, and can reorder). A deleted area goes into <b>{G.archives} ARCHIVES</b> with its
+          The sidebar's sections (VIEWS, AREAS, ARCHIVE, SYSTEM) minimize to their heading with a click, and stay that way; a dot on a minimized one means
+          what's shown is inside. <b>Areas</b> are your groups of work (a client, a team, a part of the job). Make them with <b>{G.add} AREA</b> in the sidebar. Click one and the pane on the right
+          shows it: rename it there, or delete it (right-click works too, and can reorder). A deleted area goes into <b>{G.archives} ARCHIVE</b> with its
           quests, out of ALL QUESTS, TODAY and UPCOMING; open it there to <b>RESTORE</b> it or <b>DELETE FOREVER</b> (its quests go to Trash). DAILY, MAIN
           and MISC come with the app, and DAILY quests repeat every day.
         </p>

@@ -120,7 +120,7 @@ function TaskItems({ id, close }: { id: string; close: () => void }) {
         <>
           <div className="menu-sep" />
           <div className="menu-heading">AREA</div>
-          {/* Live areas only: a quest moves out of ARCHIVES, not into it (delete its area for that). */}
+          {/* Live areas only: a quest moves out of ARCHIVE, not into it (delete its area for that). */}
           {areas.filter((a) => a.archivedAt === undefined).map((a) => (
             <Item key={a.id} glyph={task.category === a.id ? G.done : ''} label={a.name.toUpperCase()} onPick={run(() => actions.setQuestCategory(id, a.id))} />
           ))}
@@ -151,7 +151,7 @@ function TaskItems({ id, close }: { id: string; close: () => void }) {
   );
 }
 
-/** The menu for an area: rename, reorder, delete to ARCHIVES; for an archived one, restore or delete for good. */
+/** The menu for an area: rename, reorder, delete to ARCHIVE; for an archived one, restore or delete for good. */
 function AreaItems({ id, close }: { id: string; close: () => void }) {
   const allAreas = useAppStore((s) => s.tasks.areas);
   const name = useAppStore((s) => areaName(s.tasks, id));
@@ -187,7 +187,7 @@ function AreaItems({ id, close }: { id: string; close: () => void }) {
       {rename}
       <Item glyph="↑" label="Move up" disabled={index <= 0} onPick={() => (close(), actions.moveArea(id, index - 1))} />
       <Item glyph="↓" label="Move down" disabled={index >= areas.length - 1} onPick={() => (close(), actions.moveArea(id, index + 1))} />
-      <Item glyph={G.archives} label="Delete (to ARCHIVES)" disabled={areas.length <= 1} onPick={() => (close(), actions.archiveArea(id))} />
+      <Item glyph={G.archives} label="Delete (to ARCHIVE)" disabled={areas.length <= 1} onPick={() => (close(), actions.archiveArea(id))} />
     </>
   );
 }

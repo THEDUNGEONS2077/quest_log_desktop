@@ -69,7 +69,7 @@ import {
 } from './persist';
 import { DEFAULT_ONBOARDING, type Onboarding, type Tip } from './onboarding';
 import { DEFAULT_SETTINGS, type Settings } from './settings';
-import { DEFAULT_UI, type Page, type Tab, type UiState, type View } from './uiState';
+import { DEFAULT_UI, type Page, type SidebarSection, type Tab, type UiState, type View } from './uiState';
 
 /** Everything the store needs from the outside world (injected for tests). */
 export interface StoreDeps {
@@ -443,6 +443,8 @@ export interface AppStore {
   select(id: ID | null): void;
   /** Minimizes the detail pane to a strip, or brings it back (saved with the UI state). */
   toggleDetail(): void;
+  /** Minimizes a sidebar section to its heading, or opens it (saved with the UI state). */
+  toggleSidebarSection(section: SidebarSection): void;
   /** Shows a page in the centre (settings, trash, help), or the list again (null). */
   openPage(page: Page | null): void;
   /** Adds an area at the end and shows it; returns its ID (null for an empty name). */
@@ -450,9 +452,9 @@ export interface AppStore {
   renameArea(id: ID, name: string): void;
   /** Moves an area to `index` in the sidebar. */
   moveArea(id: ID, index: number): void;
-  /** Deletes an area to ARCHIVES, with its quests (undoable; never the last live area). */
+  /** Deletes an area to ARCHIVE, with its quests (undoable; never the last live area). */
   archiveArea(id: ID): void;
-  /** Brings an area back from ARCHIVES (undoable). */
+  /** Brings an area back from ARCHIVE (undoable). */
   restoreArea(id: ID): void;
   /** Deletes an archived area for good: its quests go to Trash (undoable). */
   deleteAreaForever(id: ID): void;
@@ -1308,6 +1310,12 @@ export function createAppStore(deps: StoreDeps) {
         if (selectedId !== get().selectedId) set({ selectedId });
       },
 
+      toggleSidebarSection(section) {
+        const list = get().ui.sidebarCollapsed;
+        const sidebarCollapsed = list.includes(section) ? list.filter((x) => x !== section) : [...list, section];
+        set({ ui: { ...get().ui, sidebarCollapsed } });
+      },
+
       toggleDetail() {
         set({ ui: { ...get().ui, detailCollapsed: !get().ui.detailCollapsed } });
       },
@@ -1352,9 +1360,12 @@ export function createAppStore(deps: StoreDeps) {
       archiveArea(id) {
         const op = archiveAreaOp(get().tasks, id, now());
         if (!op) return;
-        // A view showing it stays on it: it's now under ARCHIVES, quests and all.
+        // A view showing it stays on it: it's now under ARCHIVE, quests and all,
+        // and the ARCHIVE section opens so you can see where it went.
         get().dispatch(op);
-        get().showToast(`${areaName(get().tasks, id).toUpperCase()} MOVED TO ARCHIVES`, true);
+        const ui = get().ui;
+        if (ui.sidebarCollapsed.includes('archive')) set({ ui: { ...ui, sidebarCollapsed: ui.sidebarCollapsed.filter((x) => x !== 'archive') } });
+        get().showToast(`${areaName(get().tasks, id).toUpperCase()} MOVED TO ARCHIVE`, true);
       },
 
       restoreArea(id) {

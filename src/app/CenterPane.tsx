@@ -70,7 +70,7 @@ function ListPane() {
   const tab = useAppStore((s) => s.ui.tab);
   const zoom = useAppStore((s) => s.ui.zoomRootId);
   const name = useAppStore((s) => (category === 'all' ? 'ALL QUESTS' : areaName(s.tasks, category)));
-  // An area in ARCHIVES: looked through, not added to (restore it first).
+  // An area in ARCHIVE: looked through, not added to (restore it first).
   const archived = useAppStore((s) => s.tasks.areas.some((a) => a.id === category && a.archivedAt !== undefined));
   const selectors = useSelectors();
   const counts = useAppStore((s) => selectors.tabCounts(s)[category] ?? NO_COUNTS);
@@ -127,7 +127,7 @@ function ListPane() {
       {tab === 'active' && !archived && <QuickAdd placeholder={zoom ? 'new objective' : 'new quest'} />}
       {archived && (
         <p className="archived-note dim small">
-          {'> IN ARCHIVES. '}
+          {'> IN ARCHIVE. '}
           <button type="button" className="link" onClick={() => actions.restoreArea(category)}>
             RESTORE
           </button>

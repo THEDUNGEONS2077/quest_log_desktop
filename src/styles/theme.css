@@ -74,6 +74,8 @@
   --slow: 320ms;
   --ease: cubic-bezier(0.33, 1, 0.68, 1); /* out-cubic */
   --ease-exit: cubic-bezier(0.32, 0, 0.67, 0); /* in-cubic */
+  /* Endless decorative loops (the title cursor, the XP sheen): paused under Reduce Motion. */
+  --loops: running;
 
   /* Layout. */
   --sidebar: 264px;
@@ -88,10 +90,12 @@
     --fast: 0ms;
     --base: 0ms;
     --slow: 0ms;
+    --loops: paused;
   }
 }
 :root[data-reduce-motion='on'] {
   --fast: 0ms;
   --base: 0ms;
   --slow: 0ms;
+  --loops: paused;
 }

@@ -27,7 +27,7 @@
  *   CLIENT WORK                    ← its name, edited in place
  *   6 open quests · 2 completed
  *   PROJECTS  Q4 report 3 · Website 5 …
- *   [ DELETE ]   ← to ARCHIVES (or RESTORE / DELETE FOREVER there)
+ *   [ DELETE ]   ← to ARCHIVE (or RESTORE / DELETE FOREVER there)
  */
 import { type ReactNode, useState } from 'react';
 
@@ -352,7 +352,7 @@ function Details({ task, onClose }: { task: Task; onClose: () => void }) {
 /**
  * The area shown in the list: its name (edited in place: Enter or leaving
  * the field saves, Esc puts it back), its counts and open projects, and
- * DELETE (to ARCHIVES), or for an archived one RESTORE / DELETE FOREVER.
+ * DELETE (to ARCHIVE), or for an archived one RESTORE / DELETE FOREVER.
  */
 function AreaDetails({ id }: { id: string }) {
   const area = useAppStore((s) => s.tasks.areas.find((a) => a.id === id))!;
@@ -380,7 +380,7 @@ function AreaDetails({ id }: { id: string }) {
   return (
     <div className="details">
       <div className="detail-head">
-        <span className="detail-path dim">{archived ? `${G.archives} ARCHIVES` : 'AREA'}</span>
+        <span className="detail-path dim">{archived ? `${G.archives} ARCHIVE` : 'AREA'}</span>
         <MinimizeButton />
       </div>
       <input
@@ -430,14 +430,14 @@ function AreaDetails({ id }: { id: string }) {
               type="button"
               className="text-btn danger"
               disabled={liveCount <= 1}
-              title={liveCount <= 1 ? 'Your only area can’t be deleted' : 'Moves it to ARCHIVES, with its quests'}
+              title={liveCount <= 1 ? 'Your only area can’t be deleted' : 'Moves it to ARCHIVE, with its quests'}
               onClick={() => actions.archiveArea(id)}
             >
               {G.archives} DELETE
             </button>
           )}
         </div>
-        {!archived && <p className="dim small">Deleting moves it to ARCHIVES with its quests. You can restore it there.</p>}
+        {!archived && <p className="dim small">Deleting moves it to ARCHIVE with its quests. You can restore it there.</p>}
       </footer>
     </div>
   );

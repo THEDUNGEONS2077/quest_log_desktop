@@ -2,6 +2,16 @@
 
 quest_log desktop. Each version gets one section, newest first. The heading's build number is shown in Settings and written into backups.
 
+## 0.3.0 (build 3)
+
+A sharper sidebar.
+
+- **A new title block.** `<level>_quest_log` now has a blinking terminal cursor, inside a lit panel with corner brackets. Under the title, a status line shows your level, your day streak and the XP bonus it gives. Your level number pops when you level up.
+- **The XP bar pops.** It's a segmented gauge with a glowing green fill and a bright leading edge. A sheen sweeps across it every few seconds, and it flashes whenever you earn XP. Under it you'll see how much XP you have and how much is left to the next level. With Reduce Motion on, it stays still.
+- **Minimize the sidebar's sections.** Click VIEWS, AREAS, ARCHIVE or SYSTEM to fold a section away, and click again to open it. The app remembers which ones are folded. A dot on a folded section means what you're looking at is inside it. Deleting an area opens ARCHIVE so you can see where it went.
+- **Dividers between the sidebar's sections.**
+- **ARCHIVES is now ARCHIVE.**
+
 ## 0.2.0 (build 2)
 
 - **Fixed: a black screen after closing and reopening the app.** New areas weren't being saved, so after a reopen the app tried to show an area that no longer existed and got stuck. Areas are saved now. Areas that were lost come back by themselves, with their quests: by name where the daily snapshot remembers it, otherwise as **RECOVERED 1, 2…**, which you can rename. If anything ever goes wrong again, you'll see what happened, with **RELOAD** and **DOWNLOAD BACKUP**, instead of a black page.

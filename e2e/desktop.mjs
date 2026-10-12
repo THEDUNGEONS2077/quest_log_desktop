@@ -116,7 +116,7 @@ try {
     await shot('06-upcoming');
   });
 
-  await path('areas: add, put a quest in it, rename and delete it from the right-hand pane, ARCHIVES, restore', async () => {
+  await path('areas: add, put a quest in it, rename and delete it from the right-hand pane, ARCHIVE, restore', async () => {
     await nav('+ AREA').click();
     await page.getByLabel('New area name').fill('Client ACME');
     await page.getByLabel('New area name').press('Enter');
@@ -130,34 +130,33 @@ try {
     await areaName.press('Enter');
     await see('> ACME CORP');
     await shot('07-area');
-    // DELETE moves it to ARCHIVES, quests and all; ALL QUESTS leaves them out.
+    // DELETE moves it to ARCHIVE, quests and all; ALL QUESTS leaves them out.
     await page.locator('.detail').getByRole('button', { name: 'DELETE' }).click();
-    await see('MOVED TO ARCHIVES');
-    await see('> IN ARCHIVES.');
+    await see('MOVED TO ARCHIVE');
+    await see('> IN ARCHIVE.');
     await page.locator('.sidebar .archived-area', { hasText: 'ACME CORP' }).waitFor();
     await shot('07b-archives');
     await nav('ALL QUESTS').click();
     await gone('PITCH DECK');
-    // Back from ARCHIVES (the folder opens with a click).
-    await page.locator('.sidebar .archives-folder .nav-label').click();
+    // Back from ARCHIVE (its section opened when the area went in).
     await page.locator('.sidebar .archived-area', { hasText: 'ACME CORP' }).click();
     await page.locator('.detail').getByRole('button', { name: 'RESTORE' }).click();
     await see('RESTORED');
     await nav('ALL QUESTS').click();
     await see('PITCH DECK');
-    // Another area, deleted for good from ARCHIVES (right-click): its quest goes to Trash.
+    // Another area, deleted for good from ARCHIVE (right-click): its quest goes to Trash.
     await nav('+ AREA').click();
     await page.getByLabel('New area name').fill('Temp');
     await page.getByLabel('New area name').press('Enter');
     await addQuest('Scratch notes');
     await nav('TEMP').click({ button: 'right' });
-    await page.getByRole('menuitem', { name: 'Delete (to ARCHIVES)' }).click();
+    await page.getByRole('menuitem', { name: 'Delete (to ARCHIVE)' }).click();
     // Still showing TEMP, so the folder is open with it inside.
     await page.locator('.sidebar .archived-area', { hasText: 'TEMP' }).click({ button: 'right' });
     await page.getByRole('menuitem', { name: 'Delete forever…' }).click();
     await page.getByRole('dialog').getByRole('button', { name: 'DELETE' }).click();
     await see('ITS QUESTS ARE IN TRASH');
-    if (await page.locator('.sidebar .archived-area', { hasText: 'TEMP' }).count()) throw new Error('TEMP is still in ARCHIVES');
+    if (await page.locator('.sidebar .archived-area', { hasText: 'TEMP' }).count()) throw new Error('TEMP is still in ARCHIVE');
     await nav('TRASH').click();
     await see('Scratch notes');
   });
@@ -270,6 +269,26 @@ try {
     await page.keyboard.press('d');
     await page.getByLabel('Minimize details (D)').waitFor();
     await see('> SELECT A TASK TO SEE ITS DETAILS.');
+  });
+
+  await path('sidebar sections minimize to their heading (with a dot when they hold the view), and stay so after a reload', async () => {
+    await nav('ALL QUESTS').click();
+    await shot('16-sidebar');
+    const head = (title) => page.locator('.sidebar .nav-section-head', { hasText: title });
+    await head('VIEWS').click();
+    await head('AREAS').click();
+    await page.waitForTimeout(300); // they fold
+    if (await nav('TODAY').isVisible()) throw new Error('VIEWS did not minimize');
+    if (await nav('MAIN').isVisible()) throw new Error('AREAS did not minimize');
+    if (!(await head('VIEWS').locator('.nav-section-dot').count())) throw new Error('no dot on VIEWS (ALL QUESTS is shown)');
+    await shot('17-sidebar-minimized');
+    await page.reload();
+    await head('VIEWS').waitFor();
+    if (await nav('TODAY').isVisible()) throw new Error('VIEWS opened again after a reload');
+    await head('VIEWS').click();
+    await head('AREAS').click();
+    await nav('TODAY').waitFor();
+    await nav('MAIN').waitFor();
   });
 
   await path('a narrow window: the sidebar becomes a drawer', async () => {

@@ -1,33 +1,43 @@
 /**
- * src/app/Sidebar.tsx: the left column: views, areas and their projects.
+ * src/app/Sidebar.tsx: the left column: who you are, views, areas and their
+ * projects, the archive, and the app's pages.
  *
- *   <7>_quest_log
- *   [■■■■□□□□□□] 34/125 XP
- *   ◉ TODAY            5
- *   ◔ UPCOMING        12
- *   ≣ ALL QUESTS      40
- *   AREAS
- *   ▾ ACME           6     ← an area, opened to its projects
- *       Q4 report    3
- *   ▸ MAIN          18
- *   + AREA
- *   ─────────────────
- *   ▾ ⊟ ARCHIVES      1     ← deleted areas, with their quests
- *       OLD CLIENT    4
- *   ✓ COMPLETED  ✕ TRASH  ⊛ SETTINGS  ? HELP
+ *   ┌───────────────────────────┐
+ *   │ <7>_quest_log▌            │  ← the title block: level, name, cursor
+ *   │ LVL 07 · STREAK 4D · ×1.15│
+ *   │ [▰▰▰▰▰▰▰▱▱▱▱▱] 34/125 XP   │  ← the XP gauge (sheen, pulse on a gain)
+ *   └───────────────────────────┘
+ *   ▾ VIEWS                         ← each section minimizes to its heading
+ *     ◉ TODAY            5
+ *     ◔ UPCOMING        12
+ *     ≣ ALL QUESTS      40
+ *   ──────────────────────          ← a divider between sections
+ *   ▾ AREAS              4
+ *     ▾ ACME           6     ← an area, opened to its projects
+ *         Q4 report    3
+ *     ▸ MAIN          18
+ *     + AREA
+ *   ──────────────────────
+ *   ▸ ARCHIVE            1     ← deleted areas, with their quests
+ *   ──────────────────────
+ *   ▾ SYSTEM
+ *     ✓ COMPLETED  ✕ TRASH  ⊛ SETTINGS  ? HELP
  *
  * Layer: UI. An area is the user's own group of quests (a client, a team,
  * a part of the job); its quests are projects. Clicking an area shows its
- * quests; its caret lists its projects, and a project opens inside (zoom).
- * Right-click an area to rename or delete it, or show it and use the
- * details pane on the right. A deleted area goes into the ARCHIVES folder
- * (below a separator), where it can still be opened, restored or deleted
- * for good. The selected entry has the faint glow (DESIGN.md: the glow
- * marks what's selected).
+ * quests (and the details pane shows the area: rename or delete it there);
+ * its caret lists its projects, and a project opens inside (zoom).
+ * Right-click an area for the same actions. A deleted area goes into the
+ * ARCHIVE section, where it can still be opened, restored or deleted for
+ * good. Sections minimize to their heading (remembered, ui.sidebarCollapsed);
+ * a minimized section that holds what's shown marks its heading with a dot.
+ * The selected entry has the faint glow (DESIGN.md: the glow marks what's
+ * selected).
  */
-import { type FormEvent, useMemo, useState } from 'react';
+import { type FormEvent, type ReactNode, useMemo, useState } from 'react';
 
-import { levelInfo } from '@/lib/xp';
+import { currentDayStreak, dayMultiplier, levelInfo } from '@/lib/xp';
+import type { SidebarSection } from '@/store/uiState';
 import { useActions, useAppStore, useSelectors } from '@/store/react';
 
 import { cx } from './cx';
@@ -36,13 +46,12 @@ import { useOpenMenuAt } from './menu';
 import { useMinute } from './useMinute';
 
 export function Sidebar() {
-  const xp = useAppStore((s) => s.tasks.progress.xp);
-  const { level, into, needed, fraction } = levelInfo(xp);
   const view = useAppStore((s) => s.ui.view);
   const category = useAppStore((s) => s.ui.category);
   const tab = useAppStore((s) => s.ui.tab);
   const zoom = useAppStore((s) => s.ui.zoomRootId);
   const page = useAppStore((s) => s.page);
+  const collapsed = useAppStore((s) => s.ui.sidebarCollapsed);
   const allAreas = useAppStore((s) => s.tasks.areas);
   const areas = useMemo(() => allAreas.filter((a) => a.archivedAt === undefined), [allAreas]);
   const archived = useMemo(() => allAreas.filter((a) => a.archivedAt !== undefined), [allAreas]);
@@ -56,14 +65,10 @@ export function Sidebar() {
   const openMenuAt = useOpenMenuAt();
   const [open, setOpen] = useState<ReadonlySet<string>>(() => new Set());
   const [adding, setAdding] = useState(false);
-  const [archivesOpen, setArchivesOpen] = useState(false);
 
   const inList = page === null && view === 'list';
   const isOn = (cat: string) => inList && category === cat && tab === 'active' && zoom === null;
-
-  // The folder shows its contents while one of them is shown, whatever its caret says.
-  const showingArchived = inList && archived.some((a) => a.id === category);
-  const archivesShown = archivesOpen || showingArchived;
+  const showingIn = (list: readonly { id: string }[]) => inList && list.some((a) => a.id === category);
 
   /**
    * An area (or ALL) from the sidebar: its open quests, top level. No task
@@ -85,31 +90,20 @@ export function Sidebar() {
       return next;
     });
 
+  /** Props shared by every section: whether it's minimized, and its toggle. */
+  const section = (id: SidebarSection) => ({ id, collapsed: collapsed.includes(id), onToggle: () => actions.toggleSidebarSection(id) });
+
   return (
     <nav className="sidebar" aria-label="Views and areas">
-      <button type="button" className="brand" title="Today (T)" onClick={() => actions.setView('today')}>
-        <span className="dim">{'<'}</span>
-        <span className="bright">{level}</span>
-        <span className="dim">{'>'}</span>
-        <span className="accent glow-text">_quest_log</span>
-      </button>
-      <div className="xp" title={`Level ${level}: ${into} of ${needed} XP to level ${level + 1}`}>
-        <div className="xp-track">
-          <div className="xp-fill" style={{ width: `${fraction * 100}%` }} />
-        </div>
-        <span className="dim">
-          {into}/{needed} XP
-        </span>
-      </div>
+      <Masthead />
 
-      <div className="nav-group">
+      <Section {...section('views')} title="VIEWS" active={page === null && (view !== 'list' || isOn('all'))}>
         <NavItem glyph={G.today} label="TODAY" count={today} on={page === null && view === 'today'} onClick={() => actions.setView('today')} shortcut="T" />
         <NavItem glyph={G.upcoming} label="UPCOMING" count={upcoming} on={page === null && view === 'upcoming'} onClick={() => actions.setView('upcoming')} shortcut="U" />
         <NavItem glyph={G.all} label="ALL QUESTS" count={counts.all?.active ?? 0} on={isOn('all')} onClick={() => showArea('all')} shortcut="A" />
-      </div>
+      </Section>
 
-      <div className="nav-heading">AREAS</div>
-      <div className="nav-group areas">
+      <Section {...section('areas')} title="AREAS" count={areas.length} active={showingIn(areas)}>
         {areas.map((a) => {
           const list = projects[a.id] ?? [];
           const expanded = open.has(a.id);
@@ -156,62 +150,160 @@ export function Sidebar() {
             </div>
           );
         })}
-        {adding ? <NewArea onDone={() => setAdding(false)} /> : (
+        {adding ? (
+          <NewArea onDone={() => setAdding(false)} />
+        ) : (
           <button type="button" className="nav-item add-area" onClick={() => setAdding(true)}>
             {G.add} AREA
           </button>
         )}
-      </div>
+      </Section>
 
-      <div className="nav-sep" role="separator" />
-      <div className="nav-group archives">
-        <div className="nav-item area archives-folder">
-          <button
-            type="button"
-            className={cx('caret', archivesShown && 'open', !archived.length && 'hidden')}
-            aria-label={`${archivesShown ? 'Hide' : 'Show'} the archived areas`}
-            onClick={() => setArchivesOpen(!archivesShown)}
-            disabled={!archived.length || showingArchived}
-          >
-            {G.caret}
-          </button>
-          <button type="button" className="nav-label" title="Deleted areas, with their quests" onClick={() => setArchivesOpen(!archivesShown)}>
-            <span className="nav-glyph">{G.archives}</span> ARCHIVES
-          </button>
-          <span className="count">{archived.length}</span>
-        </div>
-        {archivesShown &&
-          (archived.length ? (
-            archived.map((a) => (
-              <div
-                key={a.id}
-                className={cx('nav-item', 'archived-area', isOn(a.id) && 'on')}
-                onContextMenu={(e) => {
-                  e.preventDefault();
-                  openMenuAt(e.clientX, e.clientY, { area: a.id });
-                }}
-              >
-                <button type="button" className="nav-label" onClick={() => showArea(a.id)}>
-                  {a.name.toUpperCase()}
-                </button>
-                <span className="count">{counts[a.id]?.active ?? 0}</span>
-              </div>
-            ))
-          ) : (
-            <p className="nav-empty dim">EMPTY</p>
-          ))}
-      </div>
+      <Section {...section('archive')} title="ARCHIVE" glyph={G.archives} count={archived.length} active={showingIn(archived)} className="archive">
+        {archived.length ? (
+          archived.map((a) => (
+            <div
+              key={a.id}
+              className={cx('nav-item', 'archived-area', isOn(a.id) && 'on')}
+              onContextMenu={(e) => {
+                e.preventDefault();
+                openMenuAt(e.clientX, e.clientY, { area: a.id });
+              }}
+            >
+              <button type="button" className="nav-label" onClick={() => showArea(a.id)}>
+                {a.name.toUpperCase()}
+              </button>
+              <span className="count">{counts[a.id]?.active ?? 0}</span>
+            </div>
+          ))
+        ) : (
+          <p className="nav-empty dim">EMPTY · DELETED AREAS LAND HERE</p>
+        )}
+      </Section>
 
-      <div className="nav-group bottom">
-        <NavItem glyph={G.completed} label="COMPLETED" count={counts.all?.completed ?? 0} on={inList && category === 'all' && tab === 'completed'} onClick={() => {
-          actions.setCategoryTab('all');
-          actions.setTab('completed');
-        }} />
+      <Section
+        {...section('system')}
+        title="SYSTEM"
+        active={page !== null || (inList && category === 'all' && tab === 'completed')}
+        className="bottom"
+      >
+        <NavItem
+          glyph={G.completed}
+          label="COMPLETED"
+          count={counts.all?.completed ?? 0}
+          on={inList && category === 'all' && tab === 'completed'}
+          onClick={() => {
+            actions.setCategoryTab('all');
+            actions.setTab('completed');
+          }}
+        />
         <NavItem glyph={G.trash} label="TRASH" on={page === 'trash'} onClick={() => actions.openPage('trash')} />
         <NavItem glyph={G.settings} label="SETTINGS" on={page === 'settings'} onClick={() => actions.openPage('settings')} />
         <NavItem glyph={G.help} label="HELP" on={page === 'help'} onClick={() => actions.openPage('help')} shortcut="?" />
-      </div>
+      </Section>
     </nav>
+  );
+}
+
+/**
+ * The title block: `<level>_quest_log` with a blinking cursor, a status line
+ * (level, day streak and its XP multiplier), and the XP gauge. The gauge is
+ * segmented, its fill a green gradient with a bright leading edge and a
+ * sheen that sweeps across now and then; an XP gain flashes it, and a level
+ * up pops the level number. (Reduce Motion: no sweep, blink or flash.)
+ * Clicking the title shows TODAY.
+ */
+function Masthead() {
+  const progress = useAppStore((s) => s.tasks.progress);
+  const actions = useActions();
+  const now = useMinute();
+  const { level, into, needed, fraction } = levelInfo(progress.xp);
+  const streak = currentDayStreak(progress, now);
+  // Count gains and level-ups as they happen (the previous-props pattern), so
+  // their animations replay each time but never on the first render.
+  const [seen, setSeen] = useState({ xp: progress.xp, level });
+  const [gains, setGains] = useState(0);
+  const [levelUps, setLevelUps] = useState(0);
+  if (seen.xp !== progress.xp) {
+    if (progress.xp > seen.xp) setGains(gains + 1);
+    if (level > seen.level) setLevelUps(levelUps + 1);
+    setSeen({ xp: progress.xp, level });
+  }
+
+  return (
+    <header className="masthead">
+      <button type="button" className="brand" title="Today (T)" onClick={() => actions.setView('today')}>
+        <span className="brand-bracket">{'<'}</span>
+        <span key={levelUps} className={cx('brand-level', levelUps > 0 && 'level-up')}>
+          {level}
+        </span>
+        <span className="brand-bracket">{'>'}</span>
+        <span className="brand-name">_quest_log</span>
+        <span className="brand-cursor" aria-hidden />
+      </button>
+      <p className="brand-status">
+        <span>LVL {String(level).padStart(2, '0')}</span>
+        <span className="sep">·</span>
+        {streak > 0 ? (
+          <span title={`${streak}-day streak: completions earn ×${dayMultiplier(streak).toFixed(2)} XP`}>
+            STREAK <b>{streak}D</b> <span className="accent">×{dayMultiplier(streak).toFixed(2)}</span>
+          </span>
+        ) : (
+          <span title="Complete something today to start a streak">NO STREAK</span>
+        )}
+      </p>
+      <div className="xp" title={`Level ${level}: ${into} of ${needed} XP to level ${level + 1}`}>
+        <div className="xp-track" role="progressbar" aria-label="XP to the next level" aria-valuemin={0} aria-valuemax={needed} aria-valuenow={into}>
+          <div className="xp-fill" style={{ width: `${Math.max(fraction * 100, into > 0 ? 2 : 0)}%` }} />
+          {gains > 0 && <span key={gains} className="xp-flash" aria-hidden />}
+        </div>
+        <div className="xp-numbers">
+          <span>
+            <b>{into}</b>
+            <span className="dim">/{needed} XP</span>
+          </span>
+          <span className="dim">
+            {needed - into} TO LVL {level + 1}
+          </span>
+        </div>
+      </div>
+    </header>
+  );
+}
+
+/**
+ * One sidebar section: a heading (click to minimize or open; the count and,
+ * while minimized, a dot when it holds what's shown) over its items, which
+ * fold away smoothly. Sections are separated by a divider (CSS).
+ */
+function Section(props: {
+  id: SidebarSection;
+  title: string;
+  glyph?: string;
+  count?: number;
+  active: boolean;
+  collapsed: boolean;
+  onToggle: () => void;
+  className?: string;
+  children: ReactNode;
+}) {
+  const bodyId = `nav-section-${props.id}`;
+  return (
+    <section className={cx('nav-section', props.className, props.collapsed && 'collapsed')}>
+      <button type="button" className="nav-section-head" aria-expanded={!props.collapsed} aria-controls={bodyId} onClick={props.onToggle}>
+        <span className={cx('caret', !props.collapsed && 'open')} aria-hidden>
+          {G.caret}
+        </span>
+        {props.glyph && <span className="nav-glyph">{props.glyph}</span>}
+        <span className="nav-section-title">{props.title}</span>
+        {props.collapsed && props.active && <span className="nav-section-dot" title="What's shown is in here" />}
+        {props.count !== undefined && <span className="count">{props.count}</span>}
+      </button>
+      {/* `inert` while folded: nothing hidden can be tabbed to. */}
+      <div className="nav-section-body" id={bodyId} inert={props.collapsed}>
+        <div className="nav-section-inner">{props.children}</div>
+      </div>
+    </section>
   );
 }
 

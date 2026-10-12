@@ -26,7 +26,12 @@ export interface UiState {
   view: View;
   /** Desktop: the detail pane is minimized to a thin strip on the right (D, or its » button). */
   detailCollapsed: boolean;
+  /** Desktop: the sidebar sections minimized to their heading (VIEWS, AREAS, ARCHIVE, SYSTEM). */
+  sidebarCollapsed: SidebarSection[];
 }
+
+/** The sidebar's sections, each of which can be minimized. */
+export type SidebarSection = 'views' | 'areas' | 'archive' | 'system';
 
 /** What the centre pane shows: the quest list (an area or ALL), or a planning view. */
 export type View = 'list' | 'today' | 'upcoming';
@@ -34,4 +39,4 @@ export type View = 'list' | 'today' | 'upcoming';
 /** Desktop pages shown in the centre instead of a list. */
 export type Page = 'settings' | 'trash' | 'help';
 
-export const DEFAULT_UI: UiState = { tab: 'active', zoomRootId: null, completedExpanded: [], category: 'all', view: 'today', detailCollapsed: false };
+export const DEFAULT_UI: UiState = { tab: 'active', zoomRootId: null, completedExpanded: [], category: 'all', view: 'today', detailCollapsed: false, sidebarCollapsed: ['archive'] };
