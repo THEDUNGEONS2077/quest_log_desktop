@@ -1,0 +1,6 @@
+# Dependencies and builds (never committed).
+node_modules/
+dist/
+*.tsbuildinfo
+# Playwright screenshots from local runs.
+e2e/screenshots/
