@@ -4,8 +4,8 @@
  *
  *   ┌───────────────────────────┐
  *   │ <7>_quest_log             │  ← the title block, over drifting scanlines
- *   │ ━━━━━━━━━●──────────      │  ← the XP bar: a thin fill with a glowing tip
- *   │ 34 / 125 XP               │
+ *   │ [▮▮▮▮▮▮▮█▯▯▯▯▯▯▯▯▯▯▯▯]   │  ← the XP bar: block cells, a block cursor
+ *   │       34 / 125 XP         │
  *   └───────────────────────────┘
  *   ▾ VIEWS                         ← each section minimizes to its heading
  *     ◉ TODAY            5
@@ -211,11 +211,12 @@ export function Sidebar() {
  * a faint refresh band passing down now and then, like an old CRT), and the
  * XP bar under it.
  *
- * The XP bar is one thin line: a soft green fill with a small glowing tip,
- * and the XP numbers beneath. Its pop is in the accents: an XP gain swells
- * the tip's glow and brightens the number for a moment; a level up runs the
- * fill to the end, pops the level number, and the new level's fill grows in
- * from zero. Everything moves with transforms and opacity only (no layout
+ * The XP bar is a terminal gauge, `[▮▮▮▮▮▮▯▯▯▯]`: 20 block cells between
+ * brackets, filled to the nearest whole cell, with the last filled cell a
+ * bright block cursor that blinks slowly; the XP totals are centred beneath.
+ * Its pop is in the accents: an XP gain flashes a glow around the cursor
+ * and brightens the number for a moment; a level up runs the fill to the
+ * end, pops the level number, and the new level's fill grows in from zero. Everything moves with transforms and opacity only (no layout
  * per frame); with Reduce Motion it changes at once. Clicking the title
  * shows TODAY.
  */
@@ -244,7 +245,10 @@ function Masthead() {
     const t = setTimeout(() => setFilling(false), LEVEL_FILL_MS);
     return () => clearTimeout(t);
   }, [filling]);
-  const shown = filling ? 1 : fraction;
+  // Snapped to whole cells (at least one once there's any XP, never all 20
+  // until the level is done), so the bar always ends on a clean block.
+  const cells = into > 0 ? Math.max(1, Math.floor(fraction * XP_CELLS)) : 0;
+  const shown = filling ? 1 : cells / XP_CELLS;
 
   return (
     <header className="masthead">
@@ -258,23 +262,33 @@ function Masthead() {
         <span className="brand-name">_quest_log</span>
       </button>
       <div className="xp" title={`Level ${level}: ${into} of ${needed} XP to level ${level + 1}`}>
-        <div
-          className="xp-track"
-          role="progressbar"
-          aria-label={`XP to level ${level + 1}`}
-          aria-valuemin={0}
-          aria-valuemax={needed}
-          aria-valuenow={into}
-          style={{ '--xp': shown } as CSSProperties}
-        >
-          {/* A fresh fill per level, so a new level grows in from zero instead of shrinking back. */}
-          <span className="xp-rail">
-            {/* The finished level's full bar fades out while the new one grows in under it. */}
-            {!filling && levelUps > 0 && <span key={`spent-${levelUps}`} className="xp-fill spent" />}
-            <span key={filling ? levelUps - 1 : levelUps} className={cx('xp-fill', !filling && levelUps > 0 && 'grow')} />
+        <div className="xp-bar">
+          <span className="xp-bracket" aria-hidden>
+            [
           </span>
-          <span key={`tip-${filling ? levelUps - 1 : levelUps}`} className={cx('xp-tip', !filling && levelUps > 0 && 'grow')}>
-            <span key={gains} className={cx('xp-tip-dot', gains > 0 && 'gain')} />
+          <div
+            className="xp-track"
+            role="progressbar"
+            aria-label={`XP to level ${level + 1}`}
+            aria-valuemin={0}
+            aria-valuemax={needed}
+            aria-valuenow={into}
+            style={{ '--xp': shown } as CSSProperties}
+          >
+            {/* The cells: the track is masked into 20 blocks, so the fill reads as ▮▮▮▮▯▯▯. */}
+            <span className="xp-cells">
+              {/* The finished level's full bar fades out while the new one grows in under it. */}
+              {!filling && levelUps > 0 && <span key={`spent-${levelUps}`} className="xp-fill spent" />}
+              {/* A fresh fill per level, so a new level grows in from zero instead of shrinking back. */}
+              <span key={filling ? levelUps - 1 : levelUps} className={cx('xp-fill', !filling && levelUps > 0 && 'grow')} />
+            </span>
+            {/* The cursor: the last filled cell, bright, blinking like a terminal's. */}
+            <span key={`tip-${filling ? levelUps - 1 : levelUps}`} className={cx('xp-tip', !filling && levelUps > 0 && 'grow')}>
+              {into > 0 && <span key={gains} className={cx('xp-cursor', gains > 0 && 'gain')} />}
+            </span>
+          </div>
+          <span className="xp-bracket" aria-hidden>
+            ]
           </span>
         </div>
         <div className="xp-numbers">
@@ -293,6 +307,9 @@ function Masthead() {
     </header>
   );
 }
+
+/** The XP bar's cells (blocks). The CSS mask draws the same number (5% each). */
+const XP_CELLS = 20;
 
 /** How long a level up's fill takes to reach the end before the new level starts (≈ --slow + a beat). */
 const LEVEL_FILL_MS = 420;

@@ -2,6 +2,13 @@
 
 quest_log desktop. Each version gets one section, newest first. The heading's build number is shown in Settings and written into backups.
 
+## 0.4.2 (build 7)
+
+- **A terminal-style XP bar.** It's taller, built from 20 block cells between brackets, `[▮▮▮▮▮▯▯▯]`. The dot is gone: the last filled cell is now a bright block cursor that blinks slowly, and glows when you earn XP. With Reduce Motion on, it stays still.
+- **XP totals are centred under the bar.**
+- **No divider line above SYSTEM** at the bottom of the sidebar.
+- **A bigger ▸ / ▾** for opening and closing a quest's objectives (30% larger).
+
 ## 0.4.1 (build 6)
 
 Everything lines up.

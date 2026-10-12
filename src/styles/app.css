@@ -259,44 +259,50 @@ mark {
 .brand:hover .brand-name {
   text-shadow: var(--glow-text-bright);
 }
-/* The XP bar: a thin line, a soft green fill and a small glowing tip; the
-   numbers beneath. Fill and tip move by transform (the fraction is --xp, set
-   inline), so nothing is laid out again while they glide. */
+/* The XP bar: a terminal gauge, [▮▮▮▮▯▯▯]. 20 block cells between brackets;
+   the fill and the cursor move by transform (the fraction, snapped to whole
+   cells, is --xp, set inline), under a fixed mask that cuts the track into
+   cells, so nothing is laid out again while they glide. */
 .xp {
   display: flex;
   flex-direction: column;
-  gap: 2px;
-  margin-top: 6px;
+  gap: var(--s-xs);
+  margin-top: var(--s-sm);
+}
+.xp-bar {
+  display: flex;
+  align-items: center;
+  gap: var(--s-xs);
+}
+.xp-bracket {
+  flex: none;
+  color: var(--text-dim);
+  font-size: var(--fs-meta);
+  line-height: 1;
 }
 .xp-track {
   position: relative;
+  flex: 1;
   height: 10px;
 }
-/* The rail clips the fill, with room above and below for its glow. */
-.xp-rail {
+/* The cells: everything inside is cut into 20 blocks with 2 px gaps. Empty
+   cells show faintly; a soft glow follows the filled ones (the filter sits
+   outside the mask, so the glow isn't cut). */
+.xp-cells {
   position: absolute;
   inset: 0;
   overflow: hidden;
+  background: rgba(57, 255, 20, 0.12);
+  -webkit-mask-image: repeating-linear-gradient(to right, #000 0 calc(5% - 2px), transparent calc(5% - 2px) 5%);
+  mask-image: repeating-linear-gradient(to right, #000 0 calc(5% - 2px), transparent calc(5% - 2px) 5%);
 }
-.xp-rail::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  right: 0;
-  top: 4px;
-  height: 2px;
-  border-radius: 1px;
-  background: var(--line);
+.xp-track {
+  filter: drop-shadow(0 0 3px rgba(57, 255, 20, 0.35));
 }
 .xp-fill {
   position: absolute;
-  left: 0;
-  right: 0;
-  top: 4px;
-  height: 2px;
-  border-radius: 1px;
-  background: linear-gradient(90deg, rgba(47, 179, 68, 0.35), var(--accent));
-  box-shadow: 0 0 6px rgba(57, 255, 20, 0.45);
+  inset: 0;
+  background: linear-gradient(90deg, #1f8f2c, var(--accent));
   transform: translateX(calc((var(--xp) - 1) * 100%));
   transition: transform var(--slow) var(--ease);
 }
@@ -314,7 +320,7 @@ mark {
     transform: translateX(-100%);
   }
 }
-/* The tip rides at the end of the fill. */
+/* The cursor rides at the end of the fill, covering the last filled cell. */
 .xp-tip {
   position: absolute;
   inset: 0;
@@ -331,51 +337,50 @@ mark {
     opacity: 0;
   }
 }
-.xp-tip-dot {
+/* One cell wide (less its gap), just behind the tip: exactly the last filled cell. */
+.xp-cursor {
   position: absolute;
-  left: -2.5px;
-  top: 2.5px;
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
+  top: 0;
+  bottom: 0;
+  left: -5%;
+  width: calc(5% - 2px);
   background: var(--text-bright);
-  box-shadow: 0 0 5px 1px rgba(57, 255, 20, 0.7);
+  box-shadow: 0 0 6px rgba(57, 255, 20, 0.8);
+  animation: xp-cursor-blink 1.2s steps(1) infinite;
+  animation-play-state: var(--loops);
 }
-/* The accent on a gain: a soft halo swells from the tip and fades, and the
-   tip itself gives a small pulse. */
-.xp-tip-dot::after {
+@keyframes xp-cursor-blink {
+  50% {
+    opacity: 0.45;
+  }
+}
+/* The accent on a gain: a soft glow flares around the cursor and fades. */
+.xp-cursor::after {
   content: '';
   position: absolute;
   inset: -6px;
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(57, 255, 20, 0.55), transparent 65%);
+  background: radial-gradient(closest-side, rgba(57, 255, 20, 0.6), transparent);
   opacity: 0;
 }
-.xp-tip-dot.gain {
-  animation: xp-tip-pulse calc(var(--slow) * 2) var(--ease);
-}
-.xp-tip-dot.gain::after {
+.xp-cursor.gain::after {
   animation: xp-halo calc(var(--slow) * 3) var(--ease);
-}
-@keyframes xp-tip-pulse {
-  35% {
-    transform: scale(1.5);
-  }
 }
 @keyframes xp-halo {
   0% {
     opacity: 0;
-    transform: scale(0.4);
+    transform: scale(0.5);
   }
   25% {
     opacity: 1;
   }
   100% {
     opacity: 0;
-    transform: scale(2.2);
+    transform: scale(2);
   }
 }
+/* The totals, centred under the bar. */
 .xp-numbers {
+  text-align: center;
   font-size: var(--fs-small);
   letter-spacing: 0.5px;
 }
@@ -423,6 +428,10 @@ mark {
 }
 .nav-section.bottom {
   margin-top: auto;
+}
+/* SYSTEM sits apart at the bottom already: no divider line above it. */
+.nav-section.bottom::before {
+  display: none;
 }
 .nav-section-head {
   display: flex;
@@ -840,6 +849,11 @@ mark {
 .row > .check {
   height: var(--lh-body);
   line-height: var(--lh-body);
+}
+/* The open/close caret on list rows: 30% larger than the shared 15 px (user request 2026-10-12), still in its 24 px column. */
+.row > .caret {
+  align-items: center;
+  font-size: 19.5px;
 }
 .check {
   flex: none;
