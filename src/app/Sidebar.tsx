@@ -3,7 +3,7 @@
  * projects, the archive, and the app's pages.
  *
  *   ┌───────────────────────────┐
- *   │ <7>_quest_log▌            │  ← the title block: level, name, cursor
+ *   │ <7>_quest_log             │  ← the title block, over drifting scanlines
  *   │ LVL 07 · STREAK 4D · ×1.15│
  *   │ [▰▰▰▰▰▰▰▱▱▱▱▱] 34/125 XP   │  ← the XP gauge (sheen, pulse on a gain)
  *   └───────────────────────────┘
@@ -206,7 +206,8 @@ export function Sidebar() {
 }
 
 /**
- * The title block: `<level>_quest_log` with a blinking cursor, a status line
+ * The title block: `<level>_quest_log` over slowly drifting scanlines (with
+ * a faint refresh band passing down now and then, like an old CRT), a status line
  * (level, day streak and its XP multiplier), and the XP gauge. The gauge is
  * segmented, its fill a green gradient with a bright leading edge and a
  * sheen that sweeps across now and then; an XP gain flashes it, and a level
@@ -232,6 +233,7 @@ function Masthead() {
 
   return (
     <header className="masthead">
+      <span className="masthead-scan" aria-hidden />
       <button type="button" className="brand" title="Today (T)" onClick={() => actions.setView('today')}>
         <span className="brand-bracket">{'<'}</span>
         <span key={levelUps} className={cx('brand-level', levelUps > 0 && 'level-up')}>
@@ -239,7 +241,6 @@ function Masthead() {
         </span>
         <span className="brand-bracket">{'>'}</span>
         <span className="brand-name">_quest_log</span>
-        <span className="brand-cursor" aria-hidden />
       </button>
       <p className="brand-status">
         <span>LVL {String(level).padStart(2, '0')}</span>

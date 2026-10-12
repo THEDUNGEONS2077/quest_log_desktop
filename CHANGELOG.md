@@ -2,6 +2,10 @@
 
 quest_log desktop. Each version gets one section, newest first. The heading's build number is shown in Settings and written into backups.
 
+## 0.3.1 (build 4)
+
+- **The title block's scanlines move.** They drift slowly down, and a soft band of light passes over now and then, like an old CRT screen. This replaces the blinking cursor. With Reduce Motion on, they stay still.
+
 ## 0.3.0 (build 3)
 
 A sharper sidebar.

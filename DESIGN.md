@@ -39,11 +39,11 @@ The same terminal look as the phone app (the phone's `DESIGN.md` is the source),
 └──────────────┴──────────────────────────────────┴───────────────────┘
 ```
 - **Three columns** in a CSS grid (`--sidebar`, flexible, `--detail`), separated by hairlines.
-- **The sidebar** opens with the masthead: a lit `--surface` panel with faint scanlines, a green glow from the top-left corner and two accent corner brackets. In it:
-  - `<level>_quest_log` with a blinking block cursor; the level pops on a level up;
+- **The sidebar** opens with the masthead: a lit `--surface` panel with faint scanlines that drift slowly down (and a soft refresh band passing every 7 s), a green glow from the top-left corner and two accent corner brackets. In it:
+  - `<level>_quest_log`; the level pops on a level up;
   - a status line (LVL, day streak and its XP multiplier);
   - the XP gauge: 20 segments, a green gradient fill with a bright leading edge, a sheen sweeping across every 4 s, and a flash on each gain.
-  Below it come the sections VIEWS, AREAS, ARCHIVE and SYSTEM. Each heading minimizes its section (the body folds; remembered in `ui.sidebarCollapsed`), with a dot when a minimized section holds what's shown. Between sections is a hairline divider that fades at both ends and is lit in the middle. The endless loops (cursor, sheen) pause under Reduce Motion (`--loops`).
+  Below it come the sections VIEWS, AREAS, ARCHIVE and SYSTEM. Each heading minimizes its section (the body folds; remembered in `ui.sidebarCollapsed`), with a dot when a minimized section holds what's shown. Between sections is a hairline divider that fades at both ends and is lit in the middle. The endless loops (scanlines, sheen) pause under Reduce Motion (`--loops`).
 - **The detail pane minimizes** (`»` or `D`) to a `--detail-min` (40 px) strip with `«` and a vertical DETAILS label; the columns glide (`--base`). It's remembered (`ui.detailCollapsed`).
 - **Under 1100 px wide:** the detail pane slides over the list from the right while a task is selected.
 - **Under 900 px:** the sidebar becomes a drawer, opened with `≡`.
