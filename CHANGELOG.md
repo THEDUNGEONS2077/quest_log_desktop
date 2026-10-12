@@ -2,6 +2,10 @@
 
 quest_log desktop. Each version gets one section, newest first. The heading's build number is shown in Settings and written into backups.
 
+## 0.1.1 (build 2)
+
+- **Minimize the details pane** with `»` at its top or the `D` key, and the list takes the room. It stays as a thin strip on the right: click it (or press `D`) to bring the details back. A `•` on the strip means a task is selected. It stays minimized until you bring it back, even after closing the app.
+
 ## 0.1.0 (build 1)
 
 The first desktop version of quest_log, for Google Chrome: the same terminal look, laid out for work.

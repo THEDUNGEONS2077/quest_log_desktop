@@ -16,6 +16,7 @@ const SHORTCUTS: [string, string][] = [
   ['Space', 'Complete (or restore) the selected task'],
   ['→ ← ', 'Open / close its objectives'],
   ['O', 'Open the selected project (show only its tasks)'],
+  ['D', 'Minimize the details pane, or bring it back'],
   ['Tab · Shift+Tab', 'Indent / outdent (make it an objective of the task above, or not)'],
   ['Alt+↑ · Alt+↓', 'Move it up / down among its siblings'],
   ['Del', 'Delete (to Trash; Ctrl+Z brings it back)'],

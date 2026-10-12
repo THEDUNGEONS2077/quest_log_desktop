@@ -24,6 +24,8 @@ export interface UiState {
   category: CategoryTab;
   /** Desktop: the centre shows the quest list, or a planning view (TODAY / UPCOMING, lib/plan.ts). */
   view: View;
+  /** Desktop: the detail pane is minimized to a thin strip on the right (D, or its » button). */
+  detailCollapsed: boolean;
 }
 
 /** What the centre pane shows: the quest list (an area or ALL), or a planning view. */
@@ -32,4 +34,4 @@ export type View = 'list' | 'today' | 'upcoming';
 /** Desktop pages shown in the centre instead of a list. */
 export type Page = 'settings' | 'trash' | 'help';
 
-export const DEFAULT_UI: UiState = { tab: 'active', zoomRootId: null, completedExpanded: [], category: 'all', view: 'today' };
+export const DEFAULT_UI: UiState = { tab: 'active', zoomRootId: null, completedExpanded: [], category: 'all', view: 'today', detailCollapsed: false };

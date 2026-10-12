@@ -76,6 +76,12 @@ export function useShortcuts({ store }: StoreBundle, blocked: boolean): void {
           handled();
           s.openPage('help');
           return;
+        case 'd':
+        case 'D':
+          // Minimize or bring back the detail pane (with or without a selection).
+          handled();
+          s.toggleDetail();
+          return;
         case 'Escape':
           handled();
           if (s.page !== null) s.openPage(null);

@@ -13,7 +13,7 @@ A to-do list for work that looks like a terminal: quest_log for desktop Google C
 - **Three panes:**
   - a sidebar: views, areas and their projects, and pages;
   - the list;
-  - the selected task's details.
+  - the selected task's details (minimize them with `»` or `D` when you want the room).
 - **Areas and projects.** Areas are your own categories. DAILY, MAIN and MISC come first, and you can add, rename, reorder and delete your own. A project is a quest; its objectives are its tasks, nested as deep as you like.
 - **TODAY and UPCOMING.**
   - TODAY gathers everything overdue or due today, from every area and every depth.

@@ -102,6 +102,11 @@ mark {
   display: grid;
   grid-template-columns: var(--sidebar) minmax(0, 1fr) var(--detail);
   height: 100vh;
+  /* The detail pane minimizing / coming back: the list widens or narrows smoothly. */
+  transition: grid-template-columns var(--base) var(--ease);
+}
+.app.detail-collapsed {
+  grid-template-columns: var(--sidebar) minmax(0, 1fr) var(--detail-min);
 }
 /* Narrow windows only (below); never part of the grid. */
 .app > .drawer-btn,
@@ -756,7 +761,35 @@ textarea.title {
   display: flex;
   flex-direction: column;
   gap: var(--s-sm);
-  padding: var(--s-xl) var(--s-lg);
+  padding: var(--s-md) var(--s-lg) var(--s-xl);
+}
+.detail-head-empty {
+  justify-content: flex-end;
+}
+/* Minimized: one full-height button, « at the top, DETAILS written downwards. */
+.detail-min {
+  overflow: hidden;
+}
+.detail-min-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--s-md);
+  width: 100%;
+  height: 100%;
+  padding: var(--s-md) 0;
+}
+.detail-min-btn:hover {
+  background: var(--surface);
+}
+.detail-min-label {
+  writing-mode: vertical-rl;
+  font-size: var(--fs-small);
+  letter-spacing: 0.15em;
+  color: var(--text-dim);
+}
+.detail-min-btn:hover .detail-min-label {
+  color: var(--accent);
 }
 .details {
   display: flex;
@@ -1152,10 +1185,21 @@ textarea.title {
     transform: none;
     box-shadow: var(--glow);
   }
+  /* Minimized: the strip stays at the right edge (the list keeps clear of it). */
+  .app.detail-collapsed {
+    grid-template-columns: var(--sidebar) minmax(0, 1fr);
+    padding-right: var(--detail-min);
+  }
+  .detail-collapsed .detail {
+    width: var(--detail-min);
+    transform: none;
+    box-shadow: none;
+  }
 }
 /* Under 900 px: the sidebar becomes a drawer (≡ opens it). */
 @media (max-width: 900px) {
-  .app {
+  .app,
+  .app.detail-collapsed {
     grid-template-columns: minmax(0, 1fr);
   }
   .sidebar {

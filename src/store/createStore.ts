@@ -441,6 +441,8 @@ export interface AppStore {
   setView(view: View): void;
   /** Selects a task for the detail pane (null: none). */
   select(id: ID | null): void;
+  /** Minimizes the detail pane to a strip, or brings it back (saved with the UI state). */
+  toggleDetail(): void;
   /** Shows a page in the centre (settings, trash, help), or the list again (null). */
   openPage(page: Page | null): void;
   /** Adds an area at the end and shows it; returns its ID (null for an empty name). */
@@ -1274,6 +1276,10 @@ export function createAppStore(deps: StoreDeps) {
 
       select(selectedId) {
         if (selectedId !== get().selectedId) set({ selectedId });
+      },
+
+      toggleDetail() {
+        set({ ui: { ...get().ui, detailCollapsed: !get().ui.detailCollapsed } });
       },
 
       openPage(page) {

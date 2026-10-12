@@ -77,10 +77,28 @@ function isoTime(ts: number): string {
 export function DetailPane() {
   const id = useAppStore((s) => s.selectedId);
   const task = useAppStore((s) => (id ? findTask(s.tasks, id) : undefined));
+  const collapsed = useAppStore((s) => s.ui.detailCollapsed);
   const actions = useActions();
+  if (collapsed) {
+    // Minimized: a strip with « to bring it back (the whole strip is the button,
+    // an easy target at the window's edge). A dot shows a task is selected.
+    return (
+      <aside className="detail detail-min" aria-label="Task details (minimized)">
+        <button type="button" className="detail-min-btn" aria-label="Show details (D)" title="Show details (D)" onClick={actions.toggleDetail}>
+          <span className="icon-btn" aria-hidden>
+            {G.showPane}
+          </span>
+          <span className="detail-min-label">DETAILS{task && task.deletedAt === null ? ' •' : ''}</span>
+        </button>
+      </aside>
+    );
+  }
   if (!id || !task || task.deletedAt !== null) {
     return (
       <aside className="detail empty-detail" aria-label="Task details">
+        <div className="detail-head detail-head-empty">
+          <MinimizeButton />
+        </div>
         <p className="dim">{'> SELECT A TASK TO SEE ITS DETAILS.'}</p>
         <p className="dim small">Click a task. Double-click (or Enter) edits its title. Right-click for more.</p>
       </aside>
@@ -90,6 +108,16 @@ export function DetailPane() {
     <aside className="detail" aria-label="Task details">
       <Details key={task.id} task={task} onClose={() => actions.select(null)} />
     </aside>
+  );
+}
+
+/** » : minimizes the detail pane to a strip (D does the same). */
+function MinimizeButton() {
+  const actions = useActions();
+  return (
+    <button type="button" className="icon-btn" aria-label="Minimize details (D)" title="Minimize details (D)" onClick={actions.toggleDetail}>
+      {G.hidePane}
+    </button>
   );
 }
 
@@ -134,6 +162,7 @@ function Details({ task, onClose }: { task: Task; onClose: () => void }) {
             </span>
           ))}
         </nav>
+        <MinimizeButton />
         <button type="button" className="icon-btn" aria-label="Close details (Esc)" onClick={onClose}>
           {G.delete}
         </button>

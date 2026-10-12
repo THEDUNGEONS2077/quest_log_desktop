@@ -141,6 +141,18 @@ describe('persistence wiring', () => {
     expect(r.settings.haptics).toBe(false);
   });
 
+  it('the detail pane minimized stays minimized after a relaunch, and comes back', () => {
+    const { store, kv } = makeStore();
+    expect(store.getState().ui.detailCollapsed).toBe(false);
+    const stop = installPersistence(store, kv, { listenAppState: false });
+    store.getState().toggleDetail();
+    stop();
+    const { store: relaunched } = makeStore(kv);
+    expect(relaunched.getState().ui.detailCollapsed).toBe(true);
+    relaunched.getState().toggleDetail();
+    expect(relaunched.getState().ui.detailCollapsed).toBe(false);
+  });
+
   it('teardown flushes pending writes immediately', () => {
     const { store, kv } = makeStore();
     const stop = installPersistence(store, kv, { listenAppState: false });

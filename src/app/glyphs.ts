@@ -16,6 +16,9 @@ export const G = {
   search: '/',
   settings: '⊛',
   delete: '✕',
+  /** Minimize / bring back the detail pane. */
+  hidePane: '»',
+  showPane: '«',
   undo: '↩',
   redo: '↪',
   outdent: '←',

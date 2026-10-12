@@ -39,6 +39,7 @@ The same terminal look as the phone app (the phone's `DESIGN.md` is the source),
 └──────────────┴──────────────────────────────────┴───────────────────┘
 ```
 - **Three columns** in a CSS grid (`--sidebar`, flexible, `--detail`), separated by hairlines.
+- **The detail pane minimizes** (`»` or `D`) to a `--detail-min` (40 px) strip with `«` and a vertical DETAILS label; the columns glide (`--base`). It's remembered (`ui.detailCollapsed`).
 - **Under 1100 px wide:** the detail pane slides over the list from the right while a task is selected.
 - **Under 900 px:** the sidebar becomes a drawer, opened with `≡`.
 

@@ -225,6 +225,23 @@ try {
     await shot('12-settings');
   });
 
+  await path('the details pane minimizes to a strip (», D), stays so after a reload, and comes back', async () => {
+    await nav('ALL QUESTS').click();
+    await page.locator('.row').first().click();
+    const centre = () => page.locator('main.center').evaluate((el) => el.getBoundingClientRect().width);
+    const wide = await centre();
+    await page.getByLabel('Minimize details (D)').click();
+    await page.getByLabel('Show details (D)').waitFor();
+    await page.waitForTimeout(400); // the columns glide
+    if ((await centre()) < wide + 300) throw new Error('the list did not take the room');
+    await shot('15-details-minimized');
+    await page.reload();
+    await page.getByLabel('Show details (D)').waitFor();
+    await page.keyboard.press('d');
+    await page.getByLabel('Minimize details (D)').waitFor();
+    await see('> SELECT A TASK TO SEE ITS DETAILS.');
+  });
+
   await path('a narrow window: the sidebar becomes a drawer', async () => {
     await page.setViewportSize({ width: 820, height: 800 });
     await page.keyboard.press('Escape');

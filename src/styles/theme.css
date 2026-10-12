@@ -78,6 +78,8 @@
   /* Layout. */
   --sidebar: 264px;
   --detail: 380px;
+  /* The detail pane minimized: a strip with its « button. */
+  --detail-min: 40px;
 }
 
 /* Reduce Motion (the OS setting, or the app's, which sets data-reduce-motion). */

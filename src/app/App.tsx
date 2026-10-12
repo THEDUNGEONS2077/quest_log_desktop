@@ -11,7 +11,9 @@
  * dialogs, the toast), the keyboard shortcuts, and the Reduce Motion
  * setting (an attribute on <html> the CSS reads). Narrower windows: the
  * detail pane slides over the list when a task is selected (under 1100 px),
- * and the sidebar becomes a drawer (under 900 px, ≡ opens it).
+ * and the sidebar becomes a drawer (under 900 px, ≡ opens it). The detail
+ * pane can be minimized to a strip (D, or its » button) to give the list
+ * the room; that's remembered across launches.
  */
 import { useEffect, useMemo, useState } from 'react';
 
@@ -33,6 +35,7 @@ export function App() {
   const [dialog, setDialog] = useState<DialogState | null>(null);
   const [drawer, setDrawer] = useState(false);
   const selected = useAppStore((s) => s.selectedId !== null);
+  const detailCollapsed = useAppStore((s) => s.ui.detailCollapsed);
   const reduceMotion = useAppStore((s) => s.settings.reduceMotion);
   // Picking something in the drawer closes it.
   const place = useAppStore((s) => `${s.ui.view}|${s.ui.category}|${s.ui.tab}|${s.ui.zoomRootId}|${s.page}`);
@@ -55,7 +58,7 @@ export function App() {
 
   return (
     <OverlayContext.Provider value={overlays}>
-      <div className={cx('app', selected && 'has-selection', drawer && 'drawer-open')}>
+      <div className={cx('app', selected && 'has-selection', drawer && 'drawer-open', detailCollapsed && 'detail-collapsed')}>
         <button type="button" className="drawer-btn icon-btn" aria-label="Views and areas" onClick={() => setDrawer((d) => !d)}>
           ≡
         </button>
