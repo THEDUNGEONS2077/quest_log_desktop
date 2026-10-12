@@ -1,0 +1,44 @@
+/**
+ * src/app/QuestList.tsx: the open quests of the area shown (or ALL), or the
+ * inside of a project when one is open (zoom).
+ *
+ * Layer: UI. Rows come from the memoized `activeRows` selector (the phone's
+ * flatten: quests by priority, then last change, holding still while you
+ * work; objectives in their own order), or from search. A quest is a
+ * project: its objectives are its tasks. The list tells the shortcuts which
+ * rows are on screen (arrow keys move the selection).
+ */
+import { useEffect } from 'react';
+
+import type { FoundRow } from '@/lib/search';
+import { useAppStore, useSelectors } from '@/store/react';
+
+import { DragArea } from './drag';
+import { setVisibleRows } from './menu';
+import { TaskRow } from './TaskRow';
+
+export function QuestList() {
+  const selectors = useSelectors();
+  const rows = useAppStore((s) => selectors.activeRows(s));
+  const query = useAppStore((s) => (s.search.active.open ? s.search.active.query : ''));
+  const zoomed = useAppStore((s) => s.ui.zoomRootId !== null);
+
+  useEffect(() => setVisibleRows(rows.map((r) => r.id)), [rows]);
+
+  if (!rows.length) {
+    return (
+      <p className="empty">
+        {query ? '> NO MATCHES.' : zoomed ? '> NOTHING HERE YET. TYPE ABOVE TO ADD AN OBJECTIVE' : '> NO OPEN QUESTS HERE. TYPE ABOVE TO BEGIN'}
+      </p>
+    );
+  }
+  return (
+    <DragArea>
+      <div className="list" role="list">
+        {rows.map((row, i) => (
+          <TaskRow key={row.id} row={row} first={i === 0} query={query} context={'context' in row && (row as FoundRow).context} draggable={!query} />
+        ))}
+      </div>
+    </DragArea>
+  );
+}

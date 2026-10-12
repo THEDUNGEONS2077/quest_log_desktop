@@ -1,0 +1,95 @@
+/*
+ * src/styles/theme.css: the design tokens, as CSS custom properties.
+ *
+ * The phone app's theme (quest_log theme/*.ts, DESIGN.md) carried over
+ * exactly: the green-on-black palette (every text color passes WCAG AA on
+ * every background), JetBrains Mono, the 4 pt spacing grid, the one effect
+ * (a soft green glow) and the motion tokens. Components use these names,
+ * never raw values.
+ */
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-weight: 400;
+  font-display: block;
+  src: url('../assets/fonts/JetBrainsMono-Regular.ttf') format('truetype');
+}
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-weight: 500;
+  font-display: block;
+  src: url('../assets/fonts/JetBrainsMono-Medium.ttf') format('truetype');
+}
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-weight: 700;
+  font-display: block;
+  src: url('../assets/fonts/JetBrainsMono-Bold.ttf') format('truetype');
+}
+
+:root {
+  /* Color: backgrounds, decoration, text (brightness encodes importance). */
+  --bg: #000000;
+  --surface: #060d08;
+  --surface-raised: #0b160d;
+  --line: #12301a;
+  --xp-wash: #092903;
+  --text-dim: #2b903f;
+  --text: #2fb344;
+  --accent: #39ff14;
+  --text-bright: #b6ffb0;
+  --backdrop: rgba(0, 0, 0, 0.6);
+
+  /* The one effect: a soft green glow (DESIGN.md: where it goes). */
+  --glow-inset: inset 0 0 6px 0 rgba(57, 255, 20, 0.35);
+  --glow: 0 0 6px 0 rgba(57, 255, 20, 0.35);
+  --glow-faint: 0 0 8px 0 rgba(57, 255, 20, 0.22);
+  --glow-bright: 0 0 6px 0 rgba(57, 255, 20, 0.6);
+  --glow-text: 0 0 6px rgba(57, 255, 20, 0.35);
+  --glow-text-bright: 0 0 6px rgba(57, 255, 20, 0.6);
+
+  /* Type: one family; sizes a step denser than the phone (a desktop reads closer). */
+  --font: 'JetBrains Mono', ui-monospace, monospace;
+  --fs-title: 22px;
+  --fs-display: 18px;
+  --fs-body: 14px;
+  --fs-quest: 13px;
+  --fs-meta: 12px;
+  --fs-small: 11px;
+  --lh-body: 20px;
+  --lh-meta: 16px;
+
+  /* Spacing (4 pt grid) and shape. */
+  --s-xs: 4px;
+  --s-sm: 8px;
+  --s-md: 12px;
+  --s-lg: 16px;
+  --s-xl: 24px;
+  --radius: 2px;
+  --hairline: 1px;
+  --indent: 20px;
+
+  /* Motion: durations and the two curves (arrive / leave). */
+  --fast: 120ms;
+  --base: 200ms;
+  --slow: 320ms;
+  --ease: cubic-bezier(0.33, 1, 0.68, 1); /* out-cubic */
+  --ease-exit: cubic-bezier(0.32, 0, 0.67, 0); /* in-cubic */
+
+  /* Layout. */
+  --sidebar: 264px;
+  --detail: 380px;
+}
+
+/* Reduce Motion (the OS setting, or the app's, which sets data-reduce-motion). */
+@media (prefers-reduced-motion: reduce) {
+  :root:not([data-reduce-motion='off']) {
+    --fast: 0ms;
+    --base: 0ms;
+    --slow: 0ms;
+  }
+}
+:root[data-reduce-motion='on'] {
+  --fast: 0ms;
+  --base: 0ms;
+  --slow: 0ms;
+}

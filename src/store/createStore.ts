@@ -450,6 +450,11 @@ export interface AppStore {
   moveArea(id: ID, index: number): void;
   /** Deletes an area, moving its quests into `into` (one undo step). */
   deleteArea(id: ID, into: ID): void;
+  /**
+   * Opens a task's inside (zoom) from anywhere: shows the quest list of its
+   * area (or stays on ALL), ACTIVE, zoomed into it, and selects it.
+   */
+  openProject(id: ID): void;
 }
 
 /**
@@ -1293,6 +1298,19 @@ export function createAppStore(deps: StoreDeps) {
       moveArea(id, index) {
         const op = moveAreaOp(get().tasks, id, index);
         if (op) get().dispatch(op);
+      },
+
+      openProject(id) {
+        const tasks = get().tasks;
+        const task = findTask(tasks, id);
+        if (!task || task.deletedAt !== null || task.done) return;
+        const chain = ancestors(tasks, id);
+        const quest = chain.length ? getTask(tasks, chain[chain.length - 1]!) : task;
+        const area = get().ui.category === 'all' && get().ui.view === 'list' ? 'all' : questCategory(quest);
+        get().setCategoryTab(area);
+        get().setTab('active');
+        get().setZoom(id);
+        set({ selectedId: id });
       },
 
       deleteArea(id, into) {
