@@ -6,7 +6,7 @@
  * run once per structural change, never per keystroke or per render.
  * Search and filter options are added in Phase 10.
  */
-import { type CategoryTab, onTab } from './quests';
+import { archivedAreaIds, type CategoryTab, onTab } from './quests';
 import { findTask } from './taskMap';
 import { childIds } from './tree';
 import { type ID, ROOT, type Task, type TasksState } from './types';
@@ -97,7 +97,7 @@ export function flattenCompleted(state: TasksState, expanded: ReadonlySet<ID> = 
   const done: Task[] = [];
   for (const id of state.children[ROOT] ?? []) {
     const t = findTask(state, id);
-    if (t && t.done && t.deletedAt === null && onTab(t, category)) done.push(t);
+    if (t && t.done && t.deletedAt === null && onTab(t, category, archivedAreaIds(state))) done.push(t);
   }
   // Newest first; ties keep the manual order (Array.prototype.sort is stable).
   done.sort((a, b) => b.updatedAt - a.updatedAt);
@@ -122,7 +122,7 @@ export function questOrder(state: TasksState, tab: CategoryTab = 'all', order?: 
   const quests: Task[] = [];
   for (const id of state.children[ROOT] ?? []) {
     const t = findTask(state, id);
-    if (t && onTab(t, tab)) quests.push(t);
+    if (t && onTab(t, tab, archivedAreaIds(state))) quests.push(t);
   }
   const byRule = (a: Task, b: Task) => b.priority - a.priority || b.updatedAt - a.updatedAt;
   if (order) {
@@ -193,7 +193,7 @@ export function shownZoom(state: TasksState, zoomRootId: ID | null, category: Ca
   const quest = chain.length ? findTask(state, chain[chain.length - 1]!) : undefined;
   // No quest at the top (the zoomed task itself or a link above it is gone).
   if (!quest || quest.parentId !== null) return null;
-  if (quest.deletedAt !== null || !onTab(quest, category)) return null;
+  if (quest.deletedAt !== null || !onTab(quest, category, archivedAreaIds(state))) return null;
   if (quest.done && !keep.includes(quest.id)) return null;
   // Below the quest: step out of every deleted level.
   let shown: ID = zoomRootId;

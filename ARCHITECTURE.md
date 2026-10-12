@@ -24,7 +24,8 @@ Imports only go down this list.
   - `TasksState.areas: Area[]` (`{id, name}`, in sidebar order); a quest's `category` is an area id;
   - the defaults are `daily` / `main` / `misc`, the phone's categories;
   - add, rename, reorder and delete are ops with exact inverses, so they undo;
-  - deleting an area moves its quests to another area, in the same undoable batch.
+  - deleting an area archives it (`archivedAt`; archived areas sit after the live ones in the list): its quests stay, out of ALL, COMPLETED, search, TODAY and UPCOMING (`onTab` with `archivedAreaIds`, `lib/plan.ts`). From ARCHIVES it's restored, or deleted for good (its quests go to Trash, moved to the first live area);
+  - the area list is saved in the tasks meta key. 0.1.0 didn't save it; a launch repair (`restoreMissingAreasOp`) brings back any area a quest belongs to, named from the daily snapshots or RECOVERED n.
 - **Ops** (`lib/ops.ts`): every change is an op with an inverse. History (`store/history.ts`) stores the inverses for undo and redo.
 - **Planning views** (`lib/plan.ts`):
   - `todayRows`: open, live tasks at any depth that are overdue or due today;

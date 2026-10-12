@@ -15,6 +15,7 @@ import { ancestors } from '@/lib/tree';
 import { findTask } from '@/lib/taskMap';
 import { shownTitle } from '@/lib/title';
 import { useActions, useAppStore, useSelectors } from '@/store/react';
+import { NO_COUNTS } from '@/store/selectors';
 
 import { CompletedList } from './CompletedList';
 import { cx } from './cx';
@@ -69,8 +70,10 @@ function ListPane() {
   const tab = useAppStore((s) => s.ui.tab);
   const zoom = useAppStore((s) => s.ui.zoomRootId);
   const name = useAppStore((s) => (category === 'all' ? 'ALL QUESTS' : areaName(s.tasks, category)));
+  // An area in ARCHIVES: looked through, not added to (restore it first).
+  const archived = useAppStore((s) => s.tasks.areas.some((a) => a.id === category && a.archivedAt !== undefined));
   const selectors = useSelectors();
-  const counts = useAppStore((s) => selectors.tabCounts(s)[category] ?? { active: 0, completed: 0 });
+  const counts = useAppStore((s) => selectors.tabCounts(s)[category] ?? NO_COUNTS);
   const search = useAppStore((s) => s.search[s.ui.tab]);
   const actions = useActions();
   const openMenuAt = useOpenMenuAt();
@@ -78,7 +81,8 @@ function ListPane() {
     <main className="center">
       <header className="center-head">
         <h1 className="view-title">
-          {G.prompt} {name.toUpperCase()}
+          {archived ? G.archives : G.prompt} {name.toUpperCase()}
+          {archived && <span className="dim"> · ARCHIVED</span>}
         </h1>
         <div className="switch" role="tablist">
           {(['active', 'completed'] as const).map((t) => (
@@ -120,7 +124,16 @@ function ListPane() {
       <SelectionBar />
       {search.open && <SearchField />}
       {tab === 'active' && zoom !== null && <Breadcrumb />}
-      {tab === 'active' && <QuickAdd placeholder={zoom ? 'new objective' : 'new quest'} />}
+      {tab === 'active' && !archived && <QuickAdd placeholder={zoom ? 'new objective' : 'new quest'} />}
+      {archived && (
+        <p className="archived-note dim small">
+          {'> IN ARCHIVES. '}
+          <button type="button" className="link" onClick={() => actions.restoreArea(category)}>
+            RESTORE
+          </button>
+          {' it to add quests and see them in ALL QUESTS, TODAY and UPCOMING.'}
+        </p>
+      )}
       <div className="center-body">{tab === 'active' ? <QuestList /> : <CompletedList />}</div>
     </main>
   );

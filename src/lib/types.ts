@@ -106,6 +106,13 @@ export type QuestCategory = AreaId;
 export interface Area {
   id: AreaId;
   name: string;
+  /**
+   * When it was deleted to ARCHIVES (2026-10-12: "deleted ones go into a
+   * folder called ARCHIVES"); absent while it's a live area. An archived
+   * area keeps its quests, out of ALL / TODAY / UPCOMING, until it's
+   * restored or deleted for good. Optional, so older data needs no migration.
+   */
+  archivedAt?: number;
 }
 
 /** The areas of data that has none saved (every phone backup): the phone's three categories. */

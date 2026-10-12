@@ -19,7 +19,7 @@ import { useActions, useAppStore } from '@/store/react';
 
 import { cx } from './cx';
 import { G } from './glyphs';
-import { type MenuItem, type OpenMenuState, useOpenDialog } from './menu';
+import { confirmDeleteForever, type MenuItem, type OpenMenuState, useOpenDialog } from './menu';
 
 interface Props {
   menu: OpenMenuState;
@@ -120,7 +120,8 @@ function TaskItems({ id, close }: { id: string; close: () => void }) {
         <>
           <div className="menu-sep" />
           <div className="menu-heading">AREA</div>
-          {areas.map((a) => (
+          {/* Live areas only: a quest moves out of ARCHIVES, not into it (delete its area for that). */}
+          {areas.filter((a) => a.archivedAt === undefined).map((a) => (
             <Item key={a.id} glyph={task.category === a.id ? G.done : ''} label={a.name.toUpperCase()} onPick={run(() => actions.setQuestCategory(id, a.id))} />
           ))}
         </>
@@ -150,41 +151,43 @@ function TaskItems({ id, close }: { id: string; close: () => void }) {
   );
 }
 
+/** The menu for an area: rename, reorder, delete to ARCHIVES; for an archived one, restore or delete for good. */
 function AreaItems({ id, close }: { id: string; close: () => void }) {
-  const areas = useAppStore((s) => s.tasks.areas);
+  const allAreas = useAppStore((s) => s.tasks.areas);
   const name = useAppStore((s) => areaName(s.tasks, id));
   const actions = useActions();
   const openDialog = useOpenDialog();
+  const areas = allAreas.filter((a) => a.archivedAt === undefined);
+  const isArchived = !areas.some((a) => a.id === id);
   const index = areas.findIndex((a) => a.id === id);
+  const rename = (
+    <Item
+      glyph={G.prompt}
+      label="Rename…"
+      onPick={() => {
+        close();
+        openDialog({ title: 'Rename area', input: { value: name, maxLength: 32 }, ok: 'RENAME', onOk: (v) => actions.renameArea(id, v) });
+      }}
+    />
+  );
+  if (isArchived)
+    return (
+      <>
+        <div className="menu-title">
+          {G.archives} {name.toUpperCase()}
+        </div>
+        {rename}
+        <Item glyph={G.undo} label="Restore" onPick={() => (close(), actions.restoreArea(id))} />
+        <Item glyph={G.delete} label="Delete forever…" onPick={() => (close(), confirmDeleteForever(openDialog, actions, id, name))} />
+      </>
+    );
   return (
     <>
       <div className="menu-title">{G.prompt} {name.toUpperCase()}</div>
-      <Item
-        glyph={G.prompt}
-        label="Rename…"
-        onPick={() => {
-          close();
-          openDialog({ title: 'Rename area', input: { value: name, maxLength: 32 }, ok: 'RENAME', onOk: (v) => actions.renameArea(id, v) });
-        }}
-      />
+      {rename}
       <Item glyph="↑" label="Move up" disabled={index <= 0} onPick={() => (close(), actions.moveArea(id, index - 1))} />
       <Item glyph="↓" label="Move down" disabled={index >= areas.length - 1} onPick={() => (close(), actions.moveArea(id, index + 1))} />
-      <Item
-        glyph={G.delete}
-        label="Delete…"
-        disabled={areas.length <= 1}
-        onPick={() => {
-          close();
-          const others = areas.filter((a) => a.id !== id);
-          openDialog({
-            title: `Delete ${name.toUpperCase()}`,
-            message: 'Its quests (open, completed and in Trash) move to the area you pick. You can undo this.',
-            choices: others.map((a) => ({ value: a.id, label: a.name.toUpperCase() })),
-            ok: 'DELETE',
-            onOk: (into) => actions.deleteArea(id, into),
-          });
-        }}
-      />
+      <Item glyph={G.archives} label="Delete (to ARCHIVES)" disabled={areas.length <= 1} onPick={() => (close(), actions.archiveArea(id))} />
     </>
   );
 }

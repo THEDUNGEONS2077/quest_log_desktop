@@ -141,6 +141,32 @@ describe('persistence wiring', () => {
     expect(r.settings.haptics).toBe(false);
   });
 
+  it('new areas, and the area shown, are still there after a relaunch (0.1.0 lost them: black screen)', () => {
+    const { store, kv } = makeStore();
+    const stop = installPersistence(store, kv, { listenAppState: false });
+    const id = store.getState().addArea('Client')!;
+    store.getState().quickAdd('Client quest');
+    stop();
+    const r = makeStore(kv).store.getState();
+    expect(r.tasks.areas.at(-1)).toEqual({ id, name: 'Client' });
+    expect(r.ui.category).toBe(id);
+  });
+
+  it('a relaunch on data that lost its areas gets them back (named from the daily snapshot), and a view of a missing area shows ALL', () => {
+    const kv = createMemoryKV();
+    const tasks = build([['q', { category: 'acme' }]]);
+    saveTasks(kv, { ...tasks, areas: tasks.areas });
+    // What 0.1.0 left: no areas in meta, but the daily snapshot knew the name.
+    const meta = JSON.parse(kv.getString('tasks.v1.meta')!);
+    delete meta.areas;
+    kv.set('tasks.v1.meta', JSON.stringify(meta));
+    kv.set('snapshot.2026-10-12', JSON.stringify({ ...JSON.parse(JSON.stringify(meta)), byId: {}, areas: [{ id: 'acme', name: 'ACME' }] }));
+    kv.set('ui.v1', JSON.stringify({ category: 'nowhere', view: 'list' }));
+    const s = makeStore(kv).store.getState();
+    expect(s.tasks.areas.find((a) => a.id === 'acme')?.name).toBe('ACME');
+    expect(s.ui.category).toBe('all');
+  });
+
   it('the detail pane minimized stays minimized after a relaunch, and comes back', () => {
     const { store, kv } = makeStore();
     expect(store.getState().ui.detailCollapsed).toBe(false);

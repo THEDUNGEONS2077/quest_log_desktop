@@ -74,3 +74,21 @@ export function setVisibleRows(ids: readonly string[]): void {
 export function visibleRows(): readonly string[] {
   return visible;
 }
+
+/**
+ * Asks before deleting an archived area for good (its quests go to Trash;
+ * UNDO still brings it all back). Shared by the menu and the details pane.
+ */
+export function confirmDeleteForever(
+  openDialog: (d: DialogState) => void,
+  actions: { deleteAreaForever(id: string): void },
+  id: string,
+  name: string,
+): void {
+  openDialog({
+    title: `Delete ${name.toUpperCase()} forever`,
+    message: 'The area is removed and its quests go to Trash (restored ones land in your first area). You can undo this.',
+    ok: 'DELETE',
+    onOk: () => actions.deleteAreaForever(id),
+  });
+}

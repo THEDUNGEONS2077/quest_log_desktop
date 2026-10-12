@@ -8,12 +8,12 @@
  *   - TODAY: everything overdue, then everything due today, by time;
  *   - UPCOMING: the next `days` days after today, grouped by day, by time.
  * Only open, live tasks count: not done, not in Trash, and not inside a
- * completed quest (that one is on COMPLETED). Each row carries its path
+ * completed quest (that one is on COMPLETED), nor in an archived area. Each row carries its path
  * (area › project › parent…) so it can be read out of context.
  */
 import { areaName } from './areaNames';
 import { addDays, dayKey, startOfDay } from './dates';
-import { questCategory } from './quests';
+import { archivedAreaIds, questCategory } from './quests';
 import { forEachTask, findTask } from './taskMap';
 import { ancestors } from './tree';
 import type { ID, Task, TasksState } from './types';
@@ -53,11 +53,20 @@ function pathOf(state: TasksState, t: Task): string[] {
   return [areaName(state, questCategory(quest)), ...chain.map((id) => findTask(state, id)!.title || 'Untitled')];
 }
 
+/** Is `t` in a quest of an archived area? */
+function inArchive(state: TasksState, t: Task, archived: ReadonlySet<string>): boolean {
+  if (!archived.size) return false;
+  const chain = ancestors(state, t.id);
+  const quest = chain.length ? findTask(state, chain[chain.length - 1]!)! : t;
+  return archived.has(questCategory(quest));
+}
+
 /** Every open, dated task due before `until`, soonest first. */
 function dueBefore(state: TasksState, until: number, now: number): PlanRow[] {
   const rows: PlanRow[] = [];
+  const archived = archivedAreaIds(state);
   forEachTask(state, (t) => {
-    if (t.dueAt === null || t.dueAt >= until || !isOpen(state, t)) return;
+    if (t.dueAt === null || t.dueAt >= until || !isOpen(state, t) || inArchive(state, t, archived)) return;
     rows.push({ id: t.id, dueAt: t.dueAt, overdue: t.dueAt < now, path: pathOf(state, t) });
   });
   return rows.sort((a, b) => a.dueAt - b.dueAt);

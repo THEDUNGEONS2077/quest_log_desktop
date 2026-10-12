@@ -116,25 +116,50 @@ try {
     await shot('06-upcoming');
   });
 
-  await path('areas: add, put a quest in it, rename, delete (its quests move)', async () => {
+  await path('areas: add, put a quest in it, rename and delete it from the right-hand pane, ARCHIVES, restore', async () => {
     await nav('+ AREA').click();
     await page.getByLabel('New area name').fill('Client ACME');
     await page.getByLabel('New area name').press('Enter');
     await see('> CLIENT ACME');
     await addQuest('Pitch deck @fri');
-    await nav('CLIENT ACME').click({ button: 'right' });
-    await page.getByRole('menuitem', { name: 'Rename…' }).click();
-    await page.getByRole('dialog').getByRole('textbox').fill('ACME Corp');
-    await page.getByRole('dialog').getByRole('button', { name: 'RENAME' }).click();
+    // The right-hand pane shows the area (no task selected): rename it there.
+    await page.keyboard.press('Escape');
+    await nav('CLIENT ACME').click();
+    const areaName = page.getByLabel('Area name');
+    await areaName.fill('ACME Corp');
+    await areaName.press('Enter');
     await see('> ACME CORP');
     await shot('07-area');
-    await nav('ACME CORP').click({ button: 'right' });
-    await page.getByRole('menuitem', { name: 'Delete…' }).click();
-    await page.getByRole('radio', { name: 'MAIN' }).check();
-    await page.getByRole('dialog').getByRole('button', { name: 'DELETE' }).click();
-    await see('QUESTS MOVED TO MAIN');
-    await nav('MAIN').click();
+    // DELETE moves it to ARCHIVES, quests and all; ALL QUESTS leaves them out.
+    await page.locator('.detail').getByRole('button', { name: 'DELETE' }).click();
+    await see('MOVED TO ARCHIVES');
+    await see('> IN ARCHIVES.');
+    await page.locator('.sidebar .archived-area', { hasText: 'ACME CORP' }).waitFor();
+    await shot('07b-archives');
+    await nav('ALL QUESTS').click();
+    await gone('PITCH DECK');
+    // Back from ARCHIVES (the folder opens with a click).
+    await page.locator('.sidebar .archives-folder .nav-label').click();
+    await page.locator('.sidebar .archived-area', { hasText: 'ACME CORP' }).click();
+    await page.locator('.detail').getByRole('button', { name: 'RESTORE' }).click();
+    await see('RESTORED');
+    await nav('ALL QUESTS').click();
     await see('PITCH DECK');
+    // Another area, deleted for good from ARCHIVES (right-click): its quest goes to Trash.
+    await nav('+ AREA').click();
+    await page.getByLabel('New area name').fill('Temp');
+    await page.getByLabel('New area name').press('Enter');
+    await addQuest('Scratch notes');
+    await nav('TEMP').click({ button: 'right' });
+    await page.getByRole('menuitem', { name: 'Delete (to ARCHIVES)' }).click();
+    // Still showing TEMP, so the folder is open with it inside.
+    await page.locator('.sidebar .archived-area', { hasText: 'TEMP' }).click({ button: 'right' });
+    await page.getByRole('menuitem', { name: 'Delete forever…' }).click();
+    await page.getByRole('dialog').getByRole('button', { name: 'DELETE' }).click();
+    await see('ITS QUESTS ARE IN TRASH');
+    if (await page.locator('.sidebar .archived-area', { hasText: 'TEMP' }).count()) throw new Error('TEMP is still in ARCHIVES');
+    await nav('TRASH').click();
+    await see('Scratch notes');
   });
 
   await path('right-click menu and keyboard shortcuts, with undo', async () => {
@@ -193,10 +218,15 @@ try {
     await gone('2 SELECTED');
   });
 
-  await path('everything is still there after a reload (IndexedDB)', async () => {
-    await page.waitForTimeout(500); // let the save land
+  await path('everything is still there after a reload (IndexedDB), new areas too, even mid-edit in one', async () => {
+    // 0.1.0: a new area wasn't saved, so a reopen on it looped (black screen).
+    await nav('ACME CORP').click();
+    await addQuest('Follow up with ACME');
+    await row('FOLLOW UP WITH ACME').dblclick();
+    await page.keyboard.type(' v2');
     await page.reload();
-    await page.waitForTimeout(500);
+    await see('> ACME CORP');
+    await nav('ACME CORP').waitFor();
     await nav('ALL QUESTS').click();
     await see('HIRE A DESIGNER');
     await see('SHIP THE REPORT');

@@ -11,7 +11,7 @@
  *     inside one would be useless.
  */
 import { questOrder } from './flatten';
-import { type CategoryTab, onTab } from './quests';
+import { archivedAreaIds, type CategoryTab, onTab } from './quests';
 import type { Row } from './flatten';
 import { findTask } from './taskMap';
 import { childIds } from './tree';
@@ -93,7 +93,7 @@ export function searchActive(
 export function searchCompleted(state: TasksState, matches: (t: Task) => boolean, category: CategoryTab = 'all'): FoundRow[] {
   const tops = (state.children[ROOT] ?? [])
     .map((id) => findTask(state, id))
-    .filter((t): t is Task => !!t && t.done && t.deletedAt === null && onTab(t, category))
+    .filter((t): t is Task => !!t && t.done && t.deletedAt === null && onTab(t, category, archivedAreaIds(state)))
     .sort((a, b) => b.updatedAt - a.updatedAt);
   const out: FoundRow[] = [];
   for (const top of tops) {

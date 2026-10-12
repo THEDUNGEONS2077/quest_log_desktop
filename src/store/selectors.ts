@@ -16,7 +16,7 @@ import { findTask } from '@/lib/taskMap';
 import { ROOT, type TasksState } from '@/lib/types';
 
 import type { Filter } from '@/lib/search';
-import { type CategoryTab, questCategory } from '@/lib/quests';
+import { archivedAreaIds, type CategoryTab, questCategory } from '@/lib/quests';
 import { liveSubtaskCount } from '@/lib/xp';
 
 import type { UiState } from './uiState';
@@ -36,6 +36,13 @@ export interface Counts {
 /** Open (active) and done (completed) quests on each quest tab. */
 /** Open and completed quests per area (by area ID), and for ALL. */
 export type TabCounts = Record<CategoryTab, { active: number; completed: number }>;
+
+/**
+ * The counts of an area that has none (unknown to tabCounts). One shared
+ * object: a selector must return the same value for the same state, or React
+ * re-renders forever (the 0.1.0 black screen, 2026-10-12).
+ */
+export const NO_COUNTS: Readonly<{ active: number; completed: number }> = Object.freeze({ active: 0, completed: 0 });
 
 /** A project (an open quest) as the sidebar lists it under its area. */
 export interface SidebarProject {
@@ -93,11 +100,13 @@ export function makeSelectors() {
     // Desktop: one entry per area (user-defined), plus ALL.
     const counts: TabCounts = { all: { active: 0, completed: 0 } };
     for (const a of tabTasks.areas) counts[a.id] = { active: 0, completed: 0 };
+    const archived = archivedAreaIds(tabTasks);
     for (const id of tabTasks.children[ROOT] ?? []) {
       const t = findTask(tabTasks, id);
       if (!t || t.deletedAt !== null) continue;
       const key = t.done ? 'completed' : 'active';
-      counts.all![key]++;
+      // ALL leaves out archived areas (as its list does); they keep their own counts.
+      if (!archived.has(questCategory(t))) counts.all![key]++;
       // A quest whose area no longer exists still counts under ALL.
       const area = counts[questCategory(t)];
       if (area) area[key]++;

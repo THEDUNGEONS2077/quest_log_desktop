@@ -39,7 +39,7 @@ import * as outliner from '@/lib/outliner';
 import { questOrder, shownZoom } from '@/lib/flatten';
 import { parse, type ParseResult } from '@/lib/parser';
 import { firstOccurrence, PRESETS } from '@/lib/recurrence';
-import { addAreaOp, deleteAreaOp, moveAreaOp, renameAreaOp } from '@/lib/areas';
+import { addAreaOp, archiveAreaOp, deleteAreaForeverOp, moveAreaOp, renameAreaOp, restoreAreaOp, restoreMissingAreasOp } from '@/lib/areas';
 import { areaName } from '@/lib/areaNames';
 import { type CategoryTab, categoryForNew, onTab, pinArchivedCategories, questCategory } from '@/lib/quests';
 import { parseOutline, pasteOp, TITLE_MAX } from '@/lib/paste';
@@ -450,13 +450,37 @@ export interface AppStore {
   renameArea(id: ID, name: string): void;
   /** Moves an area to `index` in the sidebar. */
   moveArea(id: ID, index: number): void;
-  /** Deletes an area, moving its quests into `into` (one undo step). */
-  deleteArea(id: ID, into: ID): void;
+  /** Deletes an area to ARCHIVES, with its quests (undoable; never the last live area). */
+  archiveArea(id: ID): void;
+  /** Brings an area back from ARCHIVES (undoable). */
+  restoreArea(id: ID): void;
+  /** Deletes an archived area for good: its quests go to Trash (undoable). */
+  deleteAreaForever(id: ID): void;
   /**
    * Opens a task's inside (zoom) from anywhere: shows the quest list of its
    * area (or stays on ALL), ACTIVE, zoomed into it, and selects it.
    */
   openProject(id: ID): void;
+}
+
+/** The saved view, with an area that no longer exists replaced by ALL (never a view of nothing). */
+function shownUi(ui: UiState, tasks: TasksState): UiState {
+  if (ui.category === 'all' || tasks.areas.some((a) => a.id === ui.category)) return ui;
+  return { ...ui, category: 'all', zoomRootId: null };
+}
+
+/** An area's name in the newest daily snapshot that has it (store/persist.ts), if any. */
+function areaNameInSnapshots(kv: KV, id: string): string | undefined {
+  for (const key of listDailySnapshots(kv)) {
+    try {
+      const doc = JSON.parse(kv.getString(key) ?? 'null') as { areas?: { id: string; name: string }[] } | null;
+      const name = doc?.areas?.find((a) => a.id === id)?.name;
+      if (name) return name;
+    } catch {
+      // An unreadable snapshot: try the next one.
+    }
+  }
+  return undefined;
 }
 
 /**
@@ -479,6 +503,12 @@ export function createAppStore(deps: StoreDeps) {
   // their quest's tab (lib/quests.ts pinArchivedCategories). Not undoable either.
   const pinned = pinArchivedCategories(tasks);
   if (pinned) tasks = ops.apply(tasks, pinned).state;
+
+  // Launch repair (desktop): areas that quests belong to but the list lost
+  // (0.1.0 didn't save new areas) come back, with their names from the
+  // newest daily snapshot that has them. Not undoable.
+  const recovered = restoreMissingAreasOp(tasks, (id) => areaNameInSnapshots(kv, id));
+  if (recovered) tasks = ops.apply(tasks, recovered).state;
 
   // Launch auto-clear (setting "Auto-clear completed"): completed tasks older
   // than 30 or 90 days move to Trash, where they stay restorable for 7 days.
@@ -594,7 +624,7 @@ export function createAppStore(deps: StoreDeps) {
     subscribeWithSelector((set, get) => ({
       tasks,
       history: EMPTY_HISTORY,
-      ui: loadJSON(kv, KEYS.ui, DEFAULT_UI),
+      ui: shownUi(loadJSON(kv, KEYS.ui, DEFAULT_UI), tasks),
       editingId: null,
       editingCaret: null,
       editingField: 'title',
@@ -1319,14 +1349,29 @@ export function createAppStore(deps: StoreDeps) {
         set({ selectedId: id });
       },
 
-      deleteArea(id, into) {
-        const op = deleteAreaOp(get().tasks, id, into);
+      archiveArea(id) {
+        const op = archiveAreaOp(get().tasks, id, now());
         if (!op) return;
-        const name = areaName(get().tasks, id);
-        // Showing the area being deleted: show where its quests went.
-        if (get().ui.category === id) get().setCategoryTab(into);
+        // A view showing it stays on it: it's now under ARCHIVES, quests and all.
         get().dispatch(op);
-        get().showToast(`DELETED ${name} · QUESTS MOVED TO ${areaName(get().tasks, into)}`, true);
+        get().showToast(`${areaName(get().tasks, id).toUpperCase()} MOVED TO ARCHIVES`, true);
+      },
+
+      restoreArea(id) {
+        const op = restoreAreaOp(get().tasks, id);
+        if (!op) return;
+        get().dispatch(op);
+        get().showToast(`${areaName(get().tasks, id).toUpperCase()} RESTORED`, true);
+      },
+
+      deleteAreaForever(id) {
+        const name = areaName(get().tasks, id);
+        const op = deleteAreaForeverOp(get().tasks, id, now());
+        if (!op) return;
+        // Showing it: it's gone, so show everything.
+        if (get().ui.category === id) get().setCategoryTab('all');
+        get().dispatch(op);
+        get().showToast(`DELETED ${name.toUpperCase()} · ITS QUESTS ARE IN TRASH`, true);
       },
     })),
   );

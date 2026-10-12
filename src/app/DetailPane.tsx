@@ -19,6 +19,15 @@
  * the phone spreads over the row, the hold menu and the date and repeat
  * sheets. Typing in the title or notes is one undo step per visit.
  * Clicking an objective selects it (its own details); `↑` goes back up.
+ *
+ * With no task selected while an area is shown, the pane shows the area
+ * (2026-10-12: "edit and delete areas on the right hand tab"):
+ *
+ *   AREA                                               »
+ *   CLIENT WORK                    ← its name, edited in place
+ *   6 open quests · 2 completed
+ *   PROJECTS  Q4 report 3 · Website 5 …
+ *   [ DELETE ]   ← to ARCHIVES (or RESTORE / DELETE FOREVER there)
  */
 import { type ReactNode, useState } from 'react';
 
@@ -31,10 +40,12 @@ import { shownTitle } from '@/lib/title';
 import { ancestors, liveChildIds } from '@/lib/tree';
 import type { Priority, RepeatRule, Task } from '@/lib/types';
 import { previewXp } from '@/lib/xp';
-import { useActions, useAppStore } from '@/store/react';
+import { useActions, useAppStore, useSelectors } from '@/store/react';
+import { NO_COUNTS } from '@/store/selectors';
 
 import { cx } from './cx';
 import { G } from './glyphs';
+import { confirmDeleteForever, useOpenDialog } from './menu';
 import { useMinute } from './useMinute';
 
 /** The repeat choices offered (the phone's presets), by key. */
@@ -78,6 +89,10 @@ export function DetailPane() {
   const id = useAppStore((s) => s.selectedId);
   const task = useAppStore((s) => (id ? findTask(s.tasks, id) : undefined));
   const collapsed = useAppStore((s) => s.ui.detailCollapsed);
+  // The area shown in the list (not ALL, a planning view or a page), for the area view.
+  const areaShown = useAppStore((s) =>
+    s.page === null && s.ui.view === 'list' && s.ui.category !== 'all' && s.tasks.areas.some((a) => a.id === s.ui.category) ? s.ui.category : null,
+  );
   const actions = useActions();
   if (collapsed) {
     // Minimized: a strip with « to bring it back (the whole strip is the button,
@@ -94,6 +109,13 @@ export function DetailPane() {
     );
   }
   if (!id || !task || task.deletedAt !== null) {
+    if (areaShown) {
+      return (
+        <aside className="detail" aria-label="Area details">
+          <AreaDetails key={areaShown} id={areaShown} />
+        </aside>
+      );
+    }
     return (
       <aside className="detail empty-detail" aria-label="Task details">
         <div className="detail-head detail-head-empty">
@@ -200,9 +222,11 @@ function Details({ task, onClose }: { task: Task; onClose: () => void }) {
         {isQuest && (
           <Field label="AREA">
             <select value={questCategory(task)} onChange={(e) => actions.setQuestCategory(task.id, e.target.value)} aria-label="Area">
-              {tasks.areas.map((a) => (
+              {/* Live areas, plus its own if that's archived (so the select shows it). */}
+              {tasks.areas.filter((a) => a.archivedAt === undefined || a.id === questCategory(task)).map((a) => (
                 <option key={a.id} value={a.id}>
                   {a.name.toUpperCase()}
+                  {a.archivedAt !== undefined ? ' (ARCHIVED)' : ''}
                 </option>
               ))}
             </select>
@@ -320,6 +344,100 @@ function Details({ task, onClose }: { task: Task; onClose: () => void }) {
             {G.delete} DELETE
           </button>
         </div>
+      </footer>
+    </div>
+  );
+}
+
+/**
+ * The area shown in the list: its name (edited in place: Enter or leaving
+ * the field saves, Esc puts it back), its counts and open projects, and
+ * DELETE (to ARCHIVES), or for an archived one RESTORE / DELETE FOREVER.
+ */
+function AreaDetails({ id }: { id: string }) {
+  const area = useAppStore((s) => s.tasks.areas.find((a) => a.id === id))!;
+  const liveCount = useAppStore((s) => s.tasks.areas.filter((a) => a.archivedAt === undefined).length);
+  const selectors = useSelectors();
+  const counts = useAppStore((s) => selectors.tabCounts(s)[id] ?? NO_COUNTS);
+  const projects = useAppStore((s) => selectors.projectsByArea(s)[id]);
+  const actions = useActions();
+  const openDialog = useOpenDialog();
+  const now = useMinute();
+  const [draft, setDraft] = useState(area.name);
+  const archived = area.archivedAt !== undefined;
+  const save = () => {
+    // An empty name isn't kept (renameArea ignores it): show the real one again.
+    if (draft.trim()) actions.renameArea(id, draft);
+    setDraft(area.name);
+  };
+  // The stored name changed elsewhere (menu rename, undo): show it.
+  const [seen, setSeen] = useState(area.name);
+  if (seen !== area.name) {
+    setSeen(area.name);
+    setDraft(area.name);
+  }
+
+  return (
+    <div className="details">
+      <div className="detail-head">
+        <span className="detail-path dim">{archived ? `${G.archives} ARCHIVES` : 'AREA'}</span>
+        <MinimizeButton />
+      </div>
+      <input
+        className="detail-title quest-title area-name"
+        value={draft}
+        maxLength={32}
+        aria-label="Area name"
+        onChange={(e) => setDraft(e.target.value)}
+        onBlur={save}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') e.currentTarget.blur();
+          if (e.key === 'Escape') setDraft(area.name);
+          e.stopPropagation();
+        }}
+      />
+      <p className="dim small">
+        {counts.active} open {counts.active === 1 ? 'quest' : 'quests'} · {counts.completed} completed
+        {archived && ` · archived ${ago(area.archivedAt!, now)}`}
+      </p>
+      {archived && <p className="dim small">Its quests are kept, but left out of ALL QUESTS, TODAY and UPCOMING until you restore it.</p>}
+
+      {!!projects?.length && (
+        <section className="area-projects">
+          <h3 className="section-title">PROJECTS</h3>
+          {projects.map((p) => (
+            <button key={p.id} type="button" className="area-project" onClick={() => actions.openProject(p.id)}>
+              <span className="nav-label">{p.title || 'Untitled'}</span>
+              <span className="dim">{p.open}</span>
+            </button>
+          ))}
+        </section>
+      )}
+
+      <footer className="detail-foot">
+        <div className="detail-actions">
+          {archived ? (
+            <>
+              <button type="button" className="text-btn primary" onClick={() => actions.restoreArea(id)}>
+                {G.undo} RESTORE
+              </button>
+              <button type="button" className="text-btn danger" onClick={() => confirmDeleteForever(openDialog, actions, id, area.name)}>
+                {G.delete} DELETE FOREVER…
+              </button>
+            </>
+          ) : (
+            <button
+              type="button"
+              className="text-btn danger"
+              disabled={liveCount <= 1}
+              title={liveCount <= 1 ? 'Your only area can’t be deleted' : 'Moves it to ARCHIVES, with its quests'}
+              onClick={() => actions.archiveArea(id)}
+            >
+              {G.archives} DELETE
+            </button>
+          )}
+        </div>
+        {!archived && <p className="dim small">Deleting moves it to ARCHIVES with its quests. You can restore it there.</p>}
       </footer>
     </div>
   );

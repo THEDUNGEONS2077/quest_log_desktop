@@ -40,13 +40,34 @@ export function questCategory(task: Pick<Task, 'category' | 'repeat'>): QuestCat
 /** The category a quest added while `tab` is shown gets (ALL adds to MAIN). */
 export function categoryForNew(tab: CategoryTab, areas: readonly Area[] = DEFAULT_AREAS): QuestCategory {
   if (tab !== 'all') return tab;
-  // Desktop: areas are the user's, so MAIN may be gone; then the first area.
-  return areas.some((a) => a.id === 'main') ? 'main' : (areas[0]?.id ?? 'main');
+  // Desktop: areas are the user's, so MAIN may be gone or archived; then the first live area.
+  const live = areas.filter((a) => a.archivedAt === undefined);
+  return live.some((a) => a.id === 'main') ? 'main' : (live[0]?.id ?? 'main');
 }
 
-/** Does a quest show on `tab`? */
-export function onTab(task: Pick<Task, 'category' | 'repeat'>, tab: CategoryTab): boolean {
-  return tab === 'all' || questCategory(task) === tab;
+const NO_AREAS: ReadonlySet<string> = new Set();
+// One set per areas list (the list is replaced, never mutated, on every change).
+const archivedCache = new WeakMap<readonly Area[], ReadonlySet<string>>();
+
+/** The IDs of the areas in ARCHIVES (desktop; lib/areas.ts). */
+export function archivedAreaIds(state: Pick<TasksState, 'areas'>): ReadonlySet<string> {
+  let ids = archivedCache.get(state.areas);
+  if (!ids) {
+    const list = state.areas.filter((a) => a.archivedAt !== undefined).map((a) => a.id);
+    ids = list.length ? new Set(list) : NO_AREAS;
+    archivedCache.set(state.areas, ids);
+  }
+  return ids;
+}
+
+/**
+ * Does a quest show on `tab`? ALL leaves out the quests of archived areas
+ * (`archived`, from archivedAreaIds); an area's own tab always shows its
+ * quests, so an archived area can still be looked through.
+ */
+export function onTab(task: Pick<Task, 'category' | 'repeat'>, tab: CategoryTab, archived: ReadonlySet<string> = NO_AREAS): boolean {
+  if (tab === 'all') return !archived.has(questCategory(task));
+  return questCategory(task) === tab;
 }
 
 /**

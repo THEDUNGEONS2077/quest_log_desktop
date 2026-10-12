@@ -11,15 +11,21 @@
  *       Q4 report    3
  *   ▸ MAIN          18
  *   + AREA
+ *   ─────────────────
+ *   ▾ ⊟ ARCHIVES      1     ← deleted areas, with their quests
+ *       OLD CLIENT    4
  *   ✓ COMPLETED  ✕ TRASH  ⊛ SETTINGS  ? HELP
  *
  * Layer: UI. An area is the user's own group of quests (a client, a team,
  * a part of the job); its quests are projects. Clicking an area shows its
  * quests; its caret lists its projects, and a project opens inside (zoom).
- * Right-click an area to rename or delete it. The selected entry has the
- * faint glow (DESIGN.md: the glow marks what's selected).
+ * Right-click an area to rename or delete it, or show it and use the
+ * details pane on the right. A deleted area goes into the ARCHIVES folder
+ * (below a separator), where it can still be opened, restored or deleted
+ * for good. The selected entry has the faint glow (DESIGN.md: the glow
+ * marks what's selected).
  */
-import { type FormEvent, useState } from 'react';
+import { type FormEvent, useMemo, useState } from 'react';
 
 import { levelInfo } from '@/lib/xp';
 import { useActions, useAppStore, useSelectors } from '@/store/react';
@@ -37,7 +43,9 @@ export function Sidebar() {
   const tab = useAppStore((s) => s.ui.tab);
   const zoom = useAppStore((s) => s.ui.zoomRootId);
   const page = useAppStore((s) => s.page);
-  const areas = useAppStore((s) => s.tasks.areas);
+  const allAreas = useAppStore((s) => s.tasks.areas);
+  const areas = useMemo(() => allAreas.filter((a) => a.archivedAt === undefined), [allAreas]);
+  const archived = useMemo(() => allAreas.filter((a) => a.archivedAt !== undefined), [allAreas]);
   const selectors = useSelectors();
   const now = useMinute();
   const counts = useAppStore((s) => selectors.tabCounts(s));
@@ -48,12 +56,22 @@ export function Sidebar() {
   const openMenuAt = useOpenMenuAt();
   const [open, setOpen] = useState<ReadonlySet<string>>(() => new Set());
   const [adding, setAdding] = useState(false);
+  const [archivesOpen, setArchivesOpen] = useState(false);
 
   const inList = page === null && view === 'list';
   const isOn = (cat: string) => inList && category === cat && tab === 'active' && zoom === null;
 
-  /** An area (or ALL) from the sidebar: its open quests, top level. */
+  // The folder shows its contents while one of them is shown, whatever its caret says.
+  const showingArchived = inList && archived.some((a) => a.id === category);
+  const archivesShown = archivesOpen || showingArchived;
+
+  /**
+   * An area (or ALL) from the sidebar: its open quests, top level. No task
+   * stays selected, so the details pane shows the area itself (to rename or
+   * delete it).
+   */
   const showArea = (id: string) => {
+    actions.select(null);
     actions.setCategoryTab(id);
     actions.setTab('active');
     actions.setZoom(null);
@@ -143,6 +161,45 @@ export function Sidebar() {
             {G.add} AREA
           </button>
         )}
+      </div>
+
+      <div className="nav-sep" role="separator" />
+      <div className="nav-group archives">
+        <div className="nav-item area archives-folder">
+          <button
+            type="button"
+            className={cx('caret', archivesShown && 'open', !archived.length && 'hidden')}
+            aria-label={`${archivesShown ? 'Hide' : 'Show'} the archived areas`}
+            onClick={() => setArchivesOpen(!archivesShown)}
+            disabled={!archived.length || showingArchived}
+          >
+            {G.caret}
+          </button>
+          <button type="button" className="nav-label" title="Deleted areas, with their quests" onClick={() => setArchivesOpen(!archivesShown)}>
+            <span className="nav-glyph">{G.archives}</span> ARCHIVES
+          </button>
+          <span className="count">{archived.length}</span>
+        </div>
+        {archivesShown &&
+          (archived.length ? (
+            archived.map((a) => (
+              <div
+                key={a.id}
+                className={cx('nav-item', 'archived-area', isOn(a.id) && 'on')}
+                onContextMenu={(e) => {
+                  e.preventDefault();
+                  openMenuAt(e.clientX, e.clientY, { area: a.id });
+                }}
+              >
+                <button type="button" className="nav-label" onClick={() => showArea(a.id)}>
+                  {a.name.toUpperCase()}
+                </button>
+                <span className="count">{counts[a.id]?.active ?? 0}</span>
+              </div>
+            ))
+          ) : (
+            <p className="nav-empty dim">EMPTY</p>
+          ))}
       </div>
 
       <div className="nav-group bottom">
