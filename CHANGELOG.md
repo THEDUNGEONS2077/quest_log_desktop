@@ -2,6 +2,12 @@
 
 quest_log desktop. Each version gets one section, newest first. The heading's build number is shown in Settings and written into backups.
 
+## 0.4.3 (build 8)
+
+- **No blinking cursor on the XP bar.** The block gauge stays as it was.
+- **Bigger ▸ / ▾ in the sidebar** for folding sections and showing an area's projects (30% larger, like the ones in the list).
+- **SYSTEM has its plain border back** at the bottom of the sidebar, without the glowing green divider.
+
 ## 0.4.2 (build 7)
 
 - **A terminal-style XP bar.** It's taller, built from 20 block cells between brackets, `[▮▮▮▮▮▯▯▯]`. The dot is gone: the last filled cell is now a bright block cursor that blinks slowly, and glows when you earn XP. With Reduce Motion on, it stays still.

@@ -260,7 +260,7 @@ mark {
   text-shadow: var(--glow-text-bright);
 }
 /* The XP bar: a terminal gauge, [▮▮▮▮▯▯▯]. 20 block cells between brackets;
-   the fill and the cursor move by transform (the fraction, snapped to whole
+   the fill moves by transform (the fraction, snapped to whole
    cells, is --xp, set inline), under a fixed mask that cuts the track into
    cells, so nothing is laid out again while they glide. */
 .xp {
@@ -320,64 +320,6 @@ mark {
     transform: translateX(-100%);
   }
 }
-/* The cursor rides at the end of the fill, covering the last filled cell. */
-.xp-tip {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  transform: translateX(calc(var(--xp) * 100%));
-  transition: transform var(--slow) var(--ease);
-}
-.xp-tip.grow {
-  animation: xp-tip-grow var(--slow) var(--ease);
-}
-@keyframes xp-tip-grow {
-  from {
-    transform: translateX(0);
-    opacity: 0;
-  }
-}
-/* One cell wide (less its gap), just behind the tip: exactly the last filled cell. */
-.xp-cursor {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  left: -5%;
-  width: calc(5% - 2px);
-  background: var(--text-bright);
-  box-shadow: 0 0 6px rgba(57, 255, 20, 0.8);
-  animation: xp-cursor-blink 1.2s steps(1) infinite;
-  animation-play-state: var(--loops);
-}
-@keyframes xp-cursor-blink {
-  50% {
-    opacity: 0.45;
-  }
-}
-/* The accent on a gain: a soft glow flares around the cursor and fades. */
-.xp-cursor::after {
-  content: '';
-  position: absolute;
-  inset: -6px;
-  background: radial-gradient(closest-side, rgba(57, 255, 20, 0.6), transparent);
-  opacity: 0;
-}
-.xp-cursor.gain::after {
-  animation: xp-halo calc(var(--slow) * 3) var(--ease);
-}
-@keyframes xp-halo {
-  0% {
-    opacity: 0;
-    transform: scale(0.5);
-  }
-  25% {
-    opacity: 1;
-  }
-  100% {
-    opacity: 0;
-    transform: scale(2);
-  }
-}
 /* The totals, centred under the bar. */
 .xp-numbers {
   text-align: center;
@@ -426,10 +368,11 @@ mark {
   height: var(--hairline);
   background: linear-gradient(90deg, transparent, var(--line) 15%, rgba(57, 255, 20, 0.35) 50%, var(--line) 85%, transparent);
 }
+/* SYSTEM: set off by a plain hairline border (as it first was), not the lit divider. */
 .nav-section.bottom {
   margin-top: auto;
+  border-top: var(--hairline) solid var(--line);
 }
-/* SYSTEM sits apart at the bottom already: no divider line above it. */
 .nav-section.bottom::before {
   display: none;
 }
@@ -454,7 +397,8 @@ mark {
 }
 .nav-section-head .caret {
   width: var(--nav-icon);
-  font-size: 14px;
+  /* 14 px + 30% (user request 2026-10-12). */
+  font-size: 18.2px;
   color: var(--accent);
   opacity: 0.7;
 }
@@ -551,9 +495,10 @@ mark {
 .nav-item.on .count {
   color: var(--accent);
 }
-/* An area's caret sits in the icon column. */
+/* An area's caret sits in the icon column; 15 px + 30% (user request 2026-10-12). */
 .nav-item.area .caret {
   width: var(--nav-icon);
+  font-size: 19.5px;
 }
 /* An area's projects: one step (--s-md) in from the area's label column. */
 .nav-item.project {
