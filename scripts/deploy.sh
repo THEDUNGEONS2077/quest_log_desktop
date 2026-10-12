@@ -50,8 +50,13 @@ git -C "$TMP" push -q --force "$(git remote get-url origin)" gh-pages
 echo "✓ gh-pages updated (build of $COMMIT)"
 
 # 5. Enable Pages on the branch if it isn't yet (GitHub then publishes the site in a minute or two).
+#    GitHub may already have switched it on by itself when gh-pages first
+#    appeared; the POST then answers "already enabled", which is fine.
 if ! gh api "repos/$REPO/pages" >/dev/null 2>&1; then
-  gh api -X POST "repos/$REPO/pages" -f "source[branch]=gh-pages" -f "source[path]=/" >/dev/null
-  echo "✓ GitHub Pages enabled"
+  if gh api -X POST "repos/$REPO/pages" -f "source[branch]=gh-pages" -f "source[path]=/" >/dev/null 2>&1; then
+    echo "✓ GitHub Pages enabled"
+  else
+    gh api "repos/$REPO/pages" >/dev/null || { echo "✕ couldn't enable GitHub Pages" >&2; exit 1; }
+  fi
 fi
 echo "✓ deployed: $URL (live once GitHub finishes publishing)"
