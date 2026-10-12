@@ -2,6 +2,22 @@
 
 quest_log desktop. Each version gets one section, newest first. The heading's build number is shown in Settings and written into backups.
 
+## 0.5.0 (build 9)
+
+Subtle accents across the whole app.
+
+- **Things respond when you point at them.** Buttons, fields and sidebar items brighten under the pointer, framed buttons light up softly, and pressing one gives a brief green wash. List rows show a faint edge, and menu items show the same lit edge as a selected row.
+- **Focus is easier to follow.** The label of the field you're editing lights up with it.
+- **The selected task stands out a little more:** its bar has a soft glow.
+- **Headings read like a terminal.** Section headings (OVERDUE, OBJECTIVES, the Settings and Help sections) run on into a fading line, and the `>` prompts in titles and empty screens are lit.
+- **Accents that mean something:**
+  - TODAY's count in the sidebar turns bright green while anything is overdue;
+  - a date due later today is a step brighter than other dates;
+  - high priority (`!!!`) and overdue dates glow faintly.
+- **Themed controls:** the date and time pickers' icons and the dropdown arrows are drawn in the app's green, not the browser's grey.
+- **The message at the bottom** has a lit edge and a soft glow, and dialogs have a lightly lit frame.
+- All of it stays within the motion budget: nothing new lays the page out again on every frame.
+
 ## 0.4.3 (build 8)
 
 - **No blinking cursor on the XP bar.** The block gauge stays as it was.

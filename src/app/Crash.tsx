@@ -17,6 +17,7 @@ import { Component, type ReactNode } from 'react';
 
 import { backupFileName, makeBackup } from '@/lib/backup';
 import type { StoreBundle } from '@/store/react';
+import { Prompted } from './Prompted';
 
 // Set by vite.config.ts (package.json's version, CHANGELOG.md's build).
 declare const __APP_VERSION__: string;
@@ -38,7 +39,7 @@ export function CrashScreen({ error, bundle }: { error: unknown; bundle?: StoreB
   };
   return (
     <main className="crash" role="alert">
-      <h1 className="view-title">{'>'} SOMETHING WENT WRONG.</h1>
+      <h1 className="view-title"><Prompted>SOMETHING WENT WRONG.</Prompted></h1>
       <p>Your tasks are safe in this browser. Reloading usually fixes it; if it doesn’t, download a backup and send me the error below.</p>
       <div className="detail-actions">
         <button type="button" className="text-btn primary" onClick={() => location.reload()}>

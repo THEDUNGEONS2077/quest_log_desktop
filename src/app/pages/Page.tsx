@@ -9,6 +9,7 @@ import type { ReactNode } from 'react';
 import { useActions } from '@/store/react';
 
 import { G } from '../glyphs';
+import { Prompted } from '../Prompted';
 
 export function Page({ title, children }: { title: string; children: ReactNode }) {
   const actions = useActions();
@@ -16,7 +17,7 @@ export function Page({ title, children }: { title: string; children: ReactNode }
     <main className="center page">
       <header className="center-head">
         <h1 className="view-title">
-          {G.prompt} {title}
+          <Prompted>{title}</Prompted>
         </h1>
         <button type="button" className="icon-btn" aria-label={`Close ${title.toLowerCase()} (Esc)`} onClick={() => actions.openPage(null)}>
           {G.delete}

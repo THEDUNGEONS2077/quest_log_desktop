@@ -9,6 +9,7 @@ import { type FormEvent, useRef, useState } from 'react';
 
 import type { DialogState } from './menu';
 import { useReleaseFocus } from './usePresence';
+import { Prompted } from './Prompted';
 
 /** The dialog; `leaving` while it fades out after closing (app/usePresence.ts). */
 export function Dialog({ dialog, onClose, leaving = false }: { dialog: DialogState; onClose: () => void; leaving?: boolean }) {
@@ -36,7 +37,7 @@ export function Dialog({ dialog, onClose, leaving = false }: { dialog: DialogSta
           e.stopPropagation();
         }}
       >
-        <h2 className="dialog-title">{'>'} {dialog.title}</h2>
+        <h2 className="dialog-title"><Prompted>{dialog.title}</Prompted></h2>
         {dialog.message && <p className="dialog-message">{dialog.message}</p>}
         {dialog.input && (
           <input autoFocus value={value} maxLength={dialog.input.maxLength} placeholder={dialog.input.placeholder} onChange={(e) => setValue(e.target.value)} aria-label={dialog.title} />

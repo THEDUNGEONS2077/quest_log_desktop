@@ -16,6 +16,7 @@ import { useAppStore, useSelectors } from '@/store/react';
 import { DragArea } from './drag';
 import { setVisibleRows } from './menu';
 import { TaskRow } from './TaskRow';
+import { Prompted } from './Prompted';
 
 export function QuestList() {
   const selectors = useSelectors();
@@ -28,7 +29,7 @@ export function QuestList() {
   if (!rows.length) {
     return (
       <p className="empty">
-        {query ? '> NO MATCHES.' : zoomed ? '> NOTHING HERE YET. TYPE ABOVE TO ADD AN OBJECTIVE' : '> NO OPEN QUESTS HERE. TYPE ABOVE TO BEGIN'}
+        <Prompted>{query ? 'NO MATCHES.' : zoomed ? 'NOTHING HERE YET. TYPE ABOVE TO ADD AN OBJECTIVE' : 'NO OPEN QUESTS HERE. TYPE ABOVE TO BEGIN'}</Prompted>
       </p>
     );
   }

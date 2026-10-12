@@ -47,6 +47,7 @@ import { cx } from './cx';
 import { G } from './glyphs';
 import { confirmDeleteForever, useOpenDialog } from './menu';
 import { useMinute } from './useMinute';
+import { Prompted } from './Prompted';
 
 /** The repeat choices offered (the phone's presets), by key. */
 const REPEATS: { key: keyof typeof PRESETS | 'none'; label: string }[] = [
@@ -108,7 +109,7 @@ export function DetailPane() {
         <div className="detail-head detail-head-empty">
           <MinimizeButton />
         </div>
-        <p className="dim">{'> SELECT A TASK TO SEE ITS DETAILS.'}</p>
+        <p className="dim"><Prompted>SELECT A TASK TO SEE ITS DETAILS.</Prompted></p>
         <p className="dim small">Click a task. Double-click (or Enter) edits its title. Right-click for more.</p>
       </div>
     );

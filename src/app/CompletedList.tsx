@@ -19,12 +19,13 @@ import { cx } from './cx';
 import { G } from './glyphs';
 import { setVisibleRows, useOpenMenu } from './menu';
 import { useMinute } from './useMinute';
+import { Prompted } from './Prompted';
 
 export function CompletedList() {
   const selectors = useSelectors();
   const rows = useAppStore((s) => selectors.completedRows(s));
   useEffect(() => setVisibleRows(rows.map((r) => r.id)), [rows]);
-  if (!rows.length) return <p className="empty">{'> NOTHING COMPLETED YET.'}</p>;
+  if (!rows.length) return <p className="empty"><Prompted>NOTHING COMPLETED YET.</Prompted></p>;
   return (
     <div className="list" role="list">
       {rows.map((row, i) => (

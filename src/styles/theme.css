@@ -46,6 +46,21 @@
   --glow-bright: 0 0 6px 0 rgba(57, 255, 20, 0.6);
   --glow-text: 0 0 6px rgba(57, 255, 20, 0.35);
   --glow-text-bright: 0 0 6px rgba(57, 255, 20, 0.6);
+  /* The faintest text glow: titles and headings that should only just lift. */
+  --glow-text-faint: 0 0 6px rgba(57, 255, 20, 0.2);
+
+  /* Accent tints: the accent at fixed strengths, for washes, hover edges and
+     rules (subtle accents, pass 2026-10-12), plus the XP gauge's dark end and
+     the level-up flash. */
+  --accent-05: rgba(57, 255, 20, 0.05);
+  --accent-10: rgba(57, 255, 20, 0.1);
+  --accent-12: rgba(57, 255, 20, 0.12);
+  --accent-20: rgba(57, 255, 20, 0.2);
+  --accent-35: rgba(57, 255, 20, 0.35);
+  --accent-60: rgba(57, 255, 20, 0.6);
+  --bright-08: rgba(182, 255, 176, 0.08);
+  --accent-deep: #1f8f2c;
+  --flash: #ffffff;
 
   /* Type: one family; sizes a step denser than the phone (a desktop reads closer). */
   --font: 'JetBrains Mono', ui-monospace, monospace;

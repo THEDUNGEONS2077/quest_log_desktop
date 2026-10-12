@@ -61,6 +61,41 @@ button:disabled {
 ::-webkit-scrollbar-track {
   background: transparent;
 }
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-dim);
+}
+
+/* Subtle accents (pass 2026-10-12): hover, focus and selection changes ease
+   in over --fast instead of snapping. Colours, borders and box glows only
+   (paint, no layout). Text glows (text-shadow) change at once: animating
+   them makes the browser lay the text out on every frame. Rules further
+   down that set their own transition (the caret's turn, a leaving row)
+   take precedence. List rows and menu items are left out: they change
+   state on the same click that renders other things (a menu opening, the
+   details pane filling), and an easing glow there cost a frame. */
+.nav-item,
+.nav-section-head,
+.icon-btn,
+.text-btn,
+.switch-btn,
+.prio-btn,
+.seg-btn,
+.check,
+.caret,
+.add-sub,
+.link,
+.area-project,
+.quick-add,
+.search,
+.field select,
+.field input,
+.setting select,
+.setting input,
+.notes-field {
+  transition-property: color, background-color, border-color, box-shadow;
+  transition-duration: var(--fast);
+  transition-timing-function: var(--ease);
+}
 h1,
 h2,
 h3,
@@ -138,7 +173,7 @@ mark {
   border: var(--hairline) solid var(--line);
   border-radius: var(--radius);
   background:
-    radial-gradient(130% 100% at 0% 0%, rgba(57, 255, 20, 0.1), transparent 62%),
+    radial-gradient(130% 100% at 0% 0%, var(--accent-10), transparent 62%),
     var(--surface);
 }
 /* The scanlines, drifting slowly down, under the title block's contents. */
@@ -158,7 +193,7 @@ mark {
   content: '';
   position: absolute;
   inset: -3px 0 0;
-  background: repeating-linear-gradient(to bottom, rgba(57, 255, 20, 0.045) 0 1px, transparent 1px 3px);
+  background: repeating-linear-gradient(to bottom, var(--accent-05) 0 1px, transparent 1px 3px);
   animation: scan-drift 1.8s linear infinite;
   animation-play-state: var(--loops);
   will-change: transform;
@@ -176,7 +211,7 @@ mark {
   right: 0;
   top: 0;
   height: 45%;
-  background: linear-gradient(to bottom, transparent, rgba(57, 255, 20, 0.06) 60%, rgba(182, 255, 176, 0.08) 70%, transparent);
+  background: linear-gradient(to bottom, transparent, var(--accent-05) 60%, var(--bright-08) 70%, transparent);
   transform: translateY(-110%);
   animation: scan-band 7s linear infinite;
   animation-play-state: var(--loops);
@@ -203,7 +238,7 @@ mark {
   width: 12px;
   height: 12px;
   border: 0 solid var(--accent);
-  filter: drop-shadow(0 0 3px rgba(57, 255, 20, 0.6));
+  filter: drop-shadow(0 0 3px var(--accent-60));
   pointer-events: none;
 }
 .masthead::before {
@@ -246,7 +281,7 @@ mark {
   /* Scale and colour only: an animated glow (text-shadow) would lay the title out every frame. */
   30% {
     transform: scale(1.6);
-    color: #fff;
+    color: var(--flash);
   }
   100% {
     transform: scale(1);
@@ -292,17 +327,18 @@ mark {
   position: absolute;
   inset: 0;
   overflow: hidden;
-  background: rgba(57, 255, 20, 0.12);
+  background: var(--accent-12);
+  /* (#000 in the masks below is mask opacity, not a colour.) */
   -webkit-mask-image: repeating-linear-gradient(to right, #000 0 calc(5% - 2px), transparent calc(5% - 2px) 5%);
   mask-image: repeating-linear-gradient(to right, #000 0 calc(5% - 2px), transparent calc(5% - 2px) 5%);
 }
 .xp-track {
-  filter: drop-shadow(0 0 3px rgba(57, 255, 20, 0.35));
+  filter: drop-shadow(0 0 3px var(--accent-35));
 }
 .xp-fill {
   position: absolute;
   inset: 0;
-  background: linear-gradient(90deg, #1f8f2c, var(--accent));
+  background: linear-gradient(90deg, var(--accent-deep), var(--accent));
   transform: translateX(calc((var(--xp) - 1) * 100%));
   transition: transform var(--slow) var(--ease);
 }
@@ -366,7 +402,7 @@ mark {
   left: var(--s-sm);
   right: var(--s-sm);
   height: var(--hairline);
-  background: linear-gradient(90deg, transparent, var(--line) 15%, rgba(57, 255, 20, 0.35) 50%, var(--line) 85%, transparent);
+  background: linear-gradient(90deg, transparent, var(--line) 15%, var(--accent-35) 50%, var(--line) 85%, transparent);
 }
 /* SYSTEM: set off by a plain hairline border (as it first was), not the lit divider. */
 .nav-section.bottom {
@@ -404,6 +440,7 @@ mark {
 }
 .nav-section-head:hover .caret {
   opacity: 1;
+  text-shadow: var(--glow-text);
 }
 .nav-section-head .nav-glyph {
   color: var(--accent);
@@ -464,6 +501,10 @@ mark {
 }
 .nav-item:hover {
   background: var(--surface);
+  color: var(--text-bright);
+}
+.nav-item:hover .nav-glyph {
+  text-shadow: var(--glow-text-bright);
 }
 .nav-item.on {
   border-color: var(--accent);
@@ -494,6 +535,11 @@ mark {
 }
 .nav-item.on .count {
   color: var(--accent);
+}
+/* A count that needs attention (TODAY, while anything is overdue). */
+.nav-item .count.hot {
+  color: var(--accent);
+  text-shadow: var(--glow-text);
 }
 /* An area's caret sits in the icon column; 15 px + 30% (user request 2026-10-12). */
 .nav-item.area .caret {
@@ -577,6 +623,8 @@ mark {
   white-space: nowrap;
   color: var(--text-bright);
   font: 700 var(--fs-display) / 26px var(--font);
+  /* Just lifted off the page; its > prompt glows a little more (.prompt). */
+  text-shadow: var(--glow-text-faint);
 }
 .center-body {
   flex: 1;
@@ -605,6 +653,12 @@ mark {
   height: 2px;
   background: var(--line);
 }
+.switch-btn:hover:not(.on) {
+  color: var(--text);
+}
+.switch-btn:hover:not(.on)::after {
+  background: var(--text-dim);
+}
 .switch-btn.on {
   color: var(--accent);
 }
@@ -626,6 +680,15 @@ mark {
 }
 .icon-btn:hover {
   background: var(--surface);
+  border-color: var(--accent-35);
+  box-shadow: var(--glow-faint);
+}
+/* Pressed: a brief green wash under the finger (any button with a frame). */
+.icon-btn:active,
+.text-btn:active:not(:disabled),
+.prio-btn:active,
+.seg-btn:active {
+  background: var(--accent-10);
 }
 .text-btn {
   display: inline-flex;
@@ -643,11 +706,17 @@ mark {
 }
 .text-btn:hover {
   background: var(--surface);
+  border-color: var(--text-dim);
   color: var(--text-bright);
 }
 .text-btn.primary {
   color: var(--accent);
   text-shadow: var(--glow-text);
+}
+.text-btn.primary:hover {
+  border-color: var(--accent-35);
+  box-shadow: var(--glow-faint);
+  color: var(--accent);
 }
 .text-btn.danger:hover {
   color: var(--accent);
@@ -671,6 +740,9 @@ mark {
   padding: var(--s-sm) var(--s-lg);
   border-bottom: var(--hairline) solid var(--line);
   font-size: var(--fs-meta);
+}
+.search:focus-within {
+  border-bottom-color: var(--accent-35);
 }
 .search input {
   flex: 1;
@@ -707,6 +779,9 @@ mark {
   border: var(--hairline) solid var(--line);
   border-radius: var(--radius);
   background: var(--surface);
+}
+.quick-add:hover:not(.focused) {
+  border-color: var(--text-dim);
 }
 .quick-add.focused {
   border-color: var(--accent);
@@ -771,10 +846,15 @@ mark {
 }
 .row:hover {
   background: var(--surface);
+  /* A faint edge on the row under the pointer; the selected row's is lit. */
+  box-shadow: inset 2px 0 0 var(--accent-20);
 }
 .row.selected {
   background: var(--surface);
-  box-shadow: inset 2px 0 0 var(--accent);
+  /* The bar, with a soft glow spilling a few pixels into the row. */
+  box-shadow:
+    inset 2px 0 0 var(--accent),
+    inset 14px 0 14px -14px var(--accent-35);
 }
 .row.editing {
   background: var(--surface);
@@ -812,6 +892,11 @@ mark {
 }
 .check:hover {
   color: var(--accent);
+  text-shadow: var(--glow-text);
+}
+.caret:not(:disabled):hover {
+  color: var(--accent);
+  text-shadow: var(--glow-text);
 }
 .row.done .check {
   color: var(--text-dim);
@@ -870,6 +955,7 @@ textarea.title {
 }
 .prio-3 {
   color: var(--accent);
+  text-shadow: var(--glow-text);
 }
 .prio-2 {
   color: var(--text);
@@ -877,6 +963,12 @@ textarea.title {
 .due.overdue,
 .overdue {
   color: var(--accent);
+  text-shadow: var(--glow-text-faint);
+}
+/* Due later today: one step brighter than other dates (overdue is the accent). */
+.due.today,
+.plan-row .due.today {
+  color: var(--text);
 }
 .notes {
   margin-top: var(--s-xs);
@@ -894,6 +986,10 @@ textarea.title {
   color: var(--accent);
   opacity: 0;
   transition: opacity var(--fast) var(--ease);
+}
+.add-sub:hover {
+  border-color: var(--accent-35);
+  box-shadow: var(--glow-faint);
 }
 .row:hover .add-sub,
 .row.selected .add-sub,
@@ -929,14 +1025,28 @@ textarea.title {
   padding-top: var(--s-sm);
 }
 .section-title {
+  display: flex;
+  align-items: center;
+  gap: var(--s-sm);
   padding: var(--s-sm) var(--s-lg) var(--s-xs);
   color: var(--text-dim);
   font-size: var(--fs-small);
   font-weight: 700;
   letter-spacing: 1px;
 }
+/* A rule runs on from the heading and fades out: a terminal section line. */
+.section-title::after {
+  content: '';
+  flex: 1;
+  height: var(--hairline);
+  background: linear-gradient(90deg, var(--line), transparent);
+}
 .section-title.overdue {
   color: var(--accent);
+  text-shadow: var(--glow-text-faint);
+}
+.section-title.overdue::after {
+  background: linear-gradient(90deg, var(--accent-35), transparent);
 }
 .plan-row .due {
   flex: none;
@@ -1013,7 +1123,7 @@ textarea.title {
   position: absolute;
   inset: 0;
   pointer-events: none;
-  background: rgba(57, 255, 20, 0.12);
+  background: var(--accent-12);
   border-right: 2px solid var(--accent);
   box-shadow: var(--glow-bright);
   /* Slides in from the left (the row clips it), then fades: transform and
@@ -1142,6 +1252,11 @@ textarea.title {
 .detail-min-btn:hover {
   background: var(--surface);
 }
+/* Hovering anywhere on the strip lights its « like a hovered button. */
+.detail-min-btn:hover .icon-btn {
+  border-color: var(--accent-35);
+  box-shadow: var(--glow-faint);
+}
 .detail-min-label {
   writing-mode: vertical-rl;
   font-size: var(--fs-small);
@@ -1199,6 +1314,7 @@ textarea.title {
   text-transform: uppercase;
   font-weight: 700;
   font-size: 15px;
+  text-shadow: var(--glow-text-faint);
 }
 .fields {
   display: flex;
@@ -1217,6 +1333,7 @@ textarea.title {
   align-items: center;
   min-height: var(--control);
   color: var(--text-dim);
+  transition: color var(--fast) var(--ease);
   font-size: var(--fs-small);
   letter-spacing: 1px;
 }
@@ -1229,7 +1346,8 @@ textarea.title {
   padding: 0 var(--s-sm);
   border: var(--hairline) solid var(--line);
   border-radius: var(--radius);
-  background: var(--surface);
+  /* Colour only (not the shorthand): selects draw their chevron as a background image. */
+  background-color: var(--surface);
   color: var(--text-bright);
   color-scheme: dark;
   outline: none;
@@ -1242,6 +1360,61 @@ textarea.title {
 .notes-field:focus {
   border-color: var(--accent);
   box-shadow: var(--glow-faint);
+}
+/* Under the pointer, a field's frame brightens a step. */
+.field select:hover:not(:focus),
+.field input:hover:not(:focus, :disabled),
+.setting select:hover:not(:focus),
+.setting input:hover:not(:focus),
+.notes-field:hover:not(:focus) {
+  border-color: var(--text-dim);
+}
+/* The label of the field being edited lights up with it. */
+.field:focus-within dt,
+.setting:focus-within > :first-child {
+  color: var(--accent);
+}
+/* Selects: the theme's own chevron (the browser's is grey), accent on hover. */
+.field select,
+.setting select {
+  --chevron: var(--text);
+  appearance: none;
+  padding-right: 28px;
+  background-image:
+    linear-gradient(45deg, transparent 50%, var(--chevron) 50%),
+    linear-gradient(135deg, var(--chevron) 50%, transparent 50%);
+  background-position:
+    calc(100% - 15px) 50%,
+    calc(100% - 10px) 50%;
+  background-size: 5px 5px;
+  background-repeat: no-repeat;
+}
+.field select:hover,
+.setting select:hover,
+.field select:focus,
+.setting select:focus {
+  --chevron: var(--accent);
+}
+/* The date and time pickers' icons, redrawn in the theme colour (a mask,
+   so the colour comes from the tokens); accent on hover. */
+input[type='date']::-webkit-calendar-picker-indicator,
+input[type='time']::-webkit-calendar-picker-indicator {
+  width: 14px;
+  height: 14px;
+  cursor: pointer;
+  background: var(--text);
+  -webkit-mask: var(--picker-icon) center / 14px no-repeat;
+  mask: var(--picker-icon) center / 14px no-repeat;
+}
+input[type='date']::-webkit-calendar-picker-indicator {
+  --picker-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect x='1.75' y='3' width='12.5' height='11.25' fill='none' stroke='black' stroke-width='1.5'/%3E%3Cpath d='M1.75 6.75h12.5M5 1v3.5M11 1v3.5' stroke='black' stroke-width='1.5'/%3E%3C/svg%3E");
+}
+input[type='time']::-webkit-calendar-picker-indicator {
+  --picker-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Ccircle cx='8' cy='8' r='6.25' fill='none' stroke='black' stroke-width='1.5'/%3E%3Cpath d='M8 4.25V8l2.75 1.75' fill='none' stroke='black' stroke-width='1.5'/%3E%3C/svg%3E");
+}
+input[type='date']::-webkit-calendar-picker-indicator:hover,
+input[type='time']::-webkit-calendar-picker-indicator:hover {
+  background: var(--accent);
 }
 /* Every control fills the control column, so the pane's right edge is one straight line. */
 .field dd > select,
@@ -1280,6 +1453,7 @@ textarea.title {
 .seg-btn:hover,
 .prio-btn:hover {
   background: var(--surface);
+  border-color: var(--text-dim);
 }
 .seg-btn.on,
 .prio-btn.on {
@@ -1491,7 +1665,12 @@ input.area-name {
   background: var(--surface);
   color: var(--text-bright);
   outline: none;
-  box-shadow: none;
+  /* The same lit edge as a selected row. */
+  box-shadow: inset 2px 0 0 var(--accent);
+}
+.menu-item:hover:not(:disabled) .menu-glyph,
+.menu-item:focus-visible .menu-glyph {
+  text-shadow: var(--glow-text-bright);
 }
 .menu-item:disabled {
   color: var(--line);
@@ -1514,7 +1693,7 @@ input.area-name {
   gap: var(--s-md);
   width: min(440px, calc(100vw - 32px));
   padding: var(--s-lg);
-  border: var(--hairline) solid var(--line);
+  border: var(--hairline) solid var(--accent-35);
   border-radius: var(--radius);
   background: var(--surface-raised);
   box-shadow: var(--glow);
@@ -1555,6 +1734,10 @@ input.area-name {
   border: var(--hairline) solid var(--line);
   border-radius: var(--radius);
   background: var(--surface-raised);
+  /* A lit left edge (like a selected row) and a faint glow: news from the app. */
+  box-shadow:
+    inset 2px 0 0 var(--accent),
+    var(--glow-faint);
   color: var(--text-bright);
   font-size: var(--fs-meta);
   transform: translateX(-50%);
@@ -1677,6 +1860,10 @@ input.area-name {
 }
 .keys dt {
   color: var(--accent);
+  text-shadow: var(--glow-text-faint);
+}
+.keys > div:hover {
+  background: var(--surface);
 }
 
 /* --- Narrower windows ----------------------------------------------------- */

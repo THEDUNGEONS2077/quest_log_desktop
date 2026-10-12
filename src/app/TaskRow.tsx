@@ -18,7 +18,7 @@
  */
 import { type CSSProperties, memo, type ReactNode, useEffect, useState } from 'react';
 
-import { formatDue, isOverdue } from '@/lib/dates';
+import { formatDue, isOverdue, isSameDay } from '@/lib/dates';
 import type { Row } from '@/lib/flatten';
 import { matchRange } from '@/lib/search';
 import { findTask } from '@/lib/taskMap';
@@ -129,8 +129,10 @@ export function RowMeta({ task, row }: { task: Task; row?: Row }) {
     );
   if (task.dueAt !== null) {
     const late = isOverdue(task.dueAt, task.done, now);
+    // Due later today (open): a step brighter than other dates; overdue is accent.
+    const today = !late && !task.done && isSameDay(task.dueAt, now);
     parts.push(
-      <span key="d" className={cx('due', late && 'overdue')}>
+      <span key="d" className={cx('due', late && 'overdue', today && 'today')}>
         {G.due}
         {task.repeat ? ` ${G.repeat}` : ''} {late ? 'OVERDUE · ' : ''}
         {formatDue(task.dueAt, now)}

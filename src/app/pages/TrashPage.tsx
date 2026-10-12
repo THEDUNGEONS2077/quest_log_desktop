@@ -15,6 +15,7 @@ import { useActions, useAppStore } from '@/store/react';
 import { useOpenDialog } from '../menu';
 import { useMinute } from '../useMinute';
 import { Page } from './Page';
+import { Prompted } from '../Prompted';
 
 const DAY = 86_400_000;
 
@@ -28,7 +29,7 @@ export function TrashPage() {
     <Page title="TRASH">
       <p className="dim">Deleted tasks are kept for {TRASH_DAYS} days, then removed for good.</p>
       {items.length === 0 ? (
-        <p className="empty">{'> TRASH IS EMPTY.'}</p>
+        <p className="empty"><Prompted>TRASH IS EMPTY.</Prompted></p>
       ) : (
         <>
           <div className="list">

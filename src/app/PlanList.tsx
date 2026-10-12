@@ -15,7 +15,7 @@
  */
 import { memo, useEffect } from 'react';
 
-import { formatDue, formatTime } from '@/lib/dates';
+import { formatDue, formatTime, isSameDay } from '@/lib/dates';
 import type { PlanDay, PlanRow } from '@/lib/plan';
 import { findTask } from '@/lib/taskMap';
 import { shownTitle } from '@/lib/title';
@@ -27,6 +27,7 @@ import { setVisibleRows, useOpenMenu } from './menu';
 import { useJustChecked } from './TaskRow';
 import { TitleEditor } from './TitleEditor';
 import { useMinute } from './useMinute';
+import { Prompted } from './Prompted';
 
 const DAY = new Intl.DateTimeFormat('en-GB', { weekday: 'short', day: 'numeric', month: 'short' });
 
@@ -42,7 +43,7 @@ export function TodayList() {
   useEffect(() => setVisibleRows(rows.map((r) => r.id)), [rows]);
   const overdue = rows.filter((r) => r.overdue);
   const today = rows.filter((r) => !r.overdue);
-  if (!rows.length) return <p className="empty">{'> NOTHING DUE TODAY. GIVE TASKS A DATE (@fri, @today 3pm) TO SEE THEM HERE.'}</p>;
+  if (!rows.length) return <p className="empty"><Prompted>NOTHING DUE TODAY. GIVE TASKS A DATE (@fri, @today 3pm) TO SEE THEM HERE.</Prompted></p>;
   return (
     <div className="list plan" role="list">
       {overdue.length > 0 && <Section title="OVERDUE" rows={overdue} late />}
@@ -56,7 +57,7 @@ export function UpcomingList() {
   const now = useMinute();
   const days = useAppStore((s) => selectors.upcomingDays(s, now));
   useEffect(() => setVisibleRows(days.flatMap((d) => d.rows.map((r) => r.id))), [days]);
-  if (!days.length) return <p className="empty">{'> NOTHING DUE IN THE NEXT 14 DAYS.'}</p>;
+  if (!days.length) return <p className="empty"><Prompted>NOTHING DUE IN THE NEXT 14 DAYS.</Prompted></p>;
   return (
     <div className="list plan" role="list">
       {days.map((d: PlanDay) => (
@@ -119,7 +120,7 @@ const PlanTaskRow = memo(function PlanTaskRow({ row }: { row: PlanRow }) {
         {editing ? <TitleEditor id={task.id} className="title" /> : <span className="title">{shownTitle(task) || 'Untitled'}</span>}
         <div className="meta path">{row.path.join(' › ')}</div>
       </div>
-      <span className={cx('due', row.overdue && 'overdue')}>
+      <span className={cx('due', row.overdue && 'overdue', !row.overdue && isSameDay(row.dueAt, now) && 'today')}>
         {/* Today: the time is enough; overdue from an earlier day: the date too. */}
         {G.due} {row.overdue ? formatDue(row.dueAt, now) : formatTime(row.dueAt)}
       </span>

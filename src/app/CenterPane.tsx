@@ -29,6 +29,7 @@ import { QuestList } from './QuestList';
 import { QuickAdd } from './QuickAdd';
 import { SelectionBar } from './SelectionBar';
 import { useMinute } from './useMinute';
+import { Prompted } from './Prompted';
 
 export function CenterPane() {
   const page = useAppStore((s) => s.page);
@@ -42,7 +43,7 @@ export function CenterPane() {
       <main className="center">
         <header className="center-head">
           <h1 className="view-title">
-            {G.prompt} TODAY <span className="dim">· {dayLabel(now)}</span>
+            <Prompted>TODAY</Prompted> <span className="dim">· {dayLabel(now)}</span>
           </h1>
         </header>
         <div className="center-body">
@@ -54,7 +55,7 @@ export function CenterPane() {
     return (
       <main className="center">
         <header className="center-head">
-          <h1 className="view-title">{G.prompt} UPCOMING <span className="dim">· NEXT 14 DAYS</span></h1>
+          <h1 className="view-title"><Prompted>UPCOMING</Prompted> <span className="dim">· NEXT 14 DAYS</span></h1>
         </header>
         <div className="center-body">
           <UpcomingList />
@@ -81,7 +82,7 @@ function ListPane() {
     <main className="center">
       <header className="center-head">
         <h1 className="view-title">
-          {archived ? G.archives : G.prompt} {name.toUpperCase()}
+          <Prompted glyph={archived ? G.archives : G.prompt}>{name.toUpperCase()}</Prompted>
           {archived && <span className="dim"> · ARCHIVED</span>}
         </h1>
         <div className="switch" role="tablist">
@@ -127,7 +128,7 @@ function ListPane() {
       {tab === 'active' && !archived && <QuickAdd placeholder={zoom ? 'new objective' : 'new quest'} />}
       {archived && (
         <p className="archived-note dim small">
-          {'> IN ARCHIVE. '}
+          <Prompted>IN ARCHIVE.</Prompted>{' '}
           <button type="button" className="link" onClick={() => actions.restoreArea(category)}>
             RESTORE
           </button>

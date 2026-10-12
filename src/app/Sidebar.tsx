@@ -59,6 +59,8 @@ export function Sidebar() {
   const now = useMinute();
   const counts = useAppStore((s) => selectors.tabCounts(s));
   const today = useAppStore((s) => selectors.todayRows(s, now).length);
+  // Anything overdue: TODAY's count turns accent (it needs attention).
+  const overdue = useAppStore((s) => selectors.todayRows(s, now).some((r) => r.overdue));
   const upcoming = useAppStore((s) => selectors.upcomingDays(s, now).reduce((n, d) => n + d.rows.length, 0));
   const projects = useAppStore((s) => selectors.projectsByArea(s));
   const actions = useActions();
@@ -98,7 +100,7 @@ export function Sidebar() {
       <Masthead />
 
       <Section {...section('views')} title="VIEWS" active={page === null && (view !== 'list' || isOn('all'))}>
-        <NavItem glyph={G.today} label="TODAY" count={today} on={page === null && view === 'today'} onClick={() => actions.setView('today')} shortcut="T" />
+        <NavItem glyph={G.today} label="TODAY" count={today} hot={overdue} on={page === null && view === 'today'} onClick={() => actions.setView('today')} shortcut="T" />
         <NavItem glyph={G.upcoming} label="UPCOMING" count={upcoming} on={page === null && view === 'upcoming'} onClick={() => actions.setView('upcoming')} shortcut="U" />
         <NavItem glyph={G.all} label="ALL QUESTS" count={counts.all?.active ?? 0} on={isOn('all')} onClick={() => showArea('all')} shortcut="A" />
       </Section>
@@ -345,12 +347,17 @@ function Section(props: {
   );
 }
 
-function NavItem(props: { glyph: string; label: string; count?: number; on: boolean; onClick: () => void; shortcut?: string }) {
+/** One sidebar entry; `hot` lights its count in accent (something there needs attention). */
+function NavItem(props: { glyph: string; label: string; count?: number; hot?: boolean; on: boolean; onClick: () => void; shortcut?: string }) {
   return (
     <button type="button" className={cx('nav-item', props.on && 'on')} onClick={props.onClick} title={props.shortcut ? `${props.label} (${props.shortcut})` : props.label} aria-current={props.on ? 'page' : undefined}>
       <span className="nav-glyph">{props.glyph}</span>
       <span className="nav-label">{props.label}</span>
-      {props.count !== undefined && <span className="count">{props.count}</span>}
+      {props.count !== undefined && (
+        <span className={cx('count', props.hot && 'hot')} title={props.hot ? 'Something here is overdue' : undefined}>
+          {props.count}
+        </span>
+      )}
     </button>
   );
 }
