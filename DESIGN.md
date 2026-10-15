@@ -15,7 +15,7 @@ The same terminal look as the phone app (the phone's `DESIGN.md` is the source),
 - **Type:** JetBrains Mono (bundled TTFs in `src/assets/fonts`).
   - Sizes: `--fs-title` 22, `--fs-display` 18, `--fs-body` 14, `--fs-quest` 13, `--fs-meta` 12, `--fs-small` 11.
   - Labels and headings are UPPERCASE with letter spacing; task titles keep their case.
-- **Space:** `--s-xs` 4, `--s-sm` 8, `--s-md` 12, `--s-lg` 16, `--s-xl` 24. Also `--indent` 20 per nesting level, `--radius` 2, `--hairline` 1.
+- **Space:** `--s-xs` 4, `--s-sm` 8, `--s-md` 12, `--s-lg` 16, `--s-xl` 24. Also `--indent` 28 per nesting level, `--radius` 2, `--hairline` 1.
 - **Accents** (subtle accents pass 2026-10-12). Accents mark state or meaning, never decoration for its own sake, and always come from the tokens: the glows, `--glow-text-faint`, and the accent tints `--accent-05` … `--accent-60`. `app.css` has no raw colours.
   - **Hover:** a field's or button's frame brightens a step (`--text-dim`), or for framed icon buttons lights (`--accent-35` and `--glow-faint`). List rows get a faint 2 px edge (`--accent-20`); menu items get the selected row's lit edge. Sidebar items brighten and their icon glows. The date and time icons and the select arrows turn accent.
   - **Pressed:** a brief `--accent-10` wash on framed buttons.
@@ -37,7 +37,7 @@ The same terminal look as the phone app (the phone's `DESIGN.md` is the source),
 - **Motion rules** (animation pass 2026-10-12, measured with `npm run e2e:motion`):
   - animate only `transform` and `opacity`; the GPU runs them without laying anything out. Widths are moved by `translateX` inside a clipping box (the XP bar, the quest meter), and glows that must change get an overlay whose opacity changes (an animated `text-shadow` lays the text out every frame);
   - nothing appears or disappears in one frame: the toast, menus and dialogs animate out (`usePresence`), the details pane cross-fades with its strip, and its content is clipped, never squeezed, while the column changes;
-  - the few size animations left (a completed quest closing its gap, a sidebar section folding, the details column) change one track of a grid, so the browser lays out only what moved.
+  - the few size animations left (a completed quest closing its gap, a sidebar section folding, the details column) change one track of a grid, so the browser lays out only what moved. The grid item that shrinks must have no padding, border or margin of its own (a list row sits in a plain `.row-clip`), or the track stops at that size and the rest snaps when the element is removed. A completed quest's gap closes 640–960 ms after completion and the row is removed at 1040 ms, so the removal moves nothing (checked by `npm run e2e`).
 - **Motion:**
   - durations: `--fast` 120 ms, `--base` 200 ms, `--slow` 320 ms;
   - curves: `--ease` (out-cubic) for entering, `--ease-exit` (in-cubic) for leaving;

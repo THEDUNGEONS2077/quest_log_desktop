@@ -291,6 +291,36 @@ try {
     await nav('MAIN').waitFor();
   });
 
+  await path('a completed quest closes its gap smoothly to the end: nothing jumps when it is removed', async () => {
+    // Fix 2026-10-15: the gap stalled at the row's padding and divider (16-21 px)
+    // and the rest snapped shut when the row was removed.
+    await nav('ALL QUESTS').click();
+    for (const t of ['Glide C', 'Glide B', 'Glide A']) await addQuest(t);
+    await page.keyboard.press('Escape');
+    const steps = await page.evaluate(async () => {
+      const find = (t) => [...document.querySelectorAll('.row')].find((r) => r.textContent.toLowerCase().includes(t));
+      const out = [];
+      const t0 = performance.now();
+      await new Promise((done) => {
+        const tick = (now) => {
+          const below = find('glide b');
+          out.push({ y: below.getBoundingClientRect().top, gone: !find('glide a') });
+          if (now - t0 < 1500) requestAnimationFrame(tick);
+          else done();
+        };
+        requestAnimationFrame(tick);
+        // Complete "Glide A" (the row above "Glide B") once sampling has started.
+        find('glide a').querySelector('.check').click();
+      });
+      return out.slice(1).map((x, i) => ({ step: x.y - out[i].y, removed: x.gone && !out[i].gone }));
+    });
+    const removal = steps.find((s) => s.removed);
+    if (!removal) throw new Error('the completed quest was not removed');
+    if (Math.abs(removal.step) > 0.5) throw new Error(`the rows below jumped ${removal.step.toFixed(1)} px when it was removed`);
+    const biggest = Math.max(...steps.map((s) => Math.abs(s.step)));
+    if (biggest > 12) throw new Error(`a ${biggest.toFixed(1)} px step in the glide`);
+  });
+
   await path('a narrow window: the sidebar becomes a drawer', async () => {
     await page.setViewportSize({ width: 820, height: 800 });
     await page.keyboard.press('Escape');

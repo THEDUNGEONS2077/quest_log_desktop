@@ -2,6 +2,10 @@
 
 quest_log desktop. Each version gets one section, newest first. The heading's build number is shown in Settings and written into backups.
 
+## 0.5.1 (build 10)
+
+- **Fixed: completing a quest now ends smoothly.** After a quest slid away, the gap it left closed only partway, paused, then snapped shut. Now the quests below glide up in one continuous motion, all the way, and nothing moves when the finished quest goes to COMPLETED. This also covers quests with objectives, and the quest at the top of the list. A test now checks it frame by frame.
+
 ## 0.5.0 (build 9)
 
 Subtle accents across the whole app.

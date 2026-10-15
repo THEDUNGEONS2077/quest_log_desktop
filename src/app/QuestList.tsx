@@ -35,9 +35,10 @@ export function QuestList() {
   }
   return (
     <DragArea>
-      <div className="list" role="list">
-        {rows.map((row, i) => (
-          <TaskRow key={row.id} row={row} first={i === 0} query={query} context={'context' in row && (row as FoundRow).context} draggable={!query} />
+      {/* quest-list: tucks the first quest's divider out of sight (see app.css). */}
+      <div className="list quest-list" role="list">
+        {rows.map((row) => (
+          <TaskRow key={row.id} row={row} query={query} context={'context' in row && (row as FoundRow).context} draggable={!query} />
         ))}
       </div>
     </DragArea>

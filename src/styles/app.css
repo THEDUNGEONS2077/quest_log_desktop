@@ -831,6 +831,22 @@ mark {
   display: grid;
   grid-template-rows: 1fr;
 }
+/* The grid item: a plain layer with no padding, border or margin, so its row
+   (track) can close all the way to 0 when the quest leaves. It clips only
+   then: normally the row's chips float above it, outside. */
+.row-clip {
+  min-height: 0;
+}
+.row-wrap.leaving > .row-clip {
+  overflow: hidden;
+}
+/* Every quest carries its divider above it, the first too; the active list
+   is pulled up by exactly that much, so the first one sits just outside the
+   scrolling area's top edge, unseen. (When the top quest leaves, its divider
+   closes with it, and the next quest's is already where it belongs.) */
+.quest-list {
+  margin-top: calc(-1 * (var(--s-xs) + var(--hairline)));
+}
 .row {
   position: relative;
   display: flex;
@@ -1173,13 +1189,14 @@ textarea.title {
   }
 }
 /* A completed quest: holds 600 ms, slides out and fades (exit curve), and
-   its space closes 120 ms in, so the rows below glide up (LINGER_MS = 1040). */
+   its space closes from 40 ms in, the rows below gliding up. The close ends
+   at 960 ms, well before the row is removed at LINGER_MS (1040), so the
+   removal itself moves nothing. */
 .row-wrap.leaving {
   grid-template-rows: 0fr;
-  transition: grid-template-rows var(--slow) var(--ease) calc(600ms + var(--fast));
+  transition: grid-template-rows var(--slow) var(--ease) calc(600ms + var(--fast) / 3);
 }
-.row-wrap.leaving > .row {
-  min-height: 0;
+.row-wrap.leaving .row {
   opacity: 0;
   transform: translateX(48px);
   transition:
@@ -1187,7 +1204,7 @@ textarea.title {
     transform var(--base) var(--ease-exit) 600ms;
 }
 :root[data-reduce-motion='on'] .row-wrap.leaving,
-:root[data-reduce-motion='on'] .row-wrap.leaving > .row {
+:root[data-reduce-motion='on'] .row-wrap.leaving .row {
   transition: none;
 }
 

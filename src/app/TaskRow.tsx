@@ -15,6 +15,13 @@
  * slides out and fades, and its space closes, the rows below gliding up
  * (CSS transitions on the row's wrapper, timed like the phone's LINGER_MS),
  * before it moves to COMPLETED.
+ *
+ * The space closes on a clip layer between the wrapper and the row
+ * (`.row-clip`: no padding, border or margin of its own), so it can shrink
+ * all the way to nothing. Before (fix 2026-10-15), the row itself was the
+ * grid item and its padding, divider and margin (16–21 px) couldn't shrink:
+ * the close stalled there and the rest snapped shut when the row was
+ * removed.
  */
 import { type CSSProperties, memo, type ReactNode, useEffect, useState } from 'react';
 
@@ -146,7 +153,6 @@ export function RowMeta({ task, row }: { task: Task; row?: Row }) {
 
 interface Props {
   row: Row;
-  first?: boolean;
   /** Search text to mark in the title. */
   query?: string;
   /** Shown only as the path to a search match: dimmed. */
@@ -155,7 +161,7 @@ interface Props {
   draggable?: boolean;
 }
 
-export const TaskRow = memo(function TaskRow({ row, first = false, query = '', context = false, draggable = false }: Props) {
+export const TaskRow = memo(function TaskRow({ row, query = '', context = false, draggable = false }: Props) {
   const task = useAppStore((s) => findTask(s.tasks, row.id));
   const editing = useAppStore((s) => (s.editingId === row.id ? s.editingField : null));
   const selected = useAppStore((s) => s.selectedId === row.id);
@@ -186,11 +192,14 @@ export const TaskRow = memo(function TaskRow({ row, first = false, query = '', c
 
   return (
     <div className={cx('row-wrap', leaving && 'leaving')}>
+      <div className="row-clip">
       <div
         className={cx(
           'row',
           isQuest && 'quest',
-          isQuest && !first && 'quest-gap',
+          // Every quest has its divider, the first too (QuestList tucks the first one out of sight),
+          // so when the top quest leaves its divider closes with it instead of the next one's snapping away.
+          isQuest && 'quest-gap',
           selected && 'selected',
           editing && 'editing',
           (task.done || advancing) && 'done',
@@ -273,6 +282,7 @@ export const TaskRow = memo(function TaskRow({ row, first = false, query = '', c
             +{gain} XP
           </span>
         )}
+      </div>
       </div>
     </div>
   );
