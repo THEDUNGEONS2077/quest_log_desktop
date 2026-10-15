@@ -241,6 +241,40 @@ describe('selectors', () => {
   });
 });
 
+describe('addNextSubtask (Alt+Enter while editing)', () => {
+  it('in a quest: a new objective at the end, being edited; the quest opens if folded', () => {
+    const { store } = makeStore();
+    const s = store.getState();
+    const q = s.addTask(null, 'Quest');
+    const a = s.addTask(q, 'A');
+    s.editTask(q, { collapsed: true });
+    s.setEditing(q);
+    store.getState().addNextSubtask(q);
+    const st = store.getState();
+    const kids = childIds(st.tasks, q);
+    expect(kids.length).toBe(2);
+    expect(kids[0]).toBe(a);
+    expect(st.editingId).toBe(kids[1]);
+    expect(tk(st.tasks, q)!.collapsed).toBe(false);
+  });
+
+  it('in an objective: the next one right below it; an empty objective adds nothing', () => {
+    const { store } = makeStore();
+    const s = store.getState();
+    const q = s.addTask(null, 'Quest');
+    const a = s.addTask(q, 'A');
+    const c = s.addTask(q, 'C');
+    s.setEditing(a);
+    store.getState().addNextSubtask(a);
+    const b = store.getState().editingId!;
+    expect(childIds(store.getState().tasks, q)).toEqual([a, b, c]);
+    // b is still empty: nothing more is added.
+    store.getState().addNextSubtask(b);
+    expect(childIds(store.getState().tasks, q)).toEqual([a, b, c]);
+    expect(store.getState().editingId).toBe(b);
+  });
+});
+
 describe('editing actions', () => {
   it('finishEditing discards an empty task (undoably) and keeps non-empty ones', () => {
     const { store } = makeStore();

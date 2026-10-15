@@ -321,6 +321,40 @@ try {
     if (biggest > 12) throw new Error(`a ${biggest.toFixed(1)} px step in the glide`);
   });
 
+  await path('Alt+Enter while editing: a quest gets an objective, an objective the next one; the + sits after the title, on hover', async () => {
+    await nav('ALL QUESTS').click();
+    await addQuest('Alt enter quest');
+    await page.keyboard.press('Escape');
+    const quest = row('ALT ENTER QUEST');
+    // The +: hidden until the pointer is over the quest, then right after the title's last word.
+    const plus = quest.locator('.add-sub');
+    if ((await plus.evaluate((e) => getComputedStyle(e).opacity)) !== '0') throw new Error('the + shows without hovering');
+    await quest.hover();
+    await page.waitForTimeout(250);
+    if ((await plus.evaluate((e) => getComputedStyle(e).opacity)) !== '1') throw new Error('the + did not show on hover');
+    const t = await quest.locator('.title').boundingBox();
+    const b = await plus.boundingBox();
+    if (b.x < t.x + t.width || b.x - (t.x + t.width) > 12) throw new Error(`the + is not right after the title (gap ${(b.x - t.x - t.width).toFixed(0)} px)`);
+    // Alt+Enter in the quest's title: a new objective, being edited.
+    await quest.dblclick();
+    await page.keyboard.press('Alt+Enter');
+    await page.keyboard.type('first step');
+    await page.keyboard.press('Alt+Enter');
+    await page.keyboard.type('second step');
+    await page.keyboard.press('Alt+Enter');
+    // An empty objective adds nothing more: Enter leaves it (and the empty one goes).
+    await page.keyboard.press('Alt+Enter');
+    await page.keyboard.press('Escape');
+    await page.waitForTimeout(200);
+    const titles = await page.locator('.row').evaluateAll((rows) => rows.map((r) => r.querySelector('.title')?.textContent?.trim()));
+    const at = titles.findIndex((x) => /alt enter quest/i.test(x ?? ''));
+    const next = titles.slice(at + 1, at + 4);
+    if (next[0] !== 'First Step' || next[1] !== 'Second Step') throw new Error(`objectives: ${JSON.stringify(next)}`);
+    // Exactly those two: the empty third one was dropped.
+    await see('OBJECTIVES 0/2');
+    await shot('18-alt-enter');
+  });
+
   await path('a narrow window: the sidebar becomes a drawer', async () => {
     await page.setViewportSize({ width: 820, height: 800 });
     await page.keyboard.press('Escape');

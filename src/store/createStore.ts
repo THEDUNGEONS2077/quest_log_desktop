@@ -255,6 +255,14 @@ export interface AppStore {
   /** Toolbar + SUB: adds an empty subtask at the end of `id` and starts editing it. */
   addSubtask(id: ID): void;
   /**
+   * Alt+Enter while editing `id` (desktop, 2026-10-15): the edit is saved,
+   * then a quest gets a new empty objective at the end of its list, and an
+   * objective gets a new sibling right below it (so repeated Alt+Enter lists
+   * objectives one after another); editing moves to the new one. An empty
+   * objective adds nothing (no stacks of blank ones). A collapsed parent opens.
+   */
+  addNextSubtask(id: ID): void;
+  /**
    * Text containing line breaks arrived in task `id`'s editor (a paste).
    * The first line becomes this task's title; the rest become tasks below
    * it, nested by indentation. One undo step.
@@ -732,6 +740,20 @@ export function createAppStore(deps: StoreDeps) {
 
       addSubtask(id) {
         const child = get().addTask(id, '');
+        get().setEditing(child);
+      },
+
+      addNextSubtask(id) {
+        const tasks = get().tasks;
+        const task = findTask(tasks, id);
+        if (!task) return;
+        const parentId = task.parentId === null ? id : task.parentId;
+        if (task.parentId !== null && !task.title.trim()) return;
+        // Show the new one: open the parent if it's folded (a view change, like the caret).
+        if (getTask(tasks, parentId).collapsed) get().dispatch({ type: 'update', changes: [{ id: parentId, fields: { collapsed: false } }] });
+        const index = task.parentId === null ? undefined : childIds(get().tasks, parentId).indexOf(id) + 1;
+        const child = get().addTask(parentId, '', index);
+        // Switching the edit commits the current title (shorthand becomes fields).
         get().setEditing(child);
       },
 

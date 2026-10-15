@@ -13,6 +13,7 @@ const SHORTCUTS: [string, string][] = [
   ['T · U · A', 'TODAY · UPCOMING · ALL QUESTS'],
   ['↑ ↓', 'Move the selection'],
   ['Enter', 'Edit the selected task’s title'],
+  ['Alt+Enter', 'While editing: save, then start a new objective (in a quest) or the next one below (in an objective)'],
   ['Space', 'Complete (or restore) the selected task'],
   ['→ ← ', 'Open / close its objectives'],
   ['O', 'Open the selected project (show only its tasks)'],

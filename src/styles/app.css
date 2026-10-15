@@ -991,12 +991,20 @@ textarea.title {
   color: var(--text-dim);
   white-space: pre-wrap;
 }
+/* A quest's title is inline, so its `+` follows the last word (wrapping with
+   the text) rather than sitting at the row's far edge (user request 2026-10-15). */
+.title-line > .title {
+  display: inline;
+}
 .add-sub {
-  flex: none;
-  /* Square, centred on the title's first line (24 px on a 20 px line). */
-  width: 24px;
-  height: 24px;
-  margin: -2px 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  /* Square, one text line tall, so showing it never changes the row's height. */
+  width: 20px;
+  height: 20px;
+  margin-left: var(--s-sm);
+  vertical-align: top;
   border: var(--hairline) solid var(--line);
   border-radius: var(--radius);
   color: var(--accent);
@@ -1007,8 +1015,8 @@ textarea.title {
   border-color: var(--accent-35);
   box-shadow: var(--glow-faint);
 }
+/* Only while the pointer is over the quest (or the keyboard is on the button). */
 .row:hover .add-sub,
-.row.selected .add-sub,
 .add-sub:focus-visible {
   opacity: 1;
 }

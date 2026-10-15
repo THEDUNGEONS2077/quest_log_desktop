@@ -4,6 +4,8 @@
  *
  *   typing             → updateTitle (one undo step per editing session)
  *   Enter              → finishEditing (save; shorthand becomes fields)
+ *   Alt+Enter          → save, then a new objective (in a quest) or the
+ *                        next one below (in an objective): addNextSubtask
  *   Esc                → finishEditing
  *   Tab / Shift+Tab    → indent / outdent, still editing
  *   Backspace on empty → delete the task (backspaceOnEmpty)
@@ -39,7 +41,10 @@ export function TitleEditor({ id, className }: { id: string; className?: string 
   }, []);
 
   const onKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
+    if (e.key === 'Enter' && e.altKey) {
+      e.preventDefault();
+      actions.addNextSubtask(id);
+    } else if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       actions.finishEditing(id);
     } else if (e.key === 'Escape') {

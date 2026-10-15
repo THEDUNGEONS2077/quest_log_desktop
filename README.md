@@ -29,7 +29,7 @@ A to-do list for work that looks like a terminal: quest_log for desktop Google C
   - `N` new;
   - `/` search;
   - `T` / `U` / `A` switch views;
-  - `Enter` edits;
+  - `Enter` edits, and while editing `Alt+Enter` adds an objective (or the next one);
   - `Space` completes;
   - `Tab` / `Shift+Tab` indent and outdent;
   - `Del` sends to Trash;

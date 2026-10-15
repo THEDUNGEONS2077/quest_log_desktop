@@ -2,6 +2,11 @@
 
 quest_log desktop. Each version gets one section, newest first. The heading's build number is shown in Settings and written into backups.
 
+## 0.6.0 (build 11)
+
+- **Alt+Enter adds objectives as you type.** While editing a quest's title, Alt+Enter saves it and starts a new objective under it. While editing an objective, Alt+Enter starts the next one right below it, so you can list them one after another without touching the mouse. Pressing it on an empty objective does nothing, so blank ones don't pile up. If the quest was folded, it opens.
+- **The `+` for adding an objective now sits right after the quest's name** instead of at the far right of the row. It still only shows while you point at the quest.
+
 ## 0.5.1 (build 10)
 
 - **Fixed: completing a quest now ends smoothly.** After a quest slid away, the gap it left closed only partway, paused, then snapped shut. Now the quests below glide up in one continuous motion, all the way, and nothing moves when the finished quest goes to COMPLETED. This also covers quests with objectives, and the quest at the top of the list. A test now checks it frame by frame.

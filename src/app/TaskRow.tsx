@@ -8,7 +8,9 @@
  * Layer: UI. A click selects the task (the detail pane shows it); a double
  * click edits its title; right-click opens its menu. The checkbox
  * completes it, the caret opens and closes its objectives, and a quest's
- * `+` adds an objective.
+ * `+` adds an objective. The `+` sits right after the title's last word
+ * (it wraps with the text) and shows only while the pointer is over the
+ * row (2026-10-15; it used to sit at the row's far right).
  *
  * Completing plays the phone's burst: the box pops, a scan line crosses
  * the row, and the XP it earned floats up. A completed quest then holds,
@@ -256,27 +258,30 @@ export const TaskRow = memo(function TaskRow({ row, query = '', context = false,
           {editing === 'title' ? (
             <TitleEditor id={task.id} className={cx('title', isQuest && 'quest-title')} />
           ) : (
-            <span className={cx('title', isQuest && 'quest-title')}>
-              <Highlighted text={title || 'Untitled'} query={query} />
-            </span>
+            // The title, then (a quest's) `+` right after its last word, shown on hover.
+            <div className="title-line">
+              <span className={cx('title', isQuest && 'quest-title')}>
+                <Highlighted text={title || 'Untitled'} query={query} />
+              </span>
+              {isQuest && (
+                <button
+                  type="button"
+                  className="add-sub"
+                  title="Add an objective (or Alt+Enter while editing)"
+                  aria-label={`Add an objective to ${title}`}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    actions.addSubtask(task.id);
+                  }}
+                >
+                  {G.add}
+                </button>
+              )}
+            </div>
           )}
           <RowMeta task={task} row={row} />
           {notesOpen && task.notes && <div className="notes">{task.notes}</div>}
         </div>
-        {isQuest && (
-          <button
-            type="button"
-            className="add-sub"
-            title="Add an objective"
-            aria-label={`Add an objective to ${title}`}
-            onClick={(e) => {
-              e.stopPropagation();
-              actions.addSubtask(task.id);
-            }}
-          >
-            {G.add}
-          </button>
-        )}
         {fire > 0 && gain > 0 && (
           <span key={`xp-${fire}`} className="xp-float" aria-hidden>
             +{gain} XP
