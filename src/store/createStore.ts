@@ -67,7 +67,7 @@ import {
   type Timers,
   type Writer,
 } from './persist';
-import { DEFAULT_ONBOARDING, type Onboarding, type Tip } from './onboarding';
+import { BACKUP_DUE_MS, BACKUP_NUDGE_EVERY_MS, DEFAULT_ONBOARDING, type Onboarding, type Tip } from './onboarding';
 import { DEFAULT_SETTINGS, type Settings } from './settings';
 import { DEFAULT_UI, type Page, type SidebarSection, type Tab, type UiState, type View } from './uiState';
 
@@ -87,6 +87,10 @@ export interface Toast {
   message: string;
   /** Show an UNDO button that undoes the most recent step. */
   undo: boolean;
+  /** Show a button that opens this page (WHAT'S NEW after an update). */
+  open?: Page;
+  /** Show BACK UP (the backup reminder): saves a backup file. */
+  backup?: boolean;
 }
 
 /** What a checkbox tap did, so the UI can pick the haptic (PLAN §9.18). */
@@ -315,7 +319,7 @@ export interface AppStore {
   deleteTask(id: ID): void;
 
   // --- Toasts ---
-  showToast(message: string, undo?: boolean): void;
+  showToast(message: string, undo?: boolean, open?: Page): void;
   /** Shows a first-run tip as a toast and records it as seen (each tip shows once). */
   showTip(tip: Tip): void;
   // --- Data (Phase 13: backup, import, snapshots) ---
@@ -333,6 +337,19 @@ export interface AppStore {
   restoreSnapshot(key: string): boolean;
   /** Records that "What's new" for this build has been shown (or skipped). */
   markWhatsNewSeen(build: number): void;
+  /**
+   * At launch: after an update (a newer build than last seen), a toast says
+   * so with WHAT'S NEW; then this build counts as seen. A first start (no
+   * tasks, nothing seen) just remembers the build.
+   */
+  noticeUpdate(build: number, version: string): void;
+  /** Records a backup file saved at `at` (the reminder counts from it). */
+  markBackedUp(at: number): void;
+  /**
+   * At launch, unless a toast is showing: with tasks two weeks old and no
+   * backup for two weeks (or ever), a toast offers BACK UP; at most weekly.
+   */
+  noticeBackup(): void;
   /** Empty state → Load example tasks: adds the demo tree at the top level (one undo step). */
   loadExampleTasks(): void;
   /**
@@ -982,8 +999,8 @@ export function createAppStore(deps: StoreDeps) {
         get().showToast('DELETED', true);
       },
 
-      showToast(message, undo = false) {
-        set({ toast: { key: (get().toast?.key ?? 0) + 1, message, undo } });
+      showToast(message, undo = false, open) {
+        set({ toast: { key: (get().toast?.key ?? 0) + 1, message, undo, ...(open && { open }) } });
       },
 
       dismissToast(key) {
@@ -1042,6 +1059,38 @@ export function createAppStore(deps: StoreDeps) {
 
       markWhatsNewSeen(build) {
         set({ onboarding: { ...get().onboarding, lastSeenBuild: build } });
+      },
+
+      noticeUpdate(build, version) {
+        const seen = get().onboarding.lastSeenBuild;
+        if (seen !== null && seen >= build) return;
+        // Before 1.0 nothing was recorded: someone with tasks has updated; an empty app is new.
+        if (seen !== null || taskCount(get().tasks) > 0) get().showToast(`UPDATED TO v${version}`, false, 'whatsnew');
+        get().markWhatsNewSeen(build);
+      },
+
+      markBackedUp(at) {
+        set({ onboarding: { ...get().onboarding, lastBackupAt: at } });
+      },
+
+      noticeBackup() {
+        const s = get();
+        if (s.toast) return;
+        const t = now();
+        const { lastBackupAt, backupNudgedAt } = s.onboarding;
+        if (backupNudgedAt !== null && t - backupNudgedAt < BACKUP_NUDGE_EVERY_MS) return;
+        // Counted from the last backup, or (never backed up) from the oldest task: a new user
+        // isn't asked on their first day.
+        let since = lastBackupAt;
+        if (since === null) {
+          for (const bucket of s.tasks.buckets) for (const task of Object.values(bucket)) since = Math.min(since ?? task.createdAt, task.createdAt);
+        }
+        if (since === null || t - since < BACKUP_DUE_MS) return;
+        const days = Math.floor((t - since) / 86_400_000);
+        set({
+          toast: { key: 1, message: lastBackupAt === null ? 'NO BACKUP YET' : `LAST BACKUP ${days} DAYS AGO`, undo: false, backup: true },
+          onboarding: { ...s.onboarding, backupNudgedAt: t },
+        });
       },
 
       loadExampleTasks() {

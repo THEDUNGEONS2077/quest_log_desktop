@@ -32,7 +32,7 @@
 import { type ReactNode, useState } from 'react';
 
 import { areaName } from '@/lib/areaNames';
-import { atTimeOfDay, addDays, formatRelative, minutesOfDay, startOfDay } from '@/lib/dates';
+import { atTimeOfDay, addDays, minutesOfDay, startOfDay } from '@/lib/dates';
 import { questCategory } from '@/lib/quests';
 import { PRESETS, repeatLabel } from '@/lib/recurrence';
 import { findTask } from '@/lib/taskMap';
@@ -43,6 +43,7 @@ import { previewXp } from '@/lib/xp';
 import { useActions, useAppStore, useSelectors } from '@/store/react';
 import { NO_COUNTS } from '@/store/selectors';
 
+import { ago } from './ago';
 import { cx } from './cx';
 import { G } from './glyphs';
 import { confirmDeleteForever, useOpenDialog } from './menu';
@@ -66,12 +67,6 @@ function presetOf(rule: RepeatRule | null): string | null {
     if (p.freq === rule.freq && p.interval === rule.interval && JSON.stringify(('weekdays' in p && p.weekdays) || null) === JSON.stringify(rule.weekdays ?? null)) return k;
   }
   return null;
-}
-
-/** "5m ago", "3d ago", or "just now". */
-function ago(ts: number, now: number): string {
-  const r = formatRelative(ts, now);
-  return r === 'NOW' ? 'just now' : `${r.toLowerCase()} ago`;
 }
 
 /** "2026-10-16" for a date input. */

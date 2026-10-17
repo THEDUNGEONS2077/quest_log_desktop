@@ -29,10 +29,14 @@ import { type DialogState, type OpenMenuState, OverlayContext } from './menu';
 import { Sidebar } from './Sidebar';
 import { Toast } from './Toast';
 import { usePresence } from './usePresence';
+import { useDueSignal } from './useDueSignal';
 import { useShortcuts } from './useShortcuts';
 
 /** How long a closed menu or dialog stays to fade out (matches --fast in theme.css). */
 const EXIT_MS = 120;
+
+declare const __APP_VERSION__: string;
+declare const __APP_BUILD__: number;
 
 export function App() {
   const bundle = useStoreBundle();
@@ -50,6 +54,15 @@ export function App() {
   useEffect(() => {
     document.documentElement.dataset.reduceMotion = reduceMotion;
   }, [reduceMotion]);
+  // Updated since the last launch: say so, with WHAT'S NEW (once per build).
+  // TODAY's count in the window title and on the installed app's icon.
+  useDueSignal();
+  // Then, if nothing else is said, the backup reminder (tasks live only in this browser).
+  useEffect(() => {
+    const s = bundle.store.getState();
+    s.noticeUpdate(__APP_BUILD__, __APP_VERSION__);
+    s.noticeBackup();
+  }, [bundle]);
   // Text size: every font token is times --text-scale (theme.css). A value saved before the
   // setting existed, or not one of the sizes offered, counts as standard.
   useEffect(() => {

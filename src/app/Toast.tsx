@@ -9,10 +9,16 @@ import { useEffect } from 'react';
 
 import { usePresence } from './usePresence';
 
+/** A toast's button for each page it can open. */
+const PAGE_BUTTON: Record<Page, string> = { whatsnew: 'WHAT’S NEW', settings: 'SETTINGS', help: 'HELP', trash: 'TRASH' };
+
 /** How long a dismissed toast takes to leave (matches --base in theme.css). */
 const EXIT_MS = 200;
 
 import { useActions, useAppStore } from '@/store/react';
+import type { Page } from '@/store/uiState';
+
+import { downloadBackup } from './backupFile';
 
 export function Toast() {
   const toast = useAppStore((s) => s.toast);
@@ -27,6 +33,30 @@ export function Toast() {
   return (
     <div key={shown.key} className={leaving ? 'toast leaving' : 'toast'} role="status" aria-live="polite" inert={leaving}>
       <span>{shown.message}</span>
+      {shown.open && (
+        <button
+          type="button"
+          className="text-btn primary"
+          onClick={() => {
+            actions.openPage(shown.open!);
+            actions.dismissToast(shown.key);
+          }}
+        >
+          {PAGE_BUTTON[shown.open]}
+        </button>
+      )}
+      {shown.backup && (
+        <button
+          type="button"
+          className="text-btn primary"
+          onClick={() => {
+            actions.dismissToast(shown.key);
+            downloadBackup(actions);
+          }}
+        >
+          BACK UP
+        </button>
+      )}
       {shown.undo && (
         <button
           type="button"

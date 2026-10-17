@@ -37,6 +37,6 @@ export type SidebarSection = 'views' | 'areas' | 'archive' | 'system';
 export type View = 'list' | 'today' | 'upcoming';
 
 /** Desktop pages shown in the centre instead of a list. */
-export type Page = 'settings' | 'trash' | 'help';
+export type Page = 'settings' | 'trash' | 'help' | 'whatsnew';
 
 export const DEFAULT_UI: UiState = { tab: 'active', zoomRootId: null, completedExpanded: [], category: 'all', view: 'today', detailCollapsed: false, sidebarCollapsed: ['archive'] };

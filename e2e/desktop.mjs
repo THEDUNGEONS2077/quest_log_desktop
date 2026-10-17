@@ -505,6 +505,24 @@ try {
     }
   });
 
+  await path("the window title counts what's due; Settings shows the last backup; What's new lists this version", async () => {
+    await nav('ALL QUESTS').click();
+    await addQuest('Due in the title @today 11:59pm');
+    await page.waitForFunction(() => /^quest_log · \d+ due$/.test(document.title), null, { timeout: 4000 });
+    await nav('SETTINGS').click();
+    await see('Last backup: never');
+    const download = page.waitForEvent('download');
+    await page.getByRole('button', { name: /EXPORT BACKUP/ }).click();
+    await download;
+    await see('Last backup: just now');
+    await page.getByRole('button', { name: /WHAT’S NEW/ }).click();
+    await see('> WHAT’S NEW');
+    const version = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8')).version;
+    await see(`${version} · build`);
+    await see('this version');
+    await shot('24-whats-new');
+  });
+
   await path('a narrow window: the sidebar becomes a drawer', async () => {
     await page.setViewportSize({ width: 820, height: 800 });
     await page.keyboard.press('Escape');

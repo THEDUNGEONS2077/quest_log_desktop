@@ -22,6 +22,7 @@ import { cx } from './cx';
 import { G } from './glyphs';
 import { useOpenMenuAt } from './menu';
 import { HelpPage } from './pages/HelpPage';
+import { WhatsNewPage } from './pages/WhatsNewPage';
 import { SettingsPage } from './pages/SettingsPage';
 import { TrashPage } from './pages/TrashPage';
 import { dayLabel, TodayList, UpcomingList } from './PlanList';
@@ -38,6 +39,7 @@ export function CenterPane() {
   if (page === 'settings') return <SettingsPage />;
   if (page === 'trash') return <TrashPage />;
   if (page === 'help') return <HelpPage />;
+  if (page === 'whatsnew') return <WhatsNewPage />;
   if (view === 'today')
     return (
       <main className="center">

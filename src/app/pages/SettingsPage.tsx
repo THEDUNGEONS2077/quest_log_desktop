@@ -10,17 +10,20 @@
  *   - the daily snapshots (the last 3 days) can each be restored.
  * Nothing is uploaded: files go between this browser and your disk.
  */
-import { type ChangeEvent, useRef, useState } from 'react';
+import { type ChangeEvent, useEffect, useRef, useState } from 'react';
 
-import { backupFileName, countDocument, type DocCounts, makeBackup } from '@/lib/backup';
+import { countDocument, type DocCounts } from '@/lib/backup';
 import { formatMinutes } from '@/lib/dates';
 import type { TasksDocument } from '@/lib/types';
 import { BackupError, parseBackup } from '@/store/backup';
 import { useActions, useAppStore } from '@/store/react';
 import { TEXT_SIZES, type TextSize } from '@/store/settings';
 
+import { ago } from '../ago';
+import { downloadBackup } from '../backupFile';
 import { cx } from '../cx';
 import { useOpenDialog } from '../menu';
+import { useMinute } from '../useMinute';
 import { Page } from './Page';
 
 declare const __APP_VERSION__: string;
@@ -38,17 +41,22 @@ export function SettingsPage() {
   const [incoming, setIncoming] = useState<{ doc: TasksDocument; label: string } | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const exportBackup = () => {
-    const now = Date.now();
-    const json = JSON.stringify(makeBackup(actions.exportDocument(), now, { version: __APP_VERSION__, build: __APP_BUILD__ }));
-    const url = URL.createObjectURL(new Blob([json], { type: 'application/json' }));
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = backupFileName(now);
-    a.click();
-    setTimeout(() => URL.revokeObjectURL(url), 1000);
-    actions.showToast('BACKUP SAVED', false);
-  };
+  const exportBackup = () => downloadBackup(actions);
+  const lastBackupAt = useAppStore((s) => s.onboarding.lastBackupAt);
+  const now = useMinute();
+  // Whether the browser keeps the tasks until they're cleared on purpose (granted to installed
+  // apps), or may clear them when space runs low. Asked once; unknown while it answers.
+  const [persisted, setPersisted] = useState<boolean | null>(null);
+  useEffect(() => {
+    let live = true;
+    void navigator.storage
+      ?.persisted?.()
+      .then((p) => live && setPersisted(p))
+      .catch(() => undefined);
+    return () => {
+      live = false;
+    };
+  }, []);
 
   const onFile = async (e: ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0];
@@ -112,6 +120,21 @@ export function SettingsPage() {
       <section className="settings-group">
         <h2 className="section-title">YOUR DATA</h2>
         <p className="dim">Your tasks live only in this browser. Back them up to a file now and then; the file also moves tasks to and from the phone app.</p>
+        <p className="dim small data-status">
+          <span className="nowrap">
+            Last backup: <span className={lastBackupAt === null ? 'accent' : undefined}>{lastBackupAt === null ? 'never' : ago(lastBackupAt, now)}</span>
+          </span>
+          {persisted !== null && (
+            <>
+              {' · '}
+              {persisted ? (
+                <span>storage: kept until you clear it</span>
+              ) : (
+                <span>storage: the browser may clear it when space runs low (install the app to keep it)</span>
+              )}
+            </>
+          )}
+        </p>
         <div className="button-row">
           <button type="button" className="text-btn primary" onClick={exportBackup}>
             ↧ EXPORT BACKUP
@@ -181,7 +204,10 @@ export function SettingsPage() {
       </section>
 
       <p className="dim small">
-        quest_log desktop v{__APP_VERSION__} (build {__APP_BUILD__}) · offline · no analytics · nothing leaves this browser
+        quest_log desktop v{__APP_VERSION__} (build {__APP_BUILD__}) · offline · no analytics · nothing leaves this browser ·{' '}
+        <button type="button" className="link-btn" onClick={() => actions.openPage('whatsnew')}>
+          WHAT’S NEW
+        </button>
       </p>
     </Page>
   );

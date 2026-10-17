@@ -2207,3 +2207,43 @@ input.area-name {
 .nowrap {
   white-space: nowrap;
 }
+
+/* --- What's new (pages/WhatsNewPage.tsx) ----------------------------------- */
+.release {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-sm);
+}
+.release.current .section-title {
+  color: var(--accent);
+}
+.release b {
+  color: var(--text-bright);
+}
+/* A change: a bullet, hanging, so wrapped lines start under the text. */
+.release .change {
+  position: relative;
+  padding-left: var(--s-lg);
+}
+.release .change::before {
+  content: '·';
+  position: absolute;
+  left: var(--s-xs);
+  color: var(--accent);
+}
+.release .change.nested {
+  margin-left: var(--s-lg);
+}
+/* A text button inside a line of text (Settings' WHAT'S NEW). */
+.link-btn {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--accent);
+  font: inherit;
+  letter-spacing: inherit;
+  cursor: pointer;
+}
+.link-btn:hover {
+  text-shadow: var(--glow-text-faint);
+}

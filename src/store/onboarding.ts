@@ -21,9 +21,18 @@ export interface Onboarding {
    * build before 0.10.0).
    */
   lastSeenBuild: number | null;
+  /** When the tasks were last exported to a backup file (desktop V1 pass 2026-10-17); null: never. */
+  lastBackupAt: number | null;
+  /** When the backup reminder last showed (it waits a week before showing again). */
+  backupNudgedAt: number | null;
 }
 
-export const DEFAULT_ONBOARDING: Onboarding = { tipsSeen: [], lastSeenBuild: null };
+export const DEFAULT_ONBOARDING: Onboarding = { tipsSeen: [], lastSeenBuild: null, lastBackupAt: null, backupNudgedAt: null };
+
+/** No backup for this long (ms), with tasks that old: the reminder shows. */
+export const BACKUP_DUE_MS = 14 * 86_400_000;
+/** The reminder shows at most this often (ms). */
+export const BACKUP_NUDGE_EVERY_MS = 7 * 86_400_000;
 
 /** What a tip's condition can look at. */
 export interface TipContext {
