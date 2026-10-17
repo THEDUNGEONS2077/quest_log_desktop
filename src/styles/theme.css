@@ -75,16 +75,20 @@
   --fade-rule: linear-gradient(90deg, var(--line), transparent);
   --fade-rule-lit: linear-gradient(90deg, var(--accent-35), transparent);
 
-  /* Type: one family; sizes a step denser than the phone (a desktop reads closer). */
+  /* Type: one family; sizes a step denser than the phone (a desktop reads closer).
+     Every size and line height is times --text-scale: the Text size setting
+     (V1 pass 2026-10-17; App.tsx sets it on <html>). Only text grows: the
+     panes and spacing keep their sizes (Ctrl + in the browser zooms it all). */
+  --text-scale: 1;
   --font: 'JetBrains Mono', ui-monospace, monospace;
-  --fs-title: 22px;
-  --fs-display: 18px;
-  --fs-body: 14px;
-  --fs-quest: 13px;
-  --fs-meta: 12px;
-  --fs-small: 11px;
-  --lh-body: 20px;
-  --lh-meta: 16px;
+  --fs-title: calc(22px * var(--text-scale));
+  --fs-display: calc(18px * var(--text-scale));
+  --fs-body: calc(14px * var(--text-scale));
+  --fs-quest: calc(13px * var(--text-scale));
+  --fs-meta: calc(12px * var(--text-scale));
+  --fs-small: calc(11px * var(--text-scale));
+  --lh-body: calc(20px * var(--text-scale));
+  --lh-meta: calc(16px * var(--text-scale));
 
   /* Spacing (4 pt grid) and shape. */
   --s-xs: 4px;
@@ -135,7 +139,7 @@
   --nav-x: 12px;
   --nav-icon: 16px;
   /* Settings: the width of every control in the right-hand column, and of page buttons. */
-  --setting-control: 200px;
+  --setting-control: calc(200px * var(--text-scale)); /* grows with the text, so a choice never gets cut off */
 }
 
 /* Reduce Motion (the OS setting, or the app's, which sets data-reduce-motion). */

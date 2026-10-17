@@ -17,6 +17,7 @@ import { formatMinutes } from '@/lib/dates';
 import type { TasksDocument } from '@/lib/types';
 import { BackupError, parseBackup } from '@/store/backup';
 import { useActions, useAppStore } from '@/store/react';
+import { TEXT_SIZES, type TextSize } from '@/store/settings';
 
 import { cx } from '../cx';
 import { useOpenDialog } from '../menu';
@@ -86,6 +87,16 @@ export function SettingsPage() {
             <option value="off">never</option>
             <option value="30">30 days</option>
             <option value="90">90 days</option>
+          </select>
+        </label>
+        <label className="setting">
+          <span>Text size</span>
+          <select value={String(settings.textSize)} onChange={(e) => actions.updateSettings({ textSize: Number(e.target.value) as TextSize })}>
+            {TEXT_SIZES.map((size) => (
+              <option key={size} value={size}>
+                {size === 100 ? '100% (standard)' : `${size}%`}
+              </option>
+            ))}
           </select>
         </label>
         <label className="setting">

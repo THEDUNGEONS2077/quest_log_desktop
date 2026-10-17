@@ -180,7 +180,7 @@ export function Sidebar() {
             </div>
           ))
         ) : (
-          <p className="nav-empty dim">EMPTY · DELETED AREAS LAND HERE</p>
+          <p className="nav-empty dim">NOTHING ARCHIVED</p>
         )}
       </Section>
 

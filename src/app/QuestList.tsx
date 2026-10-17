@@ -20,6 +20,7 @@ import { RowTree, settledRows } from './Fold';
 import { setVisibleRows } from './menu';
 import { TaskRow } from './TaskRow';
 import { Prompted } from './Prompted';
+import { useBlank, Welcome } from './Welcome';
 
 export function QuestList() {
   const selectors = useSelectors();
@@ -30,6 +31,7 @@ export function QuestList() {
   const deferred = useDeferredValue(live);
   const { rows, query } = live.query ? deferred : live;
   const zoomed = useAppStore((s) => s.ui.zoomRootId !== null);
+  const blank = useBlank();
 
   // The same function while the query is: unchanged rows are then skipped (RowTree).
   const render = useCallback(
@@ -41,6 +43,7 @@ export function QuestList() {
   // The arrow keys skip objectives that are folding away (still listed only to close smoothly).
   useEffect(() => setVisibleRows(settledRows(rows, folding).map((r) => r.id)), [rows, folding]);
 
+  if (!rows.length && blank && !query && !zoomed) return <Welcome />;
   if (!rows.length) {
     return (
       <p className="empty">

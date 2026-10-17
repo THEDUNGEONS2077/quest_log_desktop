@@ -18,6 +18,7 @@
 import { useEffect, useMemo, useState } from 'react';
 
 import { useAppStore, useStoreBundle } from '@/store/react';
+import { TEXT_SIZES } from '@/store/settings';
 
 import { CenterPane } from './CenterPane';
 import { ContextMenu } from './ContextMenu';
@@ -41,12 +42,20 @@ export function App() {
   const selected = useAppStore((s) => s.selectedId !== null);
   const detailCollapsed = useAppStore((s) => s.ui.detailCollapsed);
   const reduceMotion = useAppStore((s) => s.settings.reduceMotion);
+  const textSize = useAppStore((s) => s.settings.textSize);
+  const onPage = useAppStore((s) => s.page !== null);
   // Picking something in the drawer closes it.
   const place = useAppStore((s) => `${s.ui.view}|${s.ui.category}|${s.ui.tab}|${s.ui.zoomRootId}|${s.page}`);
 
   useEffect(() => {
     document.documentElement.dataset.reduceMotion = reduceMotion;
   }, [reduceMotion]);
+  // Text size: every font token is times --text-scale (theme.css). A value saved before the
+  // setting existed, or not one of the sizes offered, counts as standard.
+  useEffect(() => {
+    const scale = (TEXT_SIZES as readonly number[]).includes(textSize) ? textSize / 100 : 1;
+    document.documentElement.style.setProperty('--text-scale', String(scale));
+  }, [textSize]);
   const [drawerPlace, setDrawerPlace] = useState(place);
   if (drawerPlace !== place) {
     setDrawerPlace(place);
@@ -65,7 +74,7 @@ export function App() {
 
   return (
     <OverlayContext.Provider value={overlays}>
-      <div className={cx('app', selected && 'has-selection', drawer && 'drawer-open', detailCollapsed && 'detail-collapsed')}>
+      <div className={cx('app', selected && 'has-selection', onPage && 'on-page', drawer && 'drawer-open', detailCollapsed && 'detail-collapsed')}>
         <button type="button" className="drawer-btn icon-btn" aria-label="Views and areas" onClick={() => setDrawer((d) => !d)}>
           ≡
         </button>

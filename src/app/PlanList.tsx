@@ -28,6 +28,7 @@ import { useJustChecked } from './TaskRow';
 import { TitleEditor } from './TitleEditor';
 import { useMinute } from './useMinute';
 import { Prompted } from './Prompted';
+import { useBlank, Welcome } from './Welcome';
 
 const DAY = new Intl.DateTimeFormat('en-GB', { weekday: 'short', day: 'numeric', month: 'short' });
 
@@ -40,9 +41,11 @@ export function TodayList() {
   const selectors = useSelectors();
   const now = useMinute();
   const rows = useAppStore((s) => selectors.todayRows(s, now));
+  const blank = useBlank();
   useEffect(() => setVisibleRows(rows.map((r) => r.id)), [rows]);
   const overdue = rows.filter((r) => r.overdue);
   const today = rows.filter((r) => !r.overdue);
+  if (blank) return <Welcome />;
   if (!rows.length) return <p className="empty"><Prompted>NOTHING DUE TODAY. GIVE TASKS A DATE (@fri, @today 3pm) TO SEE THEM HERE.</Prompted></p>;
   return (
     <div className="list plan" role="list">
@@ -117,7 +120,12 @@ const PlanTaskRow = memo(function PlanTaskRow({ row }: { row: PlanRow }) {
         </span>
       </button>
       <div className="title-col">
-        {editing ? <TitleEditor id={task.id} className="title" /> : <span className="title">{shownTitle(task) || 'Untitled'}</span>}
+        {/* A quest looks as it does on its own list (capitals, bold): the same thing, everywhere. */}
+        {editing ? (
+          <TitleEditor id={task.id} className={cx('title', task.parentId === null && 'quest-title')} />
+        ) : (
+          <span className={cx('title', task.parentId === null && 'quest-title')}>{shownTitle(task) || 'Untitled'}</span>
+        )}
         <div className="meta path">{row.path.join(' › ')}</div>
       </div>
       <span className={cx('due', row.overdue && 'overdue', !row.overdue && isSameDay(row.dueAt, now) && 'today')}>

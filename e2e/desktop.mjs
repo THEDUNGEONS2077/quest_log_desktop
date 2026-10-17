@@ -67,7 +67,7 @@ try {
 
   await path('opens on TODAY, empty, with the three columns', async () => {
     await see('> TODAY');
-    await see('NOTHING DUE TODAY');
+    await see('WELCOME TO QUEST_LOG.'); // a new user's empty TODAY: the welcome
     await see('SELECT A TASK TO SEE ITS DETAILS');
     await shot('01-first-open');
   });
@@ -456,6 +456,53 @@ try {
     await page.keyboard.press('Escape');
     await page.waitForTimeout(300);
     if (await page.getByRole('menu').count()) throw new Error('Escape left the menu open');
+  });
+
+  await path('pages take the full width; Text size scales the type and is kept; long titles wrap on a wide screen', async () => {
+    await nav('SETTINGS').click();
+    await see('> SETTINGS');
+    if (await page.locator('.detail').isVisible()) throw new Error('the details pane shows beside Settings');
+    const quest = () => page.evaluate(() => parseFloat(getComputedStyle(document.querySelector('.quest-title')).fontSize));
+    await nav('ALL QUESTS').click();
+    const before = await quest();
+    await nav('SETTINGS').click();
+    await page.getByLabel('Text size').selectOption('130');
+    await shot('21-settings-text-130');
+    await page.reload();
+    await page.waitForTimeout(500);
+    await nav('ALL QUESTS').click();
+    const after = await quest();
+    if (Math.abs(after / before - 1.3) > 0.02) throw new Error(`quest titles went from ${before} to ${after} px, not 130%`);
+    await nav('SETTINGS').click();
+    await page.getByLabel('Text size').selectOption('100');
+    // Wide screen: a long title wraps at a readable length.
+    await page.setViewportSize({ width: 2560, height: 1440 });
+    await nav('ALL QUESTS').click();
+    await addQuest('A very long quest title that keeps going well past any comfortable reading length so that it would run all the way across a wide screen');
+    const width = await row('A VERY LONG QUEST').locator('.title-col').evaluate((el) => el.getBoundingClientRect().width);
+    if (width > 1100) throw new Error(`a title line ${Math.round(width)} px wide`);
+    await page.setViewportSize({ width: 1440, height: 900 });
+  });
+
+  await path('a fresh browser: the welcome loads example quests (one undo takes them away)', async () => {
+    const fresh = await browser.newContext({ viewport: { width: 1440, height: 900 }, locale: 'en-GB', timezoneId: 'Europe/London' });
+    const p2 = await fresh.newPage();
+    try {
+      await p2.goto(URL);
+      await p2.getByText('WELCOME TO QUEST_LOG.').waitFor({ timeout: 4000 });
+      await p2.screenshot({ path: join(shots, '22-welcome.png') });
+      await p2.getByRole('button', { name: /LOAD EXAMPLE QUESTS/ }).click();
+      await p2.locator('.row', { hasText: 'Welcome to quest_log' }).first().waitFor({ timeout: 4000 });
+      // Its shorthand became fields: high priority, due today.
+      await p2.locator('.row', { hasText: 'Welcome to quest_log' }).first().getByText('!!').waitFor({ timeout: 2000 });
+      await p2.screenshot({ path: join(shots, '23-examples.png') });
+      await p2.keyboard.press('t');
+      await p2.locator('.row', { hasText: 'Welcome to quest_log' }).first().waitFor({ timeout: 4000 });
+      await p2.keyboard.press('Control+z');
+      await p2.getByText('WELCOME TO QUEST_LOG.').waitFor({ timeout: 4000 });
+    } finally {
+      await fresh.close();
+    }
   });
 
   await path('a narrow window: the sidebar becomes a drawer', async () => {

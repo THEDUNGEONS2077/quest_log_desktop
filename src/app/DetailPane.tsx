@@ -322,9 +322,11 @@ function Details({ task, onClose }: { task: Task; onClose: () => void }) {
 
       <footer className="detail-foot">
         <p className="dim small">
-          {!task.done && isQuest && <span className="accent">+{previewXp(tasks, task.id, now)} XP on completion · </span>}
-          {task.done && !!task.xp && <span className="accent">earned +{task.xp} XP · </span>}
-          made {ago(task.createdAt, now)} · changed {ago(task.updatedAt, now)}
+          {/* Each phrase stays on one line: the line breaks between them, never inside one. */}
+          {!task.done && isQuest && <span className="accent nowrap">+{previewXp(tasks, task.id, now)} XP on completion · </span>}
+          {task.done && !!task.xp && <span className="accent nowrap">earned +{task.xp} XP · </span>}
+          <span className="nowrap">made {ago(task.createdAt, now)} · </span>
+          <span className="nowrap">changed {ago(task.updatedAt, now)}</span>
         </p>
         <div className="detail-actions">
           {(isQuest || kids.length > 0) && !task.done && (

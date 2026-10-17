@@ -44,7 +44,7 @@ import { areaName } from '@/lib/areaNames';
 import { type CategoryTab, categoryForNew, onTab, pinArchivedCategories, questCategory } from '@/lib/quests';
 import { parseOutline, pasteOp, TITLE_MAX } from '@/lib/paste';
 import { purgeExpiredTrash } from '@/lib/purge';
-import { SAMPLE_OUTLINE } from '@/lib/sample';
+import { SAMPLE_OUTLINE, SAMPLE_SHORTHAND_DEPTH } from '@/lib/sample';
 import { findTask, taskCount } from '@/lib/taskMap';
 import { titleFor } from '@/lib/title';
 import { ancestors, childIds, getTask, liveChildIds, toDocument } from '@/lib/tree';
@@ -1048,9 +1048,29 @@ export function createAppStore(deps: StoreDeps) {
         // Shown on ALL, so they're visible whichever tab the empty list was on.
         if (get().ui.category !== 'all') get().setCategoryTab('all');
         const tasks = get().tasks;
-        const { op } = pasteOp(tasks, parseOutline(SAMPLE_OUTLINE), null, childIds(tasks, null).length, now(), newId);
-        get().dispatch(op);
-        get().showToast('EXAMPLE TASKS ADDED', true);
+        const at = now();
+        const { defaultTimeMinutes } = get().settings;
+        // Quests' shorthand (`!!`, `@today`, `*weekly`) becomes fields; objectives stay as written.
+        const lines = parseOutline(SAMPLE_OUTLINE);
+        const parsed = lines.map((l) => (l.depth === SAMPLE_SHORTHAND_DEPTH ? parse(l.title, { now: at, defaultTimeMinutes }) : null));
+        const { op, ids } = pasteOp(
+          tasks,
+          lines.map((l, i) => ({ ...l, title: parsed[i]?.title ?? l.title })),
+          null,
+          childIds(tasks, null).length,
+          at,
+          newId,
+        );
+        // Into MAIN, or the first live area if MAIN is gone.
+        const category = categoryForNew('all', tasks.areas);
+        const changes = ids.flatMap((id, i) => {
+          const r = parsed[i];
+          if (!r) return [];
+          const dueAt = r.dueAt ?? (r.repeat ? firstOccurrence(r.repeat, at, defaultTimeMinutes) : undefined);
+          return [{ id, fields: { category, ...(r.priority && { priority: r.priority }), ...(dueAt !== undefined && { dueAt }), ...(r.repeat && { repeat: r.repeat }) } }];
+        });
+        get().dispatch({ type: 'batch', ops: [op, { type: 'update', changes }] });
+        get().showToast('EXAMPLE QUESTS ADDED', true);
       },
 
       requestQuickAdd() {

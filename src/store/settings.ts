@@ -19,7 +19,13 @@ export interface Settings {
   haptics: boolean;
   /** 'system' follows the OS Reduce Motion setting. */
   reduceMotion: 'system' | 'on' | 'off';
+  /** Text size, in percent of the standard (desktop V1 pass 2026-10-17): every font grows, the layout stays. */
+  textSize: TextSize;
 }
+
+/** The text sizes Settings offers (percent). */
+export const TEXT_SIZES = [90, 100, 115, 130] as const;
+export type TextSize = (typeof TEXT_SIZES)[number];
 
 export const DEFAULT_SETTINGS: Settings = {
   notifyByDefault: true,
@@ -29,4 +35,5 @@ export const DEFAULT_SETTINGS: Settings = {
   bootSequence: true,
   haptics: true,
   reduceMotion: 'system',
+  textSize: 100,
 };

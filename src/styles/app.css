@@ -132,6 +132,44 @@ mark {
   color: var(--text-dim);
 }
 
+/* The first-run welcome (Welcome.tsx): on the list's gutters, prose at a
+   readable measure, the first keys in two columns like Help's. */
+.welcome {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-md);
+  padding: var(--s-xl) var(--s-lg);
+  color: var(--text);
+}
+.welcome p {
+  max-width: 68ch;
+}
+.welcome b {
+  color: var(--text-bright);
+}
+.welcome .button-row {
+  display: flex;
+  align-items: center;
+  gap: var(--s-md);
+}
+.welcome-keys {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: var(--s-xs) var(--s-lg);
+  margin: 0;
+  font-size: var(--fs-meta);
+}
+.welcome-keys > div {
+  display: contents;
+}
+.welcome-keys dt {
+  color: var(--accent);
+}
+.welcome-keys dd {
+  margin: 0;
+  color: var(--text-dim);
+}
+
 /* --- The frame: three columns ------------------------------------------- */
 .app {
   display: grid;
@@ -142,6 +180,15 @@ mark {
 }
 .app.detail-collapsed {
   grid-template-columns: var(--sidebar) minmax(0, 1fr) var(--detail-min);
+}
+/* A page (Settings, Help, Trash) has nothing for the details pane: the page
+   takes its room (V1 pass 2026-10-17). */
+.app.on-page,
+.app.on-page.detail-collapsed {
+  grid-template-columns: var(--sidebar) minmax(0, 1fr) 0px;
+}
+.app.on-page > .detail {
+  display: none;
 }
 /* Narrow windows only (below); never part of the grid. */
 .app > .drawer-btn,
@@ -432,7 +479,7 @@ mark {
 .nav-section-head .caret {
   width: var(--nav-icon);
   /* 14 px + 30% (user request 2026-10-12). */
-  font-size: 18.2px;
+  font-size: calc(18.2px * var(--text-scale));
   color: var(--accent);
   opacity: 0.7;
 }
@@ -545,7 +592,7 @@ mark {
 /* An area's caret sits in the icon column; 15 px + 30% (user request 2026-10-12). */
 .nav-item.area .caret {
   width: var(--nav-icon);
-  font-size: 19.5px;
+  font-size: calc(19.5px * var(--text-scale));
 }
 /* An area's projects: one step (--s-md) in from the area's label column. */
 .nav-item.project {
@@ -591,7 +638,7 @@ mark {
   width: var(--caret);
   flex: none;
   color: var(--text);
-  font-size: 15px;
+  font-size: calc(15px * var(--text-scale));
   /* Turns with the fold it opens (the list's objectives, a sidebar section). */
   transition: transform var(--base) var(--ease-fold);
 }
@@ -997,7 +1044,7 @@ mark {
 /* The open/close caret on list rows: 30% larger than the shared 15 px (user request 2026-10-12), still in its 24 px column. */
 .row > .caret {
   align-items: center;
-  font-size: 19.5px;
+  font-size: calc(19.5px * var(--text-scale));
 }
 .check {
   flex: none;
@@ -1005,7 +1052,7 @@ mark {
   width: var(--check);
   text-align: center;
   color: var(--text);
-  font-size: 15px;
+  font-size: calc(15px * var(--text-scale));
   letter-spacing: -2px;
   white-space: nowrap;
 }
@@ -1024,6 +1071,9 @@ mark {
   position: relative;
   flex: 1;
   min-width: 0;
+  /* A long title wraps at a readable length on a wide screen instead of one
+     line across the window (V1 pass 2026-10-17); the row stays full width. */
+  max-width: 96ch;
 }
 .title {
   display: block;
@@ -1436,7 +1486,7 @@ textarea.title {
   outline: none;
   padding: 2px var(--s-xs);
   color: var(--text-bright);
-  font-size: 16px;
+  font-size: calc(16px * var(--text-scale));
   line-height: 22px;
   field-sizing: content;
 }
@@ -1447,7 +1497,7 @@ textarea.title {
 .detail-title.quest-title {
   text-transform: uppercase;
   font-weight: 700;
-  font-size: 15px;
+  font-size: calc(15px * var(--text-scale));
   text-shadow: var(--glow-text-faint);
 }
 .fields {
@@ -2047,7 +2097,9 @@ input.area-name {
 /* Under 900 px: the sidebar becomes a drawer (≡ opens it). */
 @media (max-width: 900px) {
   .app,
-  .app.detail-collapsed {
+  .app.detail-collapsed,
+  .app.on-page,
+  .app.on-page.detail-collapsed {
     grid-template-columns: minmax(0, 1fr);
   }
   .sidebar {
@@ -2149,4 +2201,9 @@ input.area-name {
   background: var(--surface);
   box-shadow: var(--glow-faint);
   font-size: var(--fs-meta);
+}
+
+/* Keeps a short phrase on one line (a line breaks around it, not inside). */
+.nowrap {
+  white-space: nowrap;
 }
