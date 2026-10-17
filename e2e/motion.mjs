@@ -92,6 +92,15 @@ try {
     await field.press('Enter');
   }
   await page.keyboard.press('Escape');
+  // One quest with six objectives, to fold shut and open (2026-10-17).
+  const folder = () => page.locator('.row', { hasText: 'Quest number 5 with' }).first();
+  await folder().hover();
+  await folder().locator('.add-sub').click();
+  for (let i = 1; i <= 6; i++) {
+    await page.keyboard.type(`Objective ${i}`);
+    await page.keyboard.press(i < 6 ? 'Alt+Enter' : 'Enter');
+  }
+  await page.keyboard.press('Escape');
   await cdp.send('Emulation.setCPUThrottlingRate', { rate: CPU_SLOWDOWN });
 
   const row = () => page.locator('.row').nth(2);
@@ -103,6 +112,8 @@ try {
   await measure('toast leaving (on its own)', () => page.waitForTimeout(3000), 1200);
   await measure('sidebar: fold AREAS', () => page.locator('.sidebar .nav-section-head', { hasText: 'AREAS' }).click(), 600);
   await measure('sidebar: open AREAS', () => page.locator('.sidebar .nav-section-head', { hasText: 'AREAS' }).click(), 600);
+  await measure("a quest's objectives fold shut (6)", () => folder().locator('.caret').click(), 600);
+  await measure('and fold open', () => folder().locator('.caret').click(), 600);
   await measure('right-click menu opens', () => row().click({ button: 'right' }), 400);
   await page.keyboard.press('Escape');
   await measure('idle (title panel loops only)', async () => {}, 2000);

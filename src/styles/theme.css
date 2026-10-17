@@ -107,6 +107,12 @@
   --slow: 320ms;
   --ease: cubic-bezier(0.33, 1, 0.68, 1); /* out-cubic */
   --ease-exit: cubic-bezier(0.32, 0, 0.67, 0); /* in-cubic */
+  /* Folds (a quest's objectives, a sidebar section) and the carets that turn
+     with them: a soft start and a long settle (CSS's own ease). A fold moves
+     the furthest of anything here: out-cubic would jump 15% of the way in the
+     first frame (27 px for five objectives); this starts gently and moves at
+     most ~20 px a frame (2026-10-17: "as smooth as possible"). */
+  --ease-fold: cubic-bezier(0.25, 0.1, 0.25, 1);
   /* Endless decorative loops (the title cursor, the XP sheen): paused under Reduce Motion. */
   --loops: running;
 

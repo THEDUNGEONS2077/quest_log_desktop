@@ -2,7 +2,8 @@
  * src/app/CompletedList.tsx: finished quests of the area shown (or ALL),
  * newest first (the phone's COMPLETED tab).
  *
- * Layer: UI. A quest's objectives stay folded unless opened (the caret).
+ * Layer: UI. A quest's objectives stay folded unless opened (the caret);
+ * they fold open and shut smoothly, as on ACTIVE (RowTree).
  * The checkbox restores a task to where it was; right-click offers Restore,
  * Run again and Delete. Each row shows when it was finished and the XP it
  * earned.
@@ -16,6 +17,7 @@ import { shownTitle } from '@/lib/title';
 import { useActions, useAppStore, useSelectors } from '@/store/react';
 
 import { cx } from './cx';
+import { RowTree, settledRows } from './Fold';
 import { G } from './glyphs';
 import { setVisibleRows, useOpenMenu } from './menu';
 import { useMinute } from './useMinute';
@@ -24,13 +26,15 @@ import { Prompted } from './Prompted';
 export function CompletedList() {
   const selectors = useSelectors();
   const rows = useAppStore((s) => selectors.completedRows(s));
-  useEffect(() => setVisibleRows(rows.map((r) => r.id)), [rows]);
+  const searching = useAppStore((s) => s.search.completed.open && s.search.completed.query.trim() !== '');
+  const folding = useAppStore((s) => s.folding);
+  // The arrow keys skip objectives that are folding away (still listed only to close smoothly).
+  useEffect(() => setVisibleRows(settledRows(rows, folding).map((r) => r.id)), [rows, folding]);
   if (!rows.length) return <p className="empty"><Prompted>NOTHING COMPLETED YET.</Prompted></p>;
+  const first = rows[0]!.id;
   return (
     <div className="list" role="list">
-      {rows.map((row, i) => (
-        <CompletedRow key={row.id} row={row} first={i === 0} />
-      ))}
+      <RowTree rows={rows} still={searching} render={(row) => <CompletedRow key={row.id} row={row} first={row.id === first} />} />
     </div>
   );
 }

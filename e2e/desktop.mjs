@@ -321,6 +321,65 @@ try {
     if (biggest > 12) throw new Error(`a ${biggest.toFixed(1)} px step in the glide`);
   });
 
+  await path("a quest's objectives fold shut and open smoothly: every frame a step the same way, nothing jumps at the end", async () => {
+    // 2026-10-17: "a smooth animation for when a quest is expanded and collapsed".
+    await nav('ALL QUESTS').click();
+    await addQuest('Fold under');
+    await addQuest('Fold quest');
+    await page.keyboard.press('Escape');
+    const quest = row('FOLD QUEST');
+    await quest.hover();
+    await quest.locator('.add-sub').click();
+    for (let i = 1; i <= 4; i++) {
+      await page.keyboard.type(`Fold objective ${i}`);
+      await page.keyboard.press(i < 4 ? 'Alt+Enter' : 'Enter');
+    }
+    await page.keyboard.press('Escape');
+    await page.waitForTimeout(500);
+    /** Clicks the quest's caret and records, every frame, where the quest below is and whether its objectives are still there. */
+    const fold = () =>
+      page.evaluate(async () => {
+        const find = (t) => [...document.querySelectorAll('.row')].find((r) => r.textContent.toLowerCase().includes(t));
+        const out = [];
+        const t0 = performance.now();
+        await new Promise((done) => {
+          const tick = (now) => {
+            out.push({ y: find('fold under').getBoundingClientRect().top, listed: !!find('fold objective 1') });
+            if (now - t0 < 800) requestAnimationFrame(tick);
+            else done();
+          };
+          requestAnimationFrame(tick);
+          find('fold quest').querySelector('.caret').click();
+        });
+        return out;
+      });
+    /** Throws unless the quest below moved `way` (-1 up, 1 down) in several steps, never back, by `by` px in all. */
+    const check = (frames, way, name) => {
+      const steps = frames.slice(1).map((f, i) => f.y - frames[i].y);
+      const moved = frames[frames.length - 1].y - frames[0].y;
+      if (Math.sign(moved) !== way || Math.abs(moved) < 100) throw new Error(`${name}: the quest below moved ${moved.toFixed(1)} px`);
+      const back = steps.find((d) => d * way < -0.5);
+      if (back !== undefined) throw new Error(`${name}: a ${back.toFixed(1)} px step back`);
+      const moving = steps.filter((d) => Math.abs(d) > 0.5).length;
+      if (moving < 8) throw new Error(`${name}: it moved in only ${moving} frames (not animated?)`);
+      const biggest = Math.max(...steps.map((d) => Math.abs(d)));
+      if (biggest > Math.abs(moved) * 0.35) throw new Error(`${name}: a ${biggest.toFixed(1)} px jump`);
+      return steps;
+    };
+    const shut = await fold();
+    const steps = check(shut, -1, 'folding shut');
+    // The objectives stay listed while they close, then go without moving anything.
+    const gone = shut.findIndex((f) => !f.listed);
+    if (gone < 0) throw new Error('the folded objectives were not removed');
+    if (Math.abs(steps[gone - 1]) > 0.5) throw new Error(`the quest below jumped ${steps[gone - 1].toFixed(1)} px when they were removed`);
+    await page.waitForTimeout(200);
+    const open = await fold();
+    check(open, 1, 'opening');
+    if (!open[0].listed && !open[1].listed) throw new Error('the objectives did not appear at once to unfold');
+    await page.waitForTimeout(500);
+    await shot('19-fold-open');
+  });
+
   await path('Alt+Enter while editing: a quest gets an objective, an objective the next one; the + sits after the title, on hover', async () => {
     await nav('ALL QUESTS').click();
     await addQuest('Alt enter quest');

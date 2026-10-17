@@ -2,6 +2,11 @@
 
 quest_log desktop. Each version gets one section, newest first. The heading's build number is shown in Settings and written into backups.
 
+## 0.8.0 (build 13)
+
+- **Opening and closing a quest is smooth.** Click the caret (or press → and ←) and its objectives unfold like a curtain, fading in as the quests below glide down. Closing, they fade and fold away while the quests below glide back up. Nothing jumps at the start or the end, and if you change your mind halfway, it turns around from where it is. The same on COMPLETED.
+- **Every fold feels the same:** the sidebar's sections and the carets now use the same soft, smooth motion as the quests.
+
 ## 0.7.0 (build 12)
 
 A visual pass, to match the phone app's new look.

@@ -105,6 +105,14 @@ export const ADVANCE_MS = 500;
  */
 export const LINGER_MS = 1040;
 
+/**
+ * How long a task's objectives take to fold open or shut: the list's fold
+ * (app.css `.fold`, --slow 320 ms) plus a margin. A task folding shut keeps
+ * its objectives listed this long, so they close all the way before they're
+ * removed and nothing jumps (2026-10-17).
+ */
+export const FOLD_MS = 400;
+
 /** `dueSheetFor` value meaning "the whole multi-select selection" (PLAN §9.14 DUE). */
 export const SELECTION = '*selection*';
 
@@ -173,6 +181,14 @@ export interface AppStore {
    * strikethrough plays and holds (PLAN §6.6). Not persisted.
    */
   lingering: ID[];
+  /**
+   * Tasks whose objectives are folding shut (caret, ←, or "collapse all"):
+   * still listed as open until the fold has played (FOLD_MS), so the list
+   * can close them smoothly. Not persisted.
+   */
+  folding: ID[];
+  /** Tasks whose objectives just opened: the list plays their unfolding (for FOLD_MS). Not persisted. */
+  unfolding: ID[];
   /**
    * Repeating tasks just checked: their strike plays and holds, then
    * un-strikes with the new date (PLAN §10.5). Not persisted.
@@ -630,6 +646,36 @@ export function createAppStore(deps: StoreDeps) {
     syncOrderLock();
   };
 
+  // The folds playing (AppStore.folding / unfolding), each with its timer. Folding a task
+  // again, either way, before its fold is over restarts it (the list turns back smoothly).
+  const foldTimers = new Map<ID, ReturnType<typeof setTimeout>>();
+  /**
+   * Marks `ids` as opening or folding shut for FOLD_MS, so the list animates
+   * their objectives in or out, then forgets them.
+   */
+  const markFold = (ids: readonly ID[], opening: boolean) => {
+    if (!ids.length) return;
+    const s = store.getState();
+    const without = (list: readonly ID[]) => list.filter((x) => !ids.includes(x));
+    store.setState({
+      folding: opening ? without(s.folding) : [...without(s.folding), ...ids],
+      unfolding: opening ? [...without(s.unfolding), ...ids] : without(s.unfolding),
+    });
+    for (const id of ids) {
+      clearTimeout(foldTimers.get(id));
+      foldTimers.set(
+        id,
+        setTimeout(() => {
+          foldTimers.delete(id);
+          const st = store.getState();
+          if (st.folding.includes(id) || st.unfolding.includes(id)) {
+            store.setState({ folding: st.folding.filter((x) => x !== id), unfolding: st.unfolding.filter((x) => x !== id) });
+          }
+        }, FOLD_MS),
+      );
+    }
+  };
+
   const store = createStore<AppStore>()(
     subscribeWithSelector((set, get) => ({
       tasks,
@@ -652,6 +698,8 @@ export function createAppStore(deps: StoreDeps) {
       editSession: 0,
       settings,
       lingering: [],
+      folding: [],
+      unfolding: [],
       advancing: [],
       lastGain: null,
       toast: null,
@@ -750,7 +798,10 @@ export function createAppStore(deps: StoreDeps) {
         const parentId = task.parentId === null ? id : task.parentId;
         if (task.parentId !== null && !task.title.trim()) return;
         // Show the new one: open the parent if it's folded (a view change, like the caret).
-        if (getTask(tasks, parentId).collapsed) get().dispatch({ type: 'update', changes: [{ id: parentId, fields: { collapsed: false } }] });
+        if (getTask(tasks, parentId).collapsed) {
+          markFold([parentId], true);
+          get().dispatch({ type: 'update', changes: [{ id: parentId, fields: { collapsed: false } }] });
+        }
         const index = task.parentId === null ? undefined : childIds(get().tasks, parentId).indexOf(id) + 1;
         const child = get().addTask(parentId, '', index);
         // Switching the edit commits the current title (shorthand becomes fields).
@@ -826,6 +877,9 @@ export function createAppStore(deps: StoreDeps) {
 
       toggleCollapsed(id) {
         const task = getTask(get().tasks, id);
+        // Its objectives fold open or shut (the list animates them; marked first, so
+        // folding ones are never dropped from the list for a frame).
+        markFold([id], task.collapsed);
         // A view change, not an edit: no updatedAt bump, so the quest doesn't
         // sort to the top just for being opened or closed.
         get().dispatch({ type: 'update', changes: [{ id, fields: { collapsed: !task.collapsed } }] });
@@ -836,6 +890,11 @@ export function createAppStore(deps: StoreDeps) {
         const siblings = childIds(tasks, getTask(tasks, id).parentId);
         // Only siblings that have children can collapse.
         const changes = siblings.filter((s) => (tasks.children[s]?.length ?? 0) > 0).map((s) => ({ id: s, fields: { collapsed } }));
+        // The ones that change fold open or shut together.
+        markFold(
+          changes.filter((c) => getTask(tasks, c.id).collapsed !== collapsed).map((c) => c.id),
+          !collapsed,
+        );
         if (changes.length) get().dispatch({ type: 'update', changes });
       },
 
@@ -1315,6 +1374,8 @@ export function createAppStore(deps: StoreDeps) {
       },
       toggleCompletedExpanded(id) {
         const list = get().ui.completedExpanded;
+        // Its objectives fold open or shut, as on ACTIVE.
+        markFold([id], !list.includes(id));
         const completedExpanded = list.includes(id) ? list.filter((x) => x !== id) : [...list, id];
         set({ ui: { ...get().ui, completedExpanded } });
       },

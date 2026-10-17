@@ -462,9 +462,10 @@ mark {
 .nav-section-body {
   display: grid;
   grid-template-rows: 1fr;
+  /* The folds' curve, as a quest's objectives fold (--ease-fold). */
   transition:
-    grid-template-rows var(--base) var(--ease),
-    opacity var(--base) var(--ease);
+    grid-template-rows var(--base) var(--ease-fold),
+    opacity var(--base) var(--ease-fold);
 }
 .nav-section.collapsed .nav-section-body {
   grid-template-rows: 0fr;
@@ -472,8 +473,8 @@ mark {
   /* Hidden once folded (not before: the fold would vanish at once). */
   visibility: hidden;
   transition:
-    grid-template-rows var(--base) var(--ease),
-    opacity var(--base) var(--ease),
+    grid-template-rows var(--base) var(--ease-fold),
+    opacity var(--base) var(--ease-fold),
     visibility 0s var(--base);
 }
 .nav-section-inner {
@@ -591,7 +592,8 @@ mark {
   flex: none;
   color: var(--text);
   font-size: 15px;
-  transition: transform var(--fast) var(--ease);
+  /* Turns with the fold it opens (the list's objectives, a sidebar section). */
+  transition: transform var(--base) var(--ease-fold);
 }
 .caret.open {
   transform: rotate(90deg);
@@ -880,6 +882,60 @@ mark {
    closes with it, and the next quest's is already where it belongs.) */
 .quest-list {
   margin-top: calc(-1 * (var(--s-xs) + var(--hairline)));
+}
+/* A task's objectives: one block under it (app/Fold.tsx) that folds open and
+   shut (2026-10-17). Opening, the block grows from nothing like a curtain
+   while its rows fade in; closing, it shrinks away as they fade out, and the
+   rows below glide to their place. One grid track per block, changed on its
+   own (as the sidebar's sections fold), so the browser lays out only what
+   moves; the rows themselves keep their size and are only clipped. The
+   store keeps a folding block's rows listed until the fold has played
+   (FOLD_MS, 400 ms > --slow), so it closes all the way. */
+.fold {
+  display: grid;
+  grid-template-rows: 1fr;
+}
+.fold-clip {
+  min-height: 0;
+}
+/* Moving: the track glides, and the block clips its rows to it. At rest
+   nothing is clipped (an edited row's shorthand chips float above it). */
+.fold.unfolding,
+.fold.folding {
+  transition: grid-template-rows var(--slow) var(--ease-fold);
+}
+.fold.unfolding > .fold-clip,
+.fold.folding > .fold-clip {
+  overflow: hidden;
+}
+/* Its rows are drawn at their real size from the start. Rows otherwise skip
+   rendering until they're on screen (content-visibility), sized meanwhile by
+   a 40 px estimate: a block opening from nothing would grow towards the
+   estimate, then step back as each row appeared at its true height. */
+.fold.unfolding .row,
+.fold.folding .row {
+  content-visibility: visible;
+}
+.fold.unfolding > .fold-clip {
+  transition: opacity var(--slow) var(--ease-fold);
+}
+.fold.folding {
+  grid-template-rows: 0fr;
+}
+/* Closing, the rows fade a little ahead of the curtain, so none is left cut in half. */
+.fold.folding > .fold-clip {
+  opacity: 0;
+  transition: opacity var(--base) var(--ease);
+}
+/* Opening starts from nothing: the block's first style, so this plays once,
+   when it appears. A block turned around mid-fold goes back from where it is. */
+@starting-style {
+  .fold.unfolding {
+    grid-template-rows: 0fr;
+  }
+  .fold.unfolding > .fold-clip {
+    opacity: 0;
+  }
 }
 .row {
   position: relative;

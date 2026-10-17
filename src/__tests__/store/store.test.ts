@@ -3,7 +3,7 @@
  * wiring (store/createStore.ts, store/history.ts, store/selectors.ts).
  */
 import { childIds } from '@/lib/tree';
-import { createAppStore, installPersistence, LINGER_MS } from '@/store/createStore';
+import { createAppStore, FOLD_MS, installPersistence, LINGER_MS } from '@/store/createStore';
 import { HISTORY_LIMIT } from '@/store/history';
 import { createMemoryKV } from '@/store/kv';
 import { saveTasks } from '@/store/persist';
@@ -872,7 +872,87 @@ describe('editing keeps the list still (bug 2026-10-09)', () => {
     const before = tk(store.getState().tasks, a)!.updatedAt;
     s.toggleCollapsed(a);
     expect(tk(store.getState().tasks, a)!.updatedAt).toBe(before);
-    expect(sel.activeRows(store.getState()).map((r) => r.id)).toEqual([b, a]);
+    // The quests' order (its objective is still listed while it folds shut).
+    expect(sel.activeRows(store.getState()).filter((r) => r.depth === 0).map((r) => r.id)).toEqual([b, a]);
+  });
+});
+
+describe("folding a task's objectives open and shut (2026-10-17)", () => {
+  beforeEach(() => jest.useFakeTimers());
+  afterEach(() => jest.useRealTimers());
+
+  /** A quest with two objectives, the second with one of its own. */
+  function quest() {
+    const { store } = makeStore();
+    const s = store.getState();
+    const q = s.addTask(null, 'quest');
+    const a = s.addTask(q, 'a');
+    const b = s.addTask(q, 'b');
+    const b1 = s.addTask(b, 'b1');
+    return { store, s, q, a, b, b1, sel: makeSelectors() };
+  }
+
+  it('collapsing changes the task at once, but keeps its objectives listed until the fold has played', () => {
+    const { store, s, q, a, b, b1, sel } = quest();
+    s.toggleCollapsed(q);
+    expect(tk(store.getState().tasks, q)!.collapsed).toBe(true);
+    expect(store.getState().folding).toEqual([q]);
+    expect(sel.activeRows(store.getState()).map((r) => r.id)).toEqual([q, a, b, b1]);
+    jest.advanceTimersByTime(FOLD_MS - 1);
+    expect(store.getState().folding).toEqual([q]);
+    jest.advanceTimersByTime(1);
+    expect(store.getState().folding).toEqual([]);
+    expect(sel.activeRows(store.getState()).map((r) => r.id)).toEqual([q]);
+  });
+
+  it('expanding marks the objectives as unfolding for the length of the fold', () => {
+    const { store, s, q, a, b, b1, sel } = quest();
+    s.toggleCollapsed(q);
+    jest.advanceTimersByTime(FOLD_MS);
+    s.toggleCollapsed(q);
+    expect(store.getState()).toMatchObject({ folding: [], unfolding: [q] });
+    expect(sel.activeRows(store.getState()).map((r) => r.id)).toEqual([q, a, b, b1]);
+    jest.advanceTimersByTime(FOLD_MS);
+    expect(store.getState().unfolding).toEqual([]);
+  });
+
+  it('turned around mid-fold, it goes back the other way, on a fresh timer', () => {
+    const { store, s, q } = quest();
+    s.toggleCollapsed(q);
+    jest.advanceTimersByTime(FOLD_MS / 2);
+    s.toggleCollapsed(q);
+    expect(store.getState()).toMatchObject({ folding: [], unfolding: [q] });
+    // The first fold's time runs out: the second fold isn't cut short.
+    jest.advanceTimersByTime(FOLD_MS / 2);
+    expect(store.getState().unfolding).toEqual([q]);
+    jest.advanceTimersByTime(FOLD_MS / 2);
+    expect(store.getState().unfolding).toEqual([]);
+  });
+
+  it('"collapse all" folds the siblings that change, together', () => {
+    const { store, s, q } = quest();
+    const r = s.addTask(null, 'other');
+    s.addTask(r, 'inside');
+    s.setSiblingsCollapsed(q, true);
+    expect([...store.getState().folding].sort()).toEqual([q, r].sort());
+    jest.advanceTimersByTime(FOLD_MS);
+    s.setSiblingsCollapsed(q, false);
+    expect([...store.getState().unfolding].sort()).toEqual([q, r].sort());
+  });
+
+  it('on COMPLETED, a quest folding shut stays open in the list until its fold has played', () => {
+    const { store, s, q, a, b, b1, sel } = quest();
+    s.toggleDone(q);
+    jest.advanceTimersByTime(LINGER_MS);
+    s.toggleCompletedExpanded(q);
+    expect(store.getState().unfolding).toEqual([q]);
+    expect(sel.completedRows(store.getState()).map((r) => r.id)).toEqual([q, a, b, b1]);
+    jest.advanceTimersByTime(FOLD_MS);
+    s.toggleCompletedExpanded(q);
+    expect(store.getState().folding).toEqual([q]);
+    expect(sel.completedRows(store.getState()).map((r) => r.id)).toEqual([q, a, b, b1]);
+    jest.advanceTimersByTime(FOLD_MS);
+    expect(sel.completedRows(store.getState()).map((r) => r.id)).toEqual([q]);
   });
 });
 

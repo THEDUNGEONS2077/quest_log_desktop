@@ -44,10 +44,10 @@ The same terminal look as the phone app (the phone's `DESIGN.md` is the source),
 - **Motion rules** (animation pass 2026-10-12, measured with `npm run e2e:motion`):
   - animate only `transform` and `opacity`; the GPU runs them without laying anything out. Widths are moved by `translateX` inside a clipping box (the XP bar, the quest meter), and glows that must change get an overlay whose opacity changes (an animated `text-shadow` lays the text out every frame);
   - nothing appears or disappears in one frame: the toast, menus and dialogs animate out (`usePresence`), the details pane cross-fades with its strip, and its content is clipped, never squeezed, while the column changes;
-  - the few size animations left (a completed quest closing its gap, a sidebar section folding, the details column) change one track of a grid, so the browser lays out only what moved. The grid item that shrinks must have no padding, border or margin of its own (a list row sits in a plain `.row-clip`), or the track stops at that size and the rest snaps when the element is removed. A completed quest's gap closes 640–960 ms after completion and the row is removed at 1040 ms, so the removal moves nothing (checked by `npm run e2e`).
+  - the few size animations left (a completed quest closing its gap, a quest's objectives or a sidebar section folding, the details column) change one track of a grid, so the browser lays out only what moved. The grid item that shrinks must have no padding, border or margin of its own (a list row sits in a plain `.row-clip`), or the track stops at that size and the rest snaps when the element is removed. A completed quest's gap closes 640–960 ms after completion and the row is removed at 1040 ms, so the removal moves nothing (checked by `npm run e2e`).
 - **Motion:**
   - durations: `--fast` 120 ms, `--base` 200 ms, `--slow` 320 ms;
-  - curves: `--ease` (out-cubic) for entering, `--ease-exit` (in-cubic) for leaving;
+  - curves: `--ease` (out-cubic) for entering, `--ease-exit` (in-cubic) for leaving, and `--ease-fold` (CSS's `ease`: a soft start, a long settle) for folds and the carets that turn with them. A fold moves the furthest: out-cubic would jump 15% of the way in its first frame (27 px for five objectives), `--ease-fold` at most about 20 px a frame;
   - **Reduce Motion** (the Settings switch, `data-reduce-motion`, or the system's `prefers-reduced-motion`) sets all three durations to 0.
 
 ## Layout
@@ -85,5 +85,11 @@ The same terminal look as the phone app (the phone's `DESIGN.md` is the source),
   - the checkbox pops, a scan line crosses the row, and `+N XP` floats up;
   - the row then slides and fades out, and the rows below glide up (600 ms, matching the store's 1040 ms linger);
   - undo puts it back.
+- **Folding** (2026-10-17): the caret, or `←` / `→`, folds a task's objectives open or shut, on ACTIVE and on COMPLETED.
+  - The list nests its flat rows (`RowTree`, `app/Fold.tsx`), so all of a task's objectives, nested ones too, sit in one block under it: one grid track, so the block opens like a curtain.
+  - Opening: the block grows from nothing (its first style, `@starting-style`) as its rows fade in. Closing: it shrinks away as they fade out, a little ahead of it, so no row is left cut in half. The rows below glide; `--slow` (320 ms) with `--ease-fold`, and the caret turns over `--base`.
+  - A folding block's rows stay listed until the fold has played (store `folding` / `unfolding`, `FOLD_MS` 400 ms), so it closes all the way and their removal moves nothing; the arrow keys skip them meanwhile. Turned around mid-way, a fold goes back from where it is.
+  - While a block moves, its rows are drawn at their real size (no `content-visibility` estimate), or it would grow towards a 40 px-a-row guess and step back.
+  - Checked frame by frame in `npm run e2e`; `npm run e2e:motion` measures it (no dropped frames at 4× CPU slowdown). Searching, nothing folds.
 - **Right-click:** a menu of the phone's hold-menu actions, for a task, an area or a selection.
 - **Focus:** the keyboard focus ring is the accent glow. Every control is reachable by keyboard.
