@@ -53,6 +53,7 @@ const CompletedRow = memo(function CompletedRow({ row, first }: { row: Row; firs
   const title = shownTitle(task);
   return (
     <div
+      role="listitem"
       className={cx('row', 'done', isQuest && 'quest', isQuest && !first && 'quest-gap', selected && 'selected')}
       style={{ paddingLeft: `calc(var(--s-lg) + ${Math.min(row.depth, 8)} * var(--indent))` }}
       data-id={task.id}

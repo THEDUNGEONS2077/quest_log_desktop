@@ -39,6 +39,11 @@ export interface DialogState {
   choices?: { value: string; label: string }[];
   ok: string;
   onOk: (value: string) => void;
+  /**
+   * OK can't be undone (deleting from Trash): OK is styled as destructive and
+   * CANCEL has the focus as the dialog opens, so a stray Enter cancels.
+   */
+  danger?: boolean;
 }
 
 /** Opening menus and dialogs (App provides them). */

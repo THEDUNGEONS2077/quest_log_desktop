@@ -105,7 +105,8 @@ export function QuestMeter({ task, done, total }: { task: Task; done: number; to
   const now = useMinute();
   const xp = baseXp(task, subtasks, now);
   return (
-    <span className="meter" title={`${done} of ${total} done. Completing it earns ${xp} XP`}>
+    // Every objective done: the meter lights up, the quest is ready to complete (V1.1 pass).
+    <span className={cx('meter', total > 0 && done === total && 'full')} title={`${done} of ${total} done. Completing it earns ${xp} XP`}>
       {/* Moved by transform (--p, 0–1), so ticking an objective glides it without layout. */}
       <span className="meter-fill" style={{ '--p': total ? done / total : 0 } as CSSProperties} />
       <span className="meter-text">
@@ -216,7 +217,7 @@ export const TaskRow = memo(function TaskRow({ row, query = '', context = false,
   };
 
   return (
-    <div className={cx('row-wrap', leaving && 'leaving')}>
+    <div className={cx('row-wrap', leaving && 'leaving')} role="listitem">
       <div className="row-clip">
       <div
         className={cx(

@@ -36,6 +36,8 @@
  */
 import { type CSSProperties, type FormEvent, type ReactNode, useEffect, useMemo, useState } from 'react';
 
+import { trashed } from '@/lib/bulk';
+import type { TasksState } from '@/lib/types';
 import { levelInfo } from '@/lib/xp';
 import type { SidebarSection } from '@/store/uiState';
 import { useActions, useAppStore, useSelectors } from '@/store/react';
@@ -44,6 +46,17 @@ import { cx } from './cx';
 import { G } from './glyphs';
 import { useOpenMenuAt } from './menu';
 import { useMinute } from './useMinute';
+
+/** Trash's count per task tree (each tree is a new object after a change), so it's counted once a change. */
+const trashCounts = new WeakMap<TasksState, number>();
+function trashCount(tasks: TasksState): number {
+  let n = trashCounts.get(tasks);
+  if (n === undefined) {
+    n = trashed(tasks).length;
+    trashCounts.set(tasks, n);
+  }
+  return n;
+}
 
 export function Sidebar() {
   const view = useAppStore((s) => s.ui.view);
@@ -63,6 +76,8 @@ export function Sidebar() {
   const overdue = useAppStore((s) => selectors.todayRows(s, now).some((r) => r.overdue));
   const upcoming = useAppStore((s) => selectors.upcomingDays(s, now).reduce((n, d) => n + d.rows.length, 0));
   const projects = useAppStore((s) => selectors.projectsByArea(s));
+  // What's in Trash, like COMPLETED's count: there's something to restore (V1.1 pass).
+  const trash = useAppStore((s) => trashCount(s.tasks));
   const actions = useActions();
   const openMenuAt = useOpenMenuAt();
   const [open, setOpen] = useState<ReadonlySet<string>>(() => new Set());
@@ -200,7 +215,7 @@ export function Sidebar() {
             actions.setTab('completed');
           }}
         />
-        <NavItem glyph={G.trash} label="TRASH" on={page === 'trash'} onClick={() => actions.openPage('trash')} />
+        <NavItem glyph={G.trash} label="TRASH" count={trash} on={page === 'trash'} onClick={() => actions.openPage('trash')} />
         <NavItem glyph={G.settings} label="SETTINGS" on={page === 'settings'} onClick={() => actions.openPage('settings')} />
         <NavItem glyph={G.help} label="HELP" on={page === 'help'} onClick={() => actions.openPage('help')} shortcut="?" />
       </Section>

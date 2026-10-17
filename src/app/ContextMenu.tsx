@@ -57,7 +57,16 @@ export function ContextMenu({ menu, onClose, leaving = false }: Props) {
 
   return (
     <div className={cx('menu-layer', leaving && 'leaving')} onMouseDown={onClose} onContextMenu={(e) => e.preventDefault()} inert={leaving}>
-      <div ref={box} className="menu" role="menu" style={pos} onMouseDown={(e) => e.stopPropagation()} onKeyDown={onKeyDown}>
+      <div
+        ref={box}
+        className="menu"
+        role="menu"
+        // Named by its title (a task's or an area's), for screen readers.
+        aria-labelledby={'items' in menu.target ? undefined : MENU_TITLE_ID}
+        style={pos}
+        onMouseDown={(e) => e.stopPropagation()}
+        onKeyDown={onKeyDown}
+      >
         {'task' in menu.target && <TaskItems id={menu.target.task} close={onClose} />}
         {'area' in menu.target && <AreaItems id={menu.target.area} close={onClose} />}
         {'items' in menu.target && <PlainItems items={menu.target.items} close={onClose} />}
@@ -66,9 +75,26 @@ export function ContextMenu({ menu, onClose, leaving = false }: Props) {
   );
 }
 
-function Item({ glyph, label, onPick, disabled }: { glyph?: string; label: ReactNode; onPick: () => void; disabled?: boolean }) {
+/** Each priority's name, for screen readers (the buttons show only `—` and `!`s). */
+const PRIORITY_NAMES = ['No priority', 'Low priority', 'Medium priority', 'High priority'] as const;
+
+/** The id of the open menu's title (one menu is open at a time); the menu is named by it. */
+const MENU_TITLE_ID = 'context-menu-title';
+
+/**
+ * One item. With `checked` it's one of a set of choices (an area), announced
+ * as a radio item that is or isn't the current one.
+ */
+function Item({ glyph, label, onPick, disabled, checked }: { glyph?: string; label: ReactNode; onPick: () => void; disabled?: boolean; checked?: boolean }) {
   return (
-    <button type="button" role="menuitem" className="menu-item" disabled={disabled} onClick={onPick}>
+    <button
+      type="button"
+      role={checked === undefined ? 'menuitem' : 'menuitemradio'}
+      aria-checked={checked}
+      className="menu-item"
+      disabled={disabled}
+      onClick={onPick}
+    >
       <span className="menu-glyph">{glyph}</span>
       <span>{label}</span>
     </button>
@@ -78,7 +104,7 @@ function Item({ glyph, label, onPick, disabled }: { glyph?: string; label: React
 /** The menu's title: its glyph in the items' glyph column, the text on their label column. */
 function MenuTitle({ glyph, text }: { glyph: string; text: string }) {
   return (
-    <div className="menu-title">
+    <div className="menu-title" id={MENU_TITLE_ID}>
       <span className="menu-glyph">{glyph}</span>
       <span className="menu-title-text">{text}</span>
     </div>
@@ -122,29 +148,47 @@ function TaskItems({ id, close }: { id: string; close: () => void }) {
       <div className="menu-row" role="group" aria-label="Priority">
         <span className="menu-glyph">{G.priority}</span>
         {([0, 1, 2, 3] as Priority[]).map((p) => (
-          <button key={p} type="button" className={cx('prio-btn', task.priority === p && 'on')} onClick={run(() => actions.setPriority(id, p))}>
+          <button
+            key={p}
+            type="button"
+            role="menuitemradio"
+            aria-checked={task.priority === p}
+            aria-label={PRIORITY_NAMES[p]}
+            className={cx('prio-btn', task.priority === p && 'on')}
+            onClick={run(() => actions.setPriority(id, p))}
+          >
             {p === 0 ? '—' : '!'.repeat(p)}
           </button>
         ))}
       </div>
-      <div className="menu-sep" />
+      <div className="menu-sep" role="separator" />
       <Item glyph={G.due} label="Due today" onPick={run(() => actions.setDue(id, dueAt(0), false))} />
       <Item glyph={G.due} label="Due tomorrow" onPick={run(() => actions.setDue(id, dueAt(1), false))} />
       <Item glyph={G.due} label="Due in a week" onPick={run(() => actions.setDue(id, dueAt(7), false))} />
       {task.dueAt !== null && <Item glyph={G.delete} label="Clear due date" onPick={run(() => actions.clearDue(id))} />}
       {isQuest && (
         <>
-          <div className="menu-sep" />
-          <div className="menu-heading">AREA</div>
-          {/* Live areas only: a quest moves out of ARCHIVE, not into it (delete its area for that). */}
-          {areas.filter((a) => a.archivedAt === undefined).map((a) => (
-            <Item key={a.id} glyph={task.category === a.id ? G.done : ''} label={a.name.toUpperCase()} onPick={run(() => actions.setQuestCategory(id, a.id))} />
-          ))}
+          <div className="menu-sep" role="separator" />
+          <div role="group" aria-labelledby="context-menu-area">
+            <div className="menu-heading" id="context-menu-area">
+              AREA
+            </div>
+            {/* Live areas only: a quest moves out of ARCHIVE, not into it (delete its area for that). */}
+            {areas.filter((a) => a.archivedAt === undefined).map((a) => (
+              <Item
+                key={a.id}
+                glyph={task.category === a.id ? G.done : ''}
+                label={a.name.toUpperCase()}
+                checked={task.category === a.id}
+                onPick={run(() => actions.setQuestCategory(id, a.id))}
+              />
+            ))}
+          </div>
         </>
       )}
-      <div className="menu-sep" />
-      {!task.done && <Item glyph={G.indent} label="Indent  (Tab)" onPick={run(() => actions.indentTask(id))} />}
-      {!task.done && !isQuest && <Item glyph={G.outdent} label="Outdent  (Shift+Tab)" onPick={run(() => actions.outdentTask(id))} />}
+      <div className="menu-sep" role="separator" />
+      {!task.done && <Item glyph={G.indent} label="Indent  (Alt+→)" onPick={run(() => actions.indentTask(id))} />}
+      {!task.done && !isQuest && <Item glyph={G.outdent} label="Outdent  (Alt+←)" onPick={run(() => actions.outdentTask(id))} />}
       {!isQuest && <Item glyph="↑" label="Move up  (Alt+↑)" onPick={run(() => actions.moveTaskBy(id, -1))} />}
       {!isQuest && <Item glyph="↓" label="Move down  (Alt+↓)" onPick={run(() => actions.moveTaskBy(id, 1))} />}
       <Item glyph={G.duplicate} label="Duplicate" onPick={run(() => actions.duplicateTask(id))} />
@@ -155,7 +199,7 @@ function TaskItems({ id, close }: { id: string; close: () => void }) {
           void navigator.clipboard.writeText(actions.outlineText(id)).then(() => actions.showToast('COPIED', false));
         })}
       />
-      <div className="menu-sep" />
+      <div className="menu-sep" role="separator" />
       {task.done ? (
         <Item glyph={G.undo} label="Restore" onPick={run(() => actions.restoreTask(id))} />
       ) : (

@@ -28,8 +28,15 @@ The same terminal look as the phone app (the phone's `DESIGN.md` is the source),
   - **Focus:** the field's frame turns accent (as before), and its label lights up with it (`:focus-within`).
   - **Selected row:** the 2 px bar plus a soft glow spilling a few pixels into the row.
   - **Headings:** `>` prompts in titles and empty states are accent (`Prompted`); view titles and the details pane's quest title get `--glow-text-faint`; section headings run on into a hairline rule that fades out (accent for OVERDUE). On pages (Settings, Help, Trash) the headings name the sections: `--text-bright`, with the lit rule.
-  - **Meaning:** TODAY's count turns accent while anything is overdue; a date due later today is one step brighter than other dates (overdue stays accent); `!!!` and overdue dates glow faintly.
-  - **Overlays:** the toast has a lit left edge and a faint glow; a dialog's frame is lightly lit; the context menu's top edge is lit in the middle (drawn in the border's place, like the phone's sheets).
+  - **Meaning:** TODAY's count turns accent while anything is overdue; a date due later today is one step brighter than other dates; `!!!` glows faintly.
+  - **Urgency, in three steps** (V1.1 accents pass 2026-10-17): an overdue date on a row (lists and TODAY) is a **lit tag** (accent text, an `--accent-35` frame, an `--accent-10` wash, the meter's shape), so what's late stands out while scanning; due later today is brighter text; later dates are dim.
+  - **Ready to complete:** a quest whose objectives are all done lights its meter (frame, text, faint glow).
+  - **What a click does:** an open checkbox under the pointer previews its check (a faint `x` in the brackets).
+  - **Current choice:** the date preset matching the task's due day (TODAY, TOMORROW, NEXT WEEK) is lit (`aria-pressed`); CLEAR keeps its place, dimmed, when there's no date.
+  - **Destructive buttons** (`.text-btn.danger`: DELETE, EMPTY TRASH, DELETE FOREVER) are a step quieter (`--text-dim`) at rest, so the safe actions lead, and light fully (frame, wash, glow) under the pointer or the keyboard. A confirm that can't be undone has a destructive OK and opens with CANCEL focused.
+  - **Counts:** planning sections show how many they hold (`OVERDUE · 2`, in the heading's colour, regular weight); TRASH shows its count in the sidebar like COMPLETED.
+  - **Focus vs. selection:** the keyboard's focus ring is a dashed accent outline 2 px out (with the glow); a selected item is a solid lit frame, so the two are never confused.
+  - **Overlays:** the toast has a lit left edge and a faint glow, and a hairline along its bottom that shrinks as its 5 s run out (it stops while the pointer or the keyboard holds the toast; hidden under Reduce Motion); a dialog's frame is lightly lit; the context menu's top edge is lit in the middle (drawn in the border's place, like the phone's sheets).
   - **The list's end:** a long list fades out over the last 24 px at the window's bottom edge instead of being cut off (a sticky gradient at the end of the scrolling content; it rests after the last row once you've scrolled to the end).
   - **Themed controls:** select arrows are the theme's own `▼` (CSS gradients from tokens), and the date and time picker icons are redrawn in the theme colour with a mask.
   - **Motion:** colours, borders and box glows ease in over `--fast`. Text glows change at once, because an animated `text-shadow` relays text every frame. List rows and menu items switch at once too: they change on clicks that also render other things.
@@ -94,5 +101,8 @@ The same terminal look as the phone app (the phone's `DESIGN.md` is the source),
   - A folding block's rows stay listed until the fold has played (store `folding` / `unfolding`, `FOLD_MS` 400 ms), so it closes all the way and their removal moves nothing; the arrow keys skip them meanwhile. Turned around mid-way, a fold goes back from where it is.
   - While a block moves, its rows are drawn at their real size (no `content-visibility` estimate), or it would grow towards a 40 px-a-row guess and step back.
   - Checked frame by frame in `npm run e2e`; `npm run e2e:motion` measures it (no dropped frames at 4× CPU slowdown). Searching, nothing folds.
-- **Right-click:** a menu of the phone's hold-menu actions, for a task, an area or a selection.
-- **Focus:** the keyboard focus ring is the accent glow. Every control is reachable by keyboard.
+- **Right-click:** a menu of the phone's hold-menu actions, for a task, an area or a selection (Shift+F10 or the Menu key from the keyboard).
+- **Focus:** the keyboard focus ring is a dashed accent outline with the glow. Every control is reachable by keyboard, and **Tab always moves the focus** (V1.1: it used to indent the selected task). A selected task indents and outdents with Alt+→ / Alt+← (next to Alt+↑ / Alt+↓ for moving it); while a title is being edited, Tab and Shift+Tab indent. Delete selects the next task.
+- **Dialogs** take the keyboard as they open (their field, else OK, or CANCEL when OK can't be undone) and keep it: Tab cycles inside. Pages' scrolling bodies are focusable, so a long page scrolls from the keyboard.
+- **Several selected:** the details pane lists them (up to 8, then "+N more") and says how to act on them all.
+- **Accessibility is checked:** `npm run e2e` runs axe-core (WCAG 2.2 A/AA and best practice) over every view, the task menu and a dialog. Lists are lists of list items; headings run h1 → h2; the menu's choices are radio items with `aria-checked`.

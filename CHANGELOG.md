@@ -2,6 +2,32 @@
 
 quest_log desktop. Each version gets one section, newest first. The heading's build number is shown in Settings and written into backups.
 
+## 1.1.0 (build 15)
+
+A pass over the look and the feel: what matters stands out, and the keyboard and screen readers get everything right.
+
+- **What's late stands out.** An overdue date is now a lit tag on its row, in the lists and on TODAY, so you can spot it at a glance. Due later today stays brighter text, and later dates are quiet.
+- **A quest ready to finish lights up:** when all its objectives are done, its progress meter glows.
+- **TODAY and UPCOMING show more:**
+  - each section's count (OVERDUE · 2, TODAY · 3);
+  - each task's priority;
+  - the first upcoming day is called TOMORROW.
+- **Small cues that say what a click does:**
+  - pointing at an open checkbox previews its check;
+  - the date preset matching a task's due day (TODAY, TOMORROW, NEXT WEEK) is lit in the details;
+  - CLEAR stays in place, so the row no longer jumps.
+- **Delete buttons are calmer until you mean it:** they're a step quieter than the others and light up fully when you point at them. Deleting from Trash for good opens with CANCEL selected, so a stray Enter can't destroy anything.
+- **Messages behave:** a message now stays its 5 seconds however busy you are (before, it could stay up as long as you kept working), pauses while you point at it so UNDO can't slip away, and shows a thin line counting down.
+- **Tab moves between controls again,** as everywhere else. To indent or outdent a selected task, use **Alt+→ / Alt+←** (next to Alt+↑ / Alt+↓ for moving it); Tab still indents while you're editing a title. After Delete, the next task is selected, so you can keep going from the keyboard.
+- **The keyboard focus is a dashed ring,** so it's never mistaken for a selected item.
+- **Selecting several tasks** now lists them in the details pane, with how to change them all at once.
+- **Trash** lines up its buttons on the right, with EMPTY TRASH no longer a full-width bar, and shows a count in the sidebar.
+- **Clearer words:** "made on Sep 27", "deleted yesterday" (it said "sep 27 ago", "yesterday ago"), and the details' footer no longer runs off the edge.
+- **The new quest field hints at shorthand:** `!! priority · @fri 3pm due · // a note`.
+- **The area in the details' path** (MAIN › …) now takes you to that area.
+- **Screen readers:** lists are announced as lists, headings are in order, dialogs and the right-click menu are labelled, and long pages scroll from the keyboard. An automatic accessibility check now runs with every test.
+- **Loads faster the first time:** the fonts are a third of their old size, with the same letters.
+
 ## 1.0.0 (build 14)
 
 Version 1: a pass over everything, for everyday work.

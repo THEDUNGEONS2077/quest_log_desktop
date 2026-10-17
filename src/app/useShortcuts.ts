@@ -9,7 +9,7 @@
 import { useEffect } from 'react';
 
 import { findTask } from '@/lib/taskMap';
-import { liveChildIds } from '@/lib/tree';
+import { isInSubtree, liveChildIds } from '@/lib/tree';
 import type { StoreBundle } from '@/store/react';
 
 import type { Overlays } from './menu';
@@ -56,7 +56,8 @@ export function useShortcuts({ store }: StoreBundle, blocked: boolean, openMenuA
         s.redo();
         return;
       }
-      if (mod || (e.altKey && e.key !== 'ArrowUp' && e.key !== 'ArrowDown')) return;
+      // Alt goes with the arrows only (Alt+↑↓ move a task, Alt+←→ indent and outdent it).
+      if (mod || (e.altKey && !e.key.startsWith('Arrow'))) return;
 
       switch (e.key) {
         case 'n':
@@ -143,19 +144,29 @@ export function useShortcuts({ store }: StoreBundle, blocked: boolean, openMenuA
           else s.toggleDone(sel.id);
           return;
         case 'Delete':
-        case 'Backspace':
+        case 'Backspace': {
           handled();
+          // The selection moves on to the next task (the one before, at the end), so you can
+          // keep going from the keyboard (V1.1 pass 2026-10-17; it used to clear).
+          const ids = visibleRows();
+          const at = ids.indexOf(sel.id);
+          const after = ids.slice(at + 1).find((id) => !isInSubtree(s.tasks, id, sel.id));
+          const before = at > 0 ? ids[at - 1] : undefined;
           s.deleteTask(sel.id);
-          s.select(null);
+          s.select(at >= 0 ? (after ?? before ?? null) : null);
           return;
-        case 'Tab':
-          handled();
-          if (e.shiftKey) s.outdentTask(sel.id);
-          else s.indentTask(sel.id);
-          return;
+        }
+        // Tab isn't taken: it moves the keyboard focus, as everywhere (V1.1 pass 2026-10-17: Tab
+        // indented the selected task, so tabbing to a button after a click restructured the
+        // list). While a title is being edited, Tab and Shift+Tab still indent (TitleEditor).
         case 'ArrowRight':
         case 'ArrowLeft': {
           handled();
+          if (e.altKey) {
+            if (e.key === 'ArrowRight') s.indentTask(sel.id);
+            else if (sel.parentId !== null) s.outdentTask(sel.id);
+            return;
+          }
           const open = e.key === 'ArrowRight';
           if (liveChildIds(s.tasks, sel.id).length && sel.collapsed === open) s.toggleCollapsed(sel.id);
           return;

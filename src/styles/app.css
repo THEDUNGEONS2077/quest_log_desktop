@@ -42,10 +42,18 @@ button {
 button:disabled {
   cursor: default;
 }
+/* The keyboard's place: a dashed accent ring, set a little out, with the glow. Dashed, so
+   it can't be mistaken for a selected item's solid lit frame (V1.1 pass 2026-10-17: the
+   two looked the same, so a focused sidebar item read as a second selection). */
 :focus-visible {
-  outline: var(--hairline) solid var(--accent);
-  outline-offset: 1px;
+  outline: var(--hairline) dashed var(--accent);
+  outline-offset: 2px;
   box-shadow: var(--glow);
+}
+/* A page's scrolling body takes the keyboard (Page.tsx): its ring sits just inside it. */
+.page-body:focus-visible {
+  outline-offset: -2px;
+  box-shadow: none;
 }
 ::selection {
   background: var(--accent);
@@ -801,17 +809,35 @@ mark {
   box-shadow: var(--glow-faint);
   color: var(--accent);
 }
-.text-btn.danger:hover {
+/* A destructive button (DELETE, EMPTY TRASH, DELETE FOREVER): a step quieter than the
+   others at rest, so the safe actions lead; under the pointer or the keyboard it lights
+   fully, frame and all, with a faint wash, so it's plain what it will do (V1.1 pass). */
+.text-btn.danger {
+  color: var(--text-dim);
+}
+.text-btn.danger:hover,
+.text-btn.danger:focus-visible {
   color: var(--accent);
   border-color: var(--accent);
+  background: var(--accent-10);
+  box-shadow: var(--glow-faint);
 }
 .link {
   color: var(--text);
   text-align: left;
 }
-.link:hover {
+.link:hover:not(:disabled) {
   color: var(--accent);
   text-decoration: underline;
+}
+/* The date preset matching the task's due day: lit, as a selected option (V1.1 pass). */
+.link[aria-pressed='true'] {
+  color: var(--accent);
+  text-shadow: var(--glow-text-faint);
+}
+.link:disabled {
+  color: var(--text-dim);
+  opacity: 0.5;
 }
 
 /* Search, breadcrumb. */
@@ -894,7 +920,7 @@ mark {
   position: absolute;
   left: calc(var(--caret) + var(--s-sm) - var(--hairline) + var(--check) + var(--s-sm));
   top: var(--s-sm);
-  margin-left: 9.5ch;
+  /* margin-left: after the placeholder's first phrase (set inline: QuickAdd.tsx). */
   color: var(--text-dim);
   animation: blink 1060ms steps(1) infinite;
   pointer-events: none;
@@ -1060,6 +1086,22 @@ mark {
   color: var(--accent);
   text-shadow: var(--glow-text);
 }
+/* An open box under the pointer previews its check: a faint x inside the brackets says
+   what a click does (V1.1 accents pass 2026-10-17). Positioned only while pointed at:
+   every box positioned made scrolling a long list draw a little more. */
+.check[aria-checked='false']:hover {
+  position: relative;
+}
+.check[aria-checked='false']:hover::after {
+  content: 'x';
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.5;
+  pointer-events: none;
+}
 .caret:not(:disabled):hover {
   color: var(--accent);
   text-shadow: var(--glow-text);
@@ -1071,8 +1113,17 @@ mark {
   position: relative;
   flex: 1;
   min-width: 0;
-  /* A long title wraps at a readable length on a wide screen instead of one
-     line across the window (V1 pass 2026-10-17); the row stays full width. */
+}
+/* A long title (and its notes) wraps at a readable length on a wide screen
+   instead of one line across the window (V1 pass 2026-10-17). The cap is on
+   the text, not the column: what follows the column in a row (a time, Trash's
+   buttons) stays at the row's right edge (V1.1 pass). */
+/* (Named, not `.title-col > *`: a universal selector is checked against every element.) */
+.title-line,
+.title-editor,
+.title-col > .title,
+.title-col > .meta,
+.title-col > .notes {
   max-width: 96ch;
 }
 .title {
@@ -1133,6 +1184,17 @@ textarea.title {
 .overdue {
   color: var(--accent);
   text-shadow: var(--glow-text-faint);
+}
+/* Overdue, on a row: a lit tag, so what's late stands out when scanning a list
+   (V1.1 accents pass 2026-10-17; it was coloured text among the other meta).
+   The meter's shape, lit: a lit frame and a faint wash, no glow. Due later
+   today stays brighter text, other dates dim: three steps of urgency. */
+.meta .due.overdue,
+.plan-row .due.overdue {
+  padding: 0 var(--s-xs);
+  border: var(--hairline) solid var(--accent-35);
+  border-radius: var(--radius);
+  background: var(--accent-10);
 }
 /* Due later today: one step brighter than other dates (overdue is the accent). */
 .due.today,
@@ -1196,6 +1258,15 @@ textarea.title {
 .meter-xp {
   color: var(--text);
 }
+/* All objectives done: the meter lights (frame, text, a faint glow): the quest is ready to complete. */
+.meter.full {
+  border-color: var(--accent-35);
+  color: var(--accent);
+  box-shadow: var(--glow-faint);
+}
+.meter.full .meter-xp {
+  color: var(--accent);
+}
 
 /* Planning views. */
 .plan-section {
@@ -1217,6 +1288,11 @@ textarea.title {
   flex: 1;
   height: var(--hairline);
   background: var(--fade-rule);
+}
+/* A section's count (TODAY · 3): the heading's colour (dimmer would fail contrast),
+   set apart by weight: the heading is bold, the count regular. */
+.section-count {
+  font-weight: 400;
 }
 .section-title.overdue {
   color: var(--accent);
@@ -1395,6 +1471,25 @@ textarea.title {
     opacity var(--fast) var(--ease-exit),
     transform var(--base) var(--ease-exit),
     visibility 0s var(--base);
+}
+/* Several tasks selected (DetailPane ManyDetails): their titles, a quiet list. */
+.many-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-xs);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.many-list > li {
+  overflow: hidden;
+  color: var(--text);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.many-list > li::before {
+  content: '› ';
+  color: var(--accent);
 }
 .empty-detail {
   display: flex;
@@ -1889,6 +1984,10 @@ input.area-name {
   box-shadow: var(--glow);
   animation: rise var(--base) var(--ease);
 }
+/* The form inside the dialog lays nothing out itself: its parts are the dialog's rows. */
+.dialog-form {
+  display: contents;
+}
 .dialog-title {
   color: var(--text-bright);
   font-size: var(--fs-body);
@@ -1937,6 +2036,43 @@ input.area-name {
   from {
     opacity: 0;
     transform: translate(-50%, 16px);
+  }
+}
+/* The toast's clock (Toast.tsx): a hairline along the bottom edge that shrinks
+   to nothing as the toast's time runs out, from the lit left edge. It stops
+   while the pointer or the keyboard holds the toast, as the clock does. A
+   transform only (nothing is laid out); hidden under Reduce Motion, where
+   it would only jump. */
+.toast {
+  overflow: hidden;
+}
+.toast-clock {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: var(--hairline);
+  background: var(--accent-60);
+  transform-origin: left;
+  animation: toast-clock linear forwards;
+  /* Its own layer, so the GPU runs it: drawn on the main thread instead, it cost a long
+     list's scrolling a frame now and then while a toast was up. */
+  will-change: transform;
+}
+.toast.held .toast-clock {
+  animation-play-state: paused;
+}
+@keyframes toast-clock {
+  to {
+    transform: scaleX(0);
+  }
+}
+:root[data-reduce-motion='on'] .toast-clock {
+  display: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  :root:not([data-reduce-motion='off']) .toast-clock {
+    display: none;
   }
 }
 /* Leaving: back down and out (app/Toast.tsx keeps it for --base). */
@@ -2038,7 +2174,19 @@ input.area-name {
 }
 .trash-row {
   align-items: center;
+  padding-left: 0;
+  padding-right: 0;
   border-bottom: var(--hairline) solid var(--line);
+}
+/* Each button as wide as Settings' controls would be too wide for two; one width for both. */
+.trash-row > .text-btn {
+  min-width: 96px;
+}
+/* EMPTY TRASH: under the list on the right, where each row's DELETE is (V1.1 pass 2026-10-17:
+   it was a full-width bar, the loudest thing on the page for its most destructive action). */
+.trash-actions {
+  display: flex;
+  justify-content: flex-end;
 }
 .help p {
   margin-bottom: var(--s-md);

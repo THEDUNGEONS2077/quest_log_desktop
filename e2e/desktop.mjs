@@ -479,7 +479,8 @@ try {
     await page.setViewportSize({ width: 2560, height: 1440 });
     await nav('ALL QUESTS').click();
     await addQuest('A very long quest title that keeps going well past any comfortable reading length so that it would run all the way across a wide screen');
-    const width = await row('A VERY LONG QUEST').locator('.title-col').evaluate((el) => el.getBoundingClientRect().width);
+    // The text wraps at its measure (the column itself runs on: what follows it stays at the edge).
+    const width = await row('A VERY LONG QUEST').locator('.title-line').evaluate((el) => el.getBoundingClientRect().width);
     if (width > 1100) throw new Error(`a title line ${Math.round(width)} px wide`);
     await page.setViewportSize({ width: 1440, height: 900 });
   });
@@ -521,6 +522,130 @@ try {
     await see(`${version} · build`);
     await see('this version');
     await shot('24-whats-new');
+  });
+
+  await path('a toast keeps its 5 s however busy the app is, and holds while pointed at', async () => {
+    // V1.1 pass 2026-10-17: its clock restarted on every store change, so it stayed up while you worked.
+    await nav('ALL QUESTS').click();
+    await addQuest('Toast clock quest');
+    await see('Toast clock quest'.toUpperCase());
+    await page.mouse.move(700, 300);
+    for (let i = 0; i < 6; i++) {
+      await nav(i % 2 ? 'TODAY' : 'ALL QUESTS').click(); // busy: views change, the app re-renders
+      await page.waitForTimeout(1000);
+    }
+    if (await page.locator('.toast').count()) throw new Error('the toast outlived its 5 s while the app was busy');
+    await nav('ALL QUESTS').click();
+    await row('TOAST CLOCK QUEST').locator('.check').click();
+    await page.locator('.toast').waitFor({ timeout: 2000 });
+    await page.locator('.toast').hover();
+    await page.waitForTimeout(6000);
+    if (!(await page.locator('.toast').count())) throw new Error('the toast left while the pointer held it');
+    await page.mouse.move(700, 300);
+    await page.waitForTimeout(5800);
+    if (await page.locator('.toast').count()) throw new Error('the toast stayed after the pointer let go');
+  });
+
+  await path('Tab moves the focus, never the task; Alt+→ / Alt+← indent and outdent; Delete selects the next task', async () => {
+    // V1.1 pass: Tab indented the selected task, so tabbing to a button after a click restructured the list.
+    await nav('ALL QUESTS').click();
+    await addQuest('Tab under');
+    await addQuest('Tab test');
+    const depth = (t) => row(t).evaluate((el) => Number(el.dataset.depth));
+    await row('TAB TEST').click();
+    await page.keyboard.press('Tab');
+    await page.keyboard.press('Tab');
+    if ((await depth('TAB TEST')) !== 0) throw new Error('Tab indented the selected task');
+    if (!(await page.evaluate(() => document.activeElement && document.activeElement !== document.body))) throw new Error('Tab did not move the focus');
+    await row('TAB TEST').click();
+    await page.keyboard.press('Alt+ArrowRight');
+    await page.waitForFunction(() => document.querySelector('.row[data-id] .title')?.textContent !== null);
+    if ((await depth('Tab test')) !== 1) throw new Error('Alt+→ did not indent');
+    await page.keyboard.press('Alt+ArrowLeft');
+    if ((await depth('TAB TEST')) !== 0) throw new Error('Alt+← did not outdent');
+    // Delete: the selection moves on to the next task.
+    const order = await page.locator('.quest-list .row').evaluateAll((rows) => rows.map((r) => r.dataset.id));
+    const at = order.indexOf(await row('TAB TEST').getAttribute('data-id'));
+    await row('TAB TEST').click();
+    await page.keyboard.press('Delete');
+    await gone('TAB TEST');
+    const selected = await page.locator('.row.selected').getAttribute('data-id');
+    if (selected !== order[at + 1]) throw new Error('after Delete, the next task was not selected');
+    await page.keyboard.press('Control+z');
+    await see('TAB TEST');
+  });
+
+  await path('a dialog takes the keyboard: CANCEL first when OK cannot be undone, and Tab stays inside', async () => {
+    await nav('ALL QUESTS').click();
+    await addQuest('Trash dialog quest');
+    await row('TRASH DIALOG QUEST').click();
+    await page.keyboard.press('Delete');
+    await nav('TRASH').click();
+    await page.locator('.trash-row', { hasText: 'Trash dialog quest' }).getByRole('button', { name: 'DELETE' }).click();
+    await page.getByRole('alertdialog').waitFor({ timeout: 2000 });
+    const focused = () => page.evaluate(() => document.activeElement?.textContent?.trim());
+    if ((await focused()) !== 'CANCEL') throw new Error(`the dialog opened with "${await focused()}" focused, not CANCEL`);
+    await page.keyboard.press('Tab');
+    await page.keyboard.press('Tab');
+    if (!(await page.evaluate(() => !!document.activeElement?.closest('.dialog')))) throw new Error('Tab left the dialog');
+    await shot('25-danger-dialog');
+    await page.keyboard.press('Escape');
+    await see('Trash dialog quest');
+    // The trash rows end at the page's right edge.
+    const right = await page.locator('.trash-row').first().evaluate((r) => Math.round(r.getBoundingClientRect().right - r.querySelector('.text-btn:last-of-type').getBoundingClientRect().right));
+    if (right > 1) throw new Error(`the trash row's buttons end ${right} px short of its edge`);
+  });
+
+  await path('accents: overdue tag, the lit date preset, plan counts with priority, TOMORROW, a multi-selection panel', async () => {
+    await nav('ALL QUESTS').click();
+    await addQuest('Late accent quest !!!');
+    await row('LATE ACCENT QUEST').click();
+    await page.getByLabel('Due date').fill('2026-01-05');
+    await page.getByLabel('Due date').press('Tab');
+    await row('LATE ACCENT QUEST').locator('.meta .due.overdue').waitFor({ timeout: 2000 });
+    // A date preset matching the due day is lit.
+    await page.locator('.presets').getByRole('button', { name: 'TOMORROW' }).click();
+    if ((await page.locator('.presets').getByRole('button', { name: 'TOMORROW' }).getAttribute('aria-pressed')) !== 'true') throw new Error('TOMORROW is not lit for a task due tomorrow');
+    await nav('UPCOMING').click();
+    await see(/TOMORROW · /);
+    await page.locator('.plan-section', { hasText: 'TOMORROW' }).locator('.section-count').waitFor();
+    await page.locator('.plan-row', { hasText: 'Late accent quest' }).locator('.prio-3').waitFor({ timeout: 2000 });
+    await shot('26-upcoming-accents');
+    await nav('ALL QUESTS').click();
+    await row('LATE ACCENT QUEST').click();
+    await row('HIRE A DESIGNER').click({ modifiers: ['Control'] });
+    await see('2 TASKS SELECTED');
+    await shot('27-multi-panel');
+    await page.keyboard.press('Escape');
+  });
+
+  await path('no accessibility violations (axe: WCAG 2.2 A/AA and best practice) across the views, a menu and a dialog', async () => {
+    await page.addScriptTag({ path: join(root, 'node_modules/axe-core/axe.min.js') });
+    const audit = async (state) => {
+      await page.waitForTimeout(400);
+      const found = await page.evaluate(async () => {
+        // The context menu is a pop-up over the page, outside its landmarks by nature (region).
+        const r = await window.axe.run({ exclude: [['.menu-layer']] }, { runOnly: { type: 'tag', values: ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa', 'best-practice'] } });
+        return r.violations.map((v) => `${v.id} (${v.nodes.length}): ${v.nodes[0]?.target.join(' ')}`);
+      });
+      if (found.length) throw new Error(`${state}: ${found.join(' | ')}`);
+    };
+    await nav('ALL QUESTS').click();
+    await row('HIRE A DESIGNER').click();
+    await audit('ALL with a task selected');
+    for (const view of ['TODAY', 'UPCOMING', 'SETTINGS', 'HELP', 'TRASH']) {
+      await nav(view).click();
+      await audit(view);
+    }
+    await nav('ALL QUESTS').click();
+    await row('HIRE A DESIGNER').click({ button: 'right' });
+    await page.getByRole('menu').waitFor();
+    await audit('the task menu (its contents)');
+    await page.keyboard.press('Escape');
+    await nav('TRASH').click();
+    await page.locator('.trash-row').first().getByRole('button', { name: 'DELETE' }).click();
+    await audit('a dialog');
+    await page.keyboard.press('Escape');
   });
 
   await path('a narrow window: the sidebar becomes a drawer', async () => {

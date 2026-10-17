@@ -23,7 +23,10 @@ export function Page({ title, children }: { title: string; children: ReactNode }
           {G.delete}
         </button>
       </header>
-      <div className="center-body page-body">{children}</div>
+      {/* Focusable, so the keyboard can scroll a long page (Help) with the arrows and Page Down. */}
+      <div className="center-body page-body" tabIndex={0} role="region" aria-label={title}>
+        {children}
+      </div>
     </main>
   );
 }

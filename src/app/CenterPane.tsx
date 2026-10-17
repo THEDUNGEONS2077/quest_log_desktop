@@ -127,7 +127,8 @@ function ListPane() {
       <SelectionBar />
       {search.open && <SearchField />}
       {tab === 'active' && zoom !== null && <Breadcrumb />}
-      {tab === 'active' && !archived && <QuickAdd placeholder={zoom ? 'new objective' : 'new quest'} />}
+      {/* The placeholder teaches the shorthand where it's typed (V1.1 pass: it was only in Help). */}
+      {tab === 'active' && !archived && <QuickAdd placeholder={zoom ? 'new objective' : 'new quest   (try: !! priority · @fri 3pm due · // a note)'} />}
       {archived && (
         <p className="archived-note dim small">
           <Prompted>IN ARCHIVE.</Prompted>{' '}

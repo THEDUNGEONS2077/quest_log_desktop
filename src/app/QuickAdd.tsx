@@ -89,7 +89,14 @@ export function QuickAdd({ placeholder }: { placeholder: string }) {
         }}
         onBlur={() => setFocused(false)}
       />
-      {!focused && !text && <span className="cursor" aria-hidden>{G.cursor}</span>}
+      {/* The idle cursor sits after the placeholder's first phrase ("new quest", "new objective"),
+          like a prompt waiting, with any hint after it reading as a comment (it was at a fixed
+          9.5ch, on top of "new objective"'s letters). */}
+      {!focused && !text && (
+        <span className="cursor" style={{ marginLeft: `${placeholder.split('   ')[0]!.length + 0.5}ch` }} aria-hidden>
+          {G.cursor}
+        </span>
+      )}
     </div>
   );
 }

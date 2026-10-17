@@ -182,7 +182,7 @@ export function SettingsPage() {
             </div>
           </div>
         )}
-        <h3 className="section-title">DAILY SNAPSHOTS</h3>
+        <h2 className="section-title">DAILY SNAPSHOTS</h2>
         {snapshots.length === 0 ? (
           <p className="dim">None yet: one is kept each day you use the app (the last 3).</p>
         ) : (

@@ -7,11 +7,12 @@
  * app restarts.
  */
 import { trashed } from '@/lib/bulk';
-import { formatRelative } from '@/lib/dates';
 import { TRASH_DAYS } from '@/lib/purge';
 import { subtreeIds } from '@/lib/tree';
 import { useActions, useAppStore } from '@/store/react';
 
+import { ago } from '../ago';
+import { G } from '../glyphs';
 import { useOpenDialog } from '../menu';
 import { useMinute } from '../useMinute';
 import { Page } from './Page';
@@ -43,7 +44,7 @@ export function TrashPage() {
                     <div className="meta">
                       {inside > 0 && <span>+{inside} inside</span>}
                       <span>
-                        deleted {formatRelative(t.deletedAt!, now).toLowerCase()} ago · {left} {left === 1 ? 'day' : 'days'} left
+                        deleted {ago(t.deletedAt!, now)} · {left} {left === 1 ? 'day' : 'days'} left
                       </span>
                     </div>
                   </div>
@@ -54,7 +55,7 @@ export function TrashPage() {
                     type="button"
                     className="text-btn danger"
                     onClick={() =>
-                      openDialog({ title: 'Delete for good', message: `"${t.title || 'Untitled'}" can't be brought back after this.`, ok: 'DELETE', onOk: () => actions.purgeFromTrash([t.id]) })
+                      openDialog({ title: 'Delete for good', message: `"${t.title || 'Untitled'}" can't be brought back after this.`, ok: 'DELETE', danger: true, onOk: () => actions.purgeFromTrash([t.id]) })
                     }
                   >
                     DELETE
@@ -63,15 +64,17 @@ export function TrashPage() {
               );
             })}
           </div>
-          <button
-            type="button"
-            className="text-btn danger"
-            onClick={() =>
-              openDialog({ title: 'Empty Trash', message: `All ${items.length} tasks in Trash are deleted for good.`, ok: 'EMPTY', onOk: () => actions.purgeFromTrash(items.map((t) => t.id)) })
-            }
-          >
-            EMPTY TRASH
-          </button>
+          <div className="trash-actions">
+            <button
+              type="button"
+              className="text-btn danger"
+              onClick={() =>
+                openDialog({ title: 'Empty Trash', message: `All ${items.length} tasks in Trash are deleted for good.`, ok: 'EMPTY', danger: true, onOk: () => actions.purgeFromTrash(items.map((t) => t.id)) })
+              }
+            >
+              {G.delete} EMPTY TRASH
+            </button>
+          </div>
         </>
       )}
     </Page>

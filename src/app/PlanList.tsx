@@ -13,9 +13,9 @@
  * (the detail pane opens it), a double click edits its title, and the
  * checkbox completes it, right here.
  */
-import { memo, useEffect } from 'react';
+import { memo, useEffect, useId } from 'react';
 
-import { formatDue, formatTime, isSameDay } from '@/lib/dates';
+import { addDays, formatDue, formatTime, isSameDay } from '@/lib/dates';
 import type { PlanDay, PlanRow } from '@/lib/plan';
 import { findTask } from '@/lib/taskMap';
 import { shownTitle } from '@/lib/title';
@@ -32,9 +32,10 @@ import { useBlank, Welcome } from './Welcome';
 
 const DAY = new Intl.DateTimeFormat('en-GB', { weekday: 'short', day: 'numeric', month: 'short' });
 
-/** "TUE 13 OCT". */
-export function dayLabel(day: number): string {
-  return DAY.format(day).replace(/,/g, '').toUpperCase();
+/** "TUE 13 OCT"; the day after `now` reads "TOMORROW · TUE 13 OCT" (V1.1 pass 2026-10-17: the nearest day by name). */
+export function dayLabel(day: number, now?: number): string {
+  const label = DAY.format(day).replace(/,/g, '').toUpperCase();
+  return now !== undefined && isSameDay(day, addDays(now, 1)) ? `TOMORROW · ${label}` : label;
 }
 
 export function TodayList() {
@@ -48,7 +49,7 @@ export function TodayList() {
   if (blank) return <Welcome />;
   if (!rows.length) return <p className="empty"><Prompted>NOTHING DUE TODAY. GIVE TASKS A DATE (@fri, @today 3pm) TO SEE THEM HERE.</Prompted></p>;
   return (
-    <div className="list plan" role="list">
+    <div className="list plan">
       {overdue.length > 0 && <Section title="OVERDUE" rows={overdue} late />}
       {today.length > 0 && <Section title="TODAY" rows={today} />}
     </div>
@@ -62,21 +63,31 @@ export function UpcomingList() {
   useEffect(() => setVisibleRows(days.flatMap((d) => d.rows.map((r) => r.id))), [days]);
   if (!days.length) return <p className="empty"><Prompted>NOTHING DUE IN THE NEXT 14 DAYS.</Prompted></p>;
   return (
-    <div className="list plan" role="list">
+    <div className="list plan">
       {days.map((d: PlanDay) => (
-        <Section key={d.key} title={dayLabel(d.day)} rows={d.rows} />
+        <Section key={d.key} title={dayLabel(d.day, now)} rows={d.rows} />
       ))}
     </div>
   );
 }
 
+/**
+ * A day (or OVERDUE / TODAY): its heading with how many tasks it holds, then
+ * its tasks, as a list named by the heading (screen readers announce both).
+ */
 function Section({ title, rows, late = false }: { title: string; rows: PlanRow[]; late?: boolean }) {
+  const id = useId();
   return (
-    <section className="plan-section">
-      <h3 className={cx('section-title', late && 'overdue')}>{title}</h3>
-      {rows.map((r) => (
-        <PlanTaskRow key={r.id} row={r} />
-      ))}
+    <section className="plan-section" aria-labelledby={id}>
+      <h2 id={id} className={cx('section-title', late && 'overdue')}>
+        {title}
+        <span className="section-count"> · {rows.length}</span>
+      </h2>
+      <div role="list">
+        {rows.map((r) => (
+          <PlanTaskRow key={r.id} row={r} />
+        ))}
+      </div>
     </section>
   );
 }
@@ -93,6 +104,7 @@ const PlanTaskRow = memo(function PlanTaskRow({ row }: { row: PlanRow }) {
   return (
     <div
       className={cx('row', 'plan-row', selected && 'selected', task.done && 'done')}
+      role="listitem"
       data-id={task.id}
       onClick={() => actions.select(task.id)}
       onDoubleClick={() => actions.setEditing(task.id)}
@@ -126,7 +138,11 @@ const PlanTaskRow = memo(function PlanTaskRow({ row }: { row: PlanRow }) {
         ) : (
           <span className={cx('title', task.parentId === null && 'quest-title')}>{shownTitle(task) || 'Untitled'}</span>
         )}
-        <div className="meta path">{row.path.join(' › ')}</div>
+        <div className="meta path">
+          {/* Priority first, as on the lists: what to do first stands out in a day's tasks too. */}
+          {task.priority > 0 && <span className={cx('prio', `prio-${task.priority}`)}>{G.priority.repeat(task.priority)}</span>}
+          <span>{row.path.join(' › ')}</span>
+        </div>
       </div>
       <span className={cx('due', row.overdue && 'overdue', !row.overdue && isSameDay(row.dueAt, now) && 'today')}>
         {/* Today: the time is enough; overdue from an earlier day: the date too. */}

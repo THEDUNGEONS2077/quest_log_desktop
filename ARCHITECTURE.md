@@ -100,6 +100,7 @@ Imports only go down this list.
 
 ## Tests
 - **`npm run check`:** `tsc -b`, ESLint (with the React Compiler rules from `eslint-plugin-react-hooks`), and Vitest (Node environment, `TZ=Europe/London`; IndexedDB through `fake-indexeddb`).
+- **Accessibility:** `npm run e2e` injects `axe-core` (a dev dependency) and fails on any WCAG 2.2 A/AA or best-practice violation in every view, the task menu and a dialog (the menu's own layer is exempt from `region`: a pop-up sits outside the landmarks by nature).
 - **`npm run e2e`** (after `npm run build`):
   - Playwright walks the whole app at 1440×900 against `dist/` (14 paths);
   - screenshots go to `e2e/screenshots/` (git-ignored).

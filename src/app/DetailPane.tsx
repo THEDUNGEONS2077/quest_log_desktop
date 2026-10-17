@@ -32,7 +32,7 @@
 import { type ReactNode, useState } from 'react';
 
 import { areaName } from '@/lib/areaNames';
-import { atTimeOfDay, addDays, minutesOfDay, startOfDay } from '@/lib/dates';
+import { addDays, atTimeOfDay, isSameDay, minutesOfDay, startOfDay } from '@/lib/dates';
 import { questCategory } from '@/lib/quests';
 import { PRESETS, repeatLabel } from '@/lib/recurrence';
 import { findTask } from '@/lib/taskMap';
@@ -40,7 +40,7 @@ import { shownTitle } from '@/lib/title';
 import { ancestors, liveChildIds } from '@/lib/tree';
 import type { Priority, RepeatRule, Task } from '@/lib/types';
 import { previewXp } from '@/lib/xp';
-import { useActions, useAppStore, useSelectors } from '@/store/react';
+import { useActions, useAppStore, useSelectors, useAppStoreShallow } from '@/store/react';
 import { NO_COUNTS } from '@/store/selectors';
 
 import { ago } from './ago';
@@ -90,10 +90,15 @@ export function DetailPane() {
     s.page === null && s.ui.view === 'list' && s.ui.category !== 'all' && s.tasks.areas.some((a) => a.id === s.ui.category) ? s.ui.category : null,
   );
   const actions = useActions();
+  const many = useAppStore((s) => (s.selection && s.selection.length > 1 ? s.selection : null));
   const live = !!id && !!task && task.deletedAt === null;
   let content: ReactNode;
   let label = 'Task details';
-  if (live) {
+  if (many) {
+    // Several selected: what they are, not one of them as if it were alone (V1.1 pass 2026-10-17).
+    content = <ManyDetails ids={many} />;
+    label = 'Selected tasks';
+  } else if (live) {
     content = <Details key={task.id} task={task} onClose={() => actions.select(null)} />;
   } else if (areaShown) {
     content = <AreaDetails key={areaShown} id={areaShown} />;
@@ -129,6 +134,41 @@ export function DetailPane() {
   );
 }
 
+/** How many of a multi-selection's titles the pane lists before "+N more". */
+const MANY_SHOWN = 8;
+
+/**
+ * Several tasks selected: how many, their titles, and how to act on them (the
+ * selection bar, the menu) or change the selection.
+ */
+function ManyDetails({ ids }: { ids: readonly string[] }) {
+  // One subscription for the titles, compared item by item (a new array every time otherwise).
+  const titles = useAppStoreShallow((s) => ids.slice(0, MANY_SHOWN).map((id) => {
+    const t = findTask(s.tasks, id);
+    return t ? shownTitle(t) || 'Untitled' : '';
+  }));
+  return (
+    <div className="empty-detail many-detail">
+      <div className="detail-head detail-head-empty">
+        <MinimizeButton />
+      </div>
+      <p className="bright">
+        <Prompted>{ids.length} TASKS SELECTED</Prompted>
+      </p>
+      <ul className="many-list">
+        {titles.map((t, i) => (
+          <li key={ids[i]}>{t}</li>
+        ))}
+        {ids.length > MANY_SHOWN && <li className="dim">+{ids.length - MANY_SHOWN} more</li>}
+      </ul>
+      <p className="dim small">
+        The bar above the list changes them all at once: complete, priority, due, group, delete. Ctrl+click adds or removes a task, Shift+click selects
+        a range, Esc clears the selection.
+      </p>
+    </div>
+  );
+}
+
 /** » : minimizes the detail pane to a strip (D does the same). */
 function MinimizeButton() {
   const actions = useActions();
@@ -144,6 +184,8 @@ function Details({ task, onClose }: { task: Task; onClose: () => void }) {
   const defaultTime = useAppStore((s) => s.settings.defaultTimeMinutes);
   const actions = useActions();
   const now = useMinute();
+  /** Whether the task is due `days` days from today (the date presets light the matching one). */
+  const dueDay = (days: number) => task.dueAt !== null && isSameDay(task.dueAt, addDays(now, days));
   const [newObjective, setNewObjective] = useState('');
   const isQuest = task.parentId === null;
   const chain = ancestors(tasks, task.id).reverse();
@@ -170,7 +212,10 @@ function Details({ task, onClose }: { task: Task; onClose: () => void }) {
     <div className="details">
       <div className="detail-head">
         <nav className="detail-path" aria-label="Where it is">
-          <span className="dim">{areaName(tasks, questCategory(quest)).toUpperCase()}</span>
+          {/* The area leads to its list, as each parent leads to its details (V1.1 pass). */}
+          <button type="button" className="link" title="Show this area" onClick={() => actions.setCategoryTab(questCategory(quest))}>
+            {areaName(tasks, questCategory(quest)).toUpperCase()}
+          </button>
           {chain.map((a) => (
             <span key={a}>
               <span className="dim"> › </span>
@@ -242,21 +287,26 @@ function Details({ task, onClose }: { task: Task; onClose: () => void }) {
             <input type="date" value={task.dueAt !== null ? isoDay(task.dueAt) : ''} onChange={(e) => setDay(e.target.value)} aria-label="Due date" />
             <input type="time" value={task.dueAt !== null ? isoTime(task.dueAt) : ''} onChange={(e) => setTime(e.target.value)} aria-label="Due time" disabled={task.dueAt === null} />
           </div>
+          {/* The preset matching the due day is lit (aria-pressed); CLEAR keeps its place, dimmed,
+              when there's no date (V1.1 pass 2026-10-17: the row jumped as it came and went). */}
           <div className="presets">
-            <button type="button" className="link" onClick={() => actions.setDue(task.id, atTimeOfDay(now, defaultTime) > now ? atTimeOfDay(now, defaultTime) : atTimeOfDay(now, 17 * 60), false)}>
+            <button
+              type="button"
+              className="link"
+              aria-pressed={dueDay(0)}
+              onClick={() => actions.setDue(task.id, atTimeOfDay(now, defaultTime) > now ? atTimeOfDay(now, defaultTime) : atTimeOfDay(now, 17 * 60), false)}
+            >
               TODAY
             </button>
-            <button type="button" className="link" onClick={() => actions.setDue(task.id, atTimeOfDay(addDays(now, 1), defaultTime), false)}>
+            <button type="button" className="link" aria-pressed={dueDay(1)} onClick={() => actions.setDue(task.id, atTimeOfDay(addDays(now, 1), defaultTime), false)}>
               TOMORROW
             </button>
-            <button type="button" className="link" onClick={() => actions.setDue(task.id, atTimeOfDay(addDays(now, 7), defaultTime), false)}>
+            <button type="button" className="link" aria-pressed={dueDay(7)} onClick={() => actions.setDue(task.id, atTimeOfDay(addDays(now, 7), defaultTime), false)}>
               NEXT WEEK
             </button>
-            {task.dueAt !== null && (
-              <button type="button" className="link" onClick={() => actions.clearDue(task.id)}>
-                CLEAR
-              </button>
-            )}
+            <button type="button" className="link" disabled={task.dueAt === null} onClick={() => actions.clearDue(task.id)}>
+              CLEAR
+            </button>
           </div>
         </Field>
         <Field label="REPEAT">
@@ -286,9 +336,9 @@ function Details({ task, onClose }: { task: Task; onClose: () => void }) {
       </dl>
 
       <section className="objectives" aria-label="Objectives">
-        <h3 className="section-title">
+        <h2 className="section-title">
           OBJECTIVES {kids.length > 0 && <span className="dim">{done}/{kids.length}</span>}
-        </h3>
+        </h2>
         {kids.map((k) => (
           <div key={k.id} className={cx('objective', k.done && 'done')}>
             <button type="button" className="check" role="checkbox" aria-checked={k.done} aria-label={`${k.done ? 'Uncheck' : 'Complete'} ${k.title}`} onClick={() => void actions.toggleDone(k.id)}>
@@ -318,14 +368,14 @@ function Details({ task, onClose }: { task: Task; onClose: () => void }) {
       <footer className="detail-foot">
         <p className="dim small">
           {/* Each phrase stays on one line: the line breaks between them, never inside one. */}
-          {!task.done && isQuest && <span className="accent nowrap">+{previewXp(tasks, task.id, now)} XP on completion · </span>}
-          {task.done && !!task.xp && <span className="accent nowrap">earned +{task.xp} XP · </span>}
-          <span className="nowrap">made {ago(task.createdAt, now)} · </span>
-          <span className="nowrap">changed {ago(task.updatedAt, now)}</span>
+          {/* (The spaces between the phrases are where the line may break.) */}
+          {!task.done && isQuest && <span className="accent nowrap">+{previewXp(tasks, task.id, now)} XP on completion ·</span>}{' '}
+          {task.done && !!task.xp && <span className="accent nowrap">earned +{task.xp} XP ·</span>}{' '}
+          <span className="nowrap">made {ago(task.createdAt, now)} ·</span> <span className="nowrap">changed {ago(task.updatedAt, now)}</span>
         </p>
         <div className="detail-actions">
           {(isQuest || kids.length > 0) && !task.done && (
-            <button type="button" className="text-btn" onClick={() => actions.openProject(task.id)}>
+            <button type="button" className="text-btn" title="Show only this quest and its objectives (O)" onClick={() => actions.openProject(task.id)}>
               {G.zoom} OPEN
             </button>
           )}
@@ -402,7 +452,7 @@ function AreaDetails({ id }: { id: string }) {
 
       {!!projects?.length && (
         <section className="area-projects">
-          <h3 className="section-title">PROJECTS</h3>
+          <h2 className="section-title">PROJECTS</h2>
           {projects.map((p) => (
             <button key={p.id} type="button" className="area-project" onClick={() => actions.openProject(p.id)}>
               <span className="nav-label">{p.title || 'Untitled'}</span>
