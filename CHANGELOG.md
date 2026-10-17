@@ -2,6 +2,10 @@
 
 quest_log desktop. Each version gets one section, newest first. The heading's build number is shown in Settings and written into backups.
 
+## 1.3.1 (build 18)
+
+- **Bigger section headings in the sidebar:** VIEWS, AREAS and ARCHIVE, with their arrows and counts, are 30% larger.
+
 ## 1.3.0 (build 17)
 
 - **The new quest bar is at the bottom** of the list now, where your eyes land after reading down it. What you type still previews just above it, and messages appear above the bar instead of over it.
