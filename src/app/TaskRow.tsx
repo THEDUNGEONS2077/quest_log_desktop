@@ -118,6 +118,7 @@ export function QuestMeter({ task, done, total }: { task: Task; done: number; to
 /** The details line under a title: priority, streak, notes, due date, progress. */
 export function RowMeta({ task, row }: { task: Task; row?: Row }) {
   const now = useMinute();
+  const notesOpen = useAppStore((s) => s.expandedNotes.includes(task.id));
   const actions = useActions();
   const parts: ReactNode[] = [];
   if (task.priority > 0) parts.push(<span key="p" className={cx('prio', `prio-${task.priority}`)}>{G.priority.repeat(task.priority)}</span>);
@@ -129,6 +130,9 @@ export function RowMeta({ task, row }: { task: Task; row?: Row }) {
         type="button"
         className="meta-btn"
         title="Show or hide notes"
+        // A glyph alone says nothing to a screen reader (V1 pass 2026-10-17).
+        aria-label={`Notes: ${shownTitle(task)}`}
+        aria-expanded={notesOpen}
         onClick={(e) => {
           e.stopPropagation();
           actions.toggleNotes(task.id);

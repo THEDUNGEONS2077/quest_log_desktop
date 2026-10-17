@@ -41,7 +41,8 @@ export interface DialogState {
   onOk: (value: string) => void;
 }
 
-interface Overlays {
+/** Opening menus and dialogs (App provides them). */
+export interface Overlays {
   openMenuAt: (x: number, y: number, target: MenuTarget) => void;
   openDialog: (d: DialogState) => void;
 }

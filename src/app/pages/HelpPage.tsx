@@ -21,6 +21,7 @@ const SHORTCUTS: [string, string][] = [
   ['Tab · Shift+Tab', 'Indent / outdent (make it an objective of the task above, or not)'],
   ['Alt+↑ · Alt+↓', 'Move it up / down among its siblings'],
   ['Del', 'Delete (to Trash; Ctrl+Z brings it back)'],
+  ['Shift+F10 · Menu key', 'The selected task’s menu (what right-click opens)'],
   ['Ctrl+Z · Ctrl+Shift+Z', 'Undo · Redo'],
   ['Esc', 'Back out: stop editing, clear the selection, close search, leave a project'],
   ['?', 'This guide'],

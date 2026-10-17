@@ -442,6 +442,22 @@ try {
     }
   });
 
+  await path('keyboard: Enter on a focused sidebar item opens it (not the selected task); Shift+F10 opens the task menu', async () => {
+    await nav('ALL QUESTS').click();
+    await row('Made in the first window').click();
+    await nav('UPCOMING').focus();
+    await page.keyboard.press('Enter');
+    await see('> UPCOMING');
+    if (await page.locator('.row.editing').count()) throw new Error('Enter edited the selected task');
+    await nav('ALL QUESTS').click();
+    await row('Made in the first window').click();
+    await page.keyboard.press('Shift+F10');
+    await page.getByRole('menu').waitFor({ timeout: 2000 });
+    await page.keyboard.press('Escape');
+    await page.waitForTimeout(300);
+    if (await page.getByRole('menu').count()) throw new Error('Escape left the menu open');
+  });
+
   await path('a narrow window: the sidebar becomes a drawer', async () => {
     await page.setViewportSize({ width: 820, height: 800 });
     await page.keyboard.press('Escape');

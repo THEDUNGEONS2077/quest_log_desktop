@@ -53,7 +53,6 @@ export function App() {
     setDrawer(false);
   }
 
-  useShortcuts(bundle, menu !== null || dialog !== null);
   // Menus and dialogs fade out briefly after closing instead of vanishing.
   const shownMenu = usePresence(menu, EXIT_MS);
   const shownDialog = usePresence(dialog, EXIT_MS);
@@ -62,6 +61,7 @@ export function App() {
     () => ({ openMenuAt: (x: number, y: number, target: OpenMenuState['target']) => setMenu({ x, y, target }), openDialog: setDialog }),
     [],
   );
+  useShortcuts(bundle, menu !== null || dialog !== null, overlays.openMenuAt);
 
   return (
     <OverlayContext.Provider value={overlays}>

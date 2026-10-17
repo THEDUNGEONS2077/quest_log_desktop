@@ -12,6 +12,8 @@ import { findTask } from '@/lib/taskMap';
 import { liveChildIds } from '@/lib/tree';
 import type { StoreBundle } from '@/store/react';
 
+import type { Overlays } from './menu';
+
 import { visibleRows } from './menu';
 
 /** Is the key event aimed at somewhere you type? */
@@ -20,7 +22,20 @@ function typing(e: KeyboardEvent): boolean {
   return !!t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.tagName === 'SELECT' || t.isContentEditable);
 }
 
-export function useShortcuts({ store }: StoreBundle, blocked: boolean): void {
+/**
+ * Is the key event aimed at a control outside the list (a sidebar item, a
+ * button in the details or Settings)? Enter and Space then press that
+ * control, as they always do, instead of acting on the selected task
+ * (V1 pass 2026-10-17: Tab to SETTINGS, Enter edited the selected task).
+ * Inside a list row (its checkbox or caret, focused by a click) they still
+ * act on the task.
+ */
+function onControl(e: KeyboardEvent): boolean {
+  const t = e.target as HTMLElement | null;
+  return !!t?.closest?.('button, a[href], [role="menuitem"], [role="radio"], [role="tab"], summary') && !t.closest('.row');
+}
+
+export function useShortcuts({ store }: StoreBundle, blocked: boolean, openMenuAt: Overlays['openMenuAt']): void {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (blocked || typing(e)) return;
@@ -108,6 +123,15 @@ export function useShortcuts({ store }: StoreBundle, blocked: boolean): void {
       }
 
       if (!sel) return;
+      if ((e.key === 'Enter' || e.key === ' ') && onControl(e)) return;
+      // The selected task's menu from the keyboard (V1 pass 2026-10-17): Shift+F10 or the Menu
+      // key, the system's keys for a context menu. It opens under the task's title.
+      if (e.key === 'ContextMenu' || (e.shiftKey && e.key === 'F10')) {
+        handled();
+        const at = document.querySelector(`[data-id="${CSS.escape(sel.id)}"] .title`)?.getBoundingClientRect();
+        openMenuAt(at ? at.left : innerWidth / 2, at ? at.bottom + 4 : innerHeight / 3, { task: sel.id });
+        return;
+      }
       switch (e.key) {
         case 'Enter':
           handled();
@@ -154,5 +178,5 @@ export function useShortcuts({ store }: StoreBundle, blocked: boolean): void {
       window.removeEventListener('keydown', onEscape, true);
       window.removeEventListener('keydown', onKey);
     };
-  }, [store, blocked]);
+  }, [store, blocked, openMenuAt]);
 }
