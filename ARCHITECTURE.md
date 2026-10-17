@@ -81,6 +81,18 @@ Imports only go down this list.
 - **Manifest:** `public/manifest.webmanifest`, with relative `start_url` / `scope` (`./`), so the same files work at `/` locally and at `/quest_log_desktop/` on GitHub Pages.
 - **Base path:** `QUESTLOG_BASE` sets Vite's `base` (default `/`).
 
+## Windows, updates and backups (V1, 2026-10-17)
+- **One window holds the tasks** (`store/instance.ts`): the first window takes a Web Lock (`quest_log_desktop:tasks`) for as long as it's open. A second window opens nothing (`app/OtherWindow.tsx`) until USE HERE, which posts `step-aside` on a BroadcastChannel; the holder saves (`startStore().close()`: flush the throttled writers, stop persistence, wait for IndexedDB), shows "moved to another window" and releases the lock; the asker, waiting on the lock, then opens the store. Without Web Locks every window opens the tasks (as before 1.0). e2e: the two-window path.
+- **Updates:** at launch `noticeUpdate(build, version)` compares with `onboarding.lastSeenBuild`; newer → a toast with WHAT'S NEW (`pages/WhatsNewPage.tsx`, CHANGELOG.md bundled with `?raw`). A first start (no tasks) records the build silently.
+- **Backups:** exports go through `app/backupFile.ts`, which records `onboarding.lastBackupAt`. `noticeBackup()` at launch: tasks and no backup for 14 days → a BACK UP toast, at most every 7 days (`backupNudgedAt`), never over another toast.
+- **Due signal** (`app/useDueSignal.ts`): TODAY's count in `document.title` and `navigator.setAppBadge`.
+
+## Rendering big lists (speed pass 2026-10-17)
+- Rows re-render only when their own data changes: `TaskRow` is memoized by row value (`sameRow`), reads the store in four primitive subscriptions, and the drag context's value is stable (a new value re-rendered every row). `RowTree` reuses unchanged branches (`stableTrees`) behind a memoized `Branch`; lists pass a stable `render`.
+- Search results render deferred (`useDeferredValue`), only while a query is typed.
+- Blocks of objectives drawn open from the start (`.fold.rest`) skip rendering off screen (`content-visibility: auto`). Blocks that unfold don't (their first frame would use the size estimate).
+- Measure with 300 quests: `node` scripts in the V1 session; `npm run e2e:motion` for animations.
+
 ## Version
 - `package.json`'s `version`, plus the build number from the newest `## x.y.z (build N)` heading in `CHANGELOG.md`.
 - Both are injected as `__APP_VERSION__` / `__APP_BUILD__`, and shown in Settings and written into backups.

@@ -74,6 +74,9 @@ The same terminal look as the phone app (the phone's `DESIGN.md` is the source),
   - the XP bar: a terminal gauge `[▮▮▮▮▯▯▯]`, 10 px tall: 20 block cells between dim brackets (a fixed mask cuts the track into cells), filled to the nearest whole cell, no cursor; the totals centred beneath. A gain brightens the number; a level up runs the fill to the end, pops the level number, and the full bar fades while the new level grows in from zero.
   Below it come the sections VIEWS, AREAS, ARCHIVE and SYSTEM. Each heading minimizes its section (the body folds; remembered in `ui.sidebarCollapsed`), with a dot when a minimized section holds what's shown. Between sections is a hairline divider that fades at both ends and is lit in the middle (above SYSTEM, at the bottom, a plain hairline border instead). The endless loops (scanlines, sheen) pause under Reduce Motion (`--loops`).
 - **The detail pane minimizes** (`»` or `D`) to a `--detail-min` (40 px) strip with `«` and a vertical DETAILS label; the columns glide (`--base`). It's remembered (`ui.detailCollapsed`).
+- **Pages** (Settings, Help, Trash, What's new) take the details pane's room: the third column goes to 0.
+- **Text size** (Settings): `--text-scale` multiplies every `--fs-*` / `--lh-*` token and the few literal glyph sizes, plus `--setting-control`; spacing and pane widths stay. Long titles wrap at `max-width: 96ch` (`.title-col`).
+- **First run:** with no tasks at all, TODAY and ALL show the welcome (`Welcome.tsx`): a lit `>` heading, a short explanation at 68ch, LOAD EXAMPLE QUESTS (primary) and the first keys in two columns.
 - **Under 1100 px wide:** the detail pane slides over the list from the right while a task is selected.
 - **Under 900 px:** the sidebar becomes a drawer, opened with `≡`.
 

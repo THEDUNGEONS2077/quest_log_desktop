@@ -80,7 +80,17 @@ export function HelpPage() {
         <h2 className="section-title">YOUR DATA</h2>
         <p>
           Everything stays in this browser: no account, no server, no analytics. It works offline, and Chrome can install it as an app (the install icon in
-          the address bar). Back up from SETTINGS; the backup file also moves tasks to and from the phone app.
+          the address bar). Back up from SETTINGS; the backup file also moves tasks to and from the phone app. If two weeks go by without a backup, the
+          app reminds you once a week, with a button that saves one.
+        </p>
+        <p>
+          Your tasks are open in <b>one window at a time</b> (the installed app or a tab), so two never overwrite each other. Another window shows{' '}
+          <b>USE HERE</b>: it moves them over, saving everything first. The window title shows how much is due today, and so does the installed
+          app’s icon.
+        </p>
+        <p>
+          Bigger or smaller type: SETTINGS → Text size (Ctrl + and Ctrl − zoom everything instead). After an update, <b>WHAT’S NEW</b> lists the
+          changes; it’s also at the bottom of SETTINGS.
         </p>
       </section>
     </Page>

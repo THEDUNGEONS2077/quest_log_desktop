@@ -2,6 +2,28 @@
 
 quest_log desktop. Each version gets one section, newest first. The heading's build number is shown in Settings and written into backups.
 
+## 1.0.0 (build 14)
+
+Version 1: a pass over everything, for everyday work.
+
+- **A welcome for new users.** An empty app now explains quests, objectives and areas, lists the first keys, and offers **LOAD EXAMPLE QUESTS**: a few quests written for the desktop that walk you through clicking, editing, the right-click menu and shorthand. One undo takes them away.
+- **Fast with long lists.** With hundreds of quests, selecting, adding and completing no longer re-draw the whole list, typing in search stays instant, and scrolling stays smooth even on a slower laptop.
+- **One window at a time.** If quest_log is open in another window (the installed app and a browser tab, say), the new window says so and offers **USE HERE**, which moves your tasks over after the other window has saved everything. Two windows can no longer overwrite each other's changes.
+- **Backups you don't forget.** Settings shows when you last backed up and whether the browser keeps your data for good. If two weeks pass without a backup, a message offers **BACK UP** (once a week at most).
+- **What's new after an update.** After the app updates, a message says so, with a button to see what changed. It's also at the bottom of Settings.
+- **Text size** in Settings: 90%, 100%, 115% or 130%. Only the text grows; the layout stays put.
+- **Settings, Help and Trash use the full width** (the details pane isn't needed there).
+- **Long titles wrap** at a comfortable length on wide screens.
+- **What's due, at a glance:** the window title reads "quest_log · 3 due", and the installed app's icon shows the same number.
+- **Keyboard:**
+  - Shift+F10 (or the Menu key) opens the selected task's menu;
+  - Enter and Space on a focused button now press that button, even while a task is selected.
+- **Smaller fixes:**
+  - TODAY and UPCOMING show quests in capitals, as the lists do;
+  - the line under the details doesn't break mid-phrase;
+  - the empty ARCHIVE note fits on one line;
+  - the notes marker on a row can be read by screen readers.
+
 ## 0.8.0 (build 13)
 
 - **Opening and closing a quest is smooth.** Click the caret (or press → and ←) and its objectives unfold like a curtain, fading in as the quests below glide down. Closing, they fade and fold away while the quests below glide back up. Nothing jumps at the start or the end, and if you change your mind halfway, it turns around from where it is. The same on COMPLETED.

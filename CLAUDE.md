@@ -17,7 +17,7 @@ Read [ARCHITECTURE.md](ARCHITECTURE.md) (layers, storage, deploy) and [DESIGN.md
 ## Commands
 ```bash
 npm run check                      # typecheck + lint + Vitest (must pass before every commit)
-npm run build && npm run e2e       # full Playwright walk (14 paths), screenshots in e2e/screenshots/
+npm run build && npm run e2e       # full Playwright walk (every path), screenshots in e2e/screenshots/
 QUESTLOG_BASE=/quest_log_desktop/ npm run build && npm run e2e:pages   # the Pages build at its sub-path
 npm run build && npm run e2e:motion   # frame and layout cost of each animation (4× CPU slowdown); compare before/after
 npm run deploy                     # all of the above, then publish to GitHub Pages (public: ask first)
