@@ -919,6 +919,19 @@ mark {
 .fold.unfolding > .fold-clip {
   transition: opacity var(--slow) var(--ease-fold);
 }
+/* A quest's whole block of objectives skips rendering while it's off screen,
+   not just each row: with hundreds of quests, scrolling then only draws what
+   comes into view (speed pass 2026-10-17: 4x slower CPU, 300 quests, frames
+   went from 44 to ~30 ms). The browser remembers each block's real height
+   once drawn. Only blocks drawn open from the start (`.rest`, Fold.tsx): a
+   block that unfolds would be sized by the estimate for a frame, and the
+   rows below would step (caught by the fold check in e2e). Nor while a row
+   in it is being edited (skipping also clips, and the editor's chips float
+   above the row). */
+.quest-list > .fold.rest:not(:has(.editing)) {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 160px;
+}
 .fold.folding {
   grid-template-rows: 0fr;
 }

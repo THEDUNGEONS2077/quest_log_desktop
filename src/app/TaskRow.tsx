@@ -39,6 +39,7 @@ import { ADVANCE_MS, type AppStoreInstance } from '@/store/createStore';
 import { useActions, useAppStore, useSelectors, useStoreBundle } from '@/store/react';
 
 import { cx } from './cx';
+import { sameRow } from './Fold';
 import { G } from './glyphs';
 import { useDrag } from './drag';
 import { useOpenMenu, visibleRows } from './menu';
@@ -163,15 +164,33 @@ interface Props {
   draggable?: boolean;
 }
 
+/** A row's on/off states, as bits of one number (see TaskRow). */
+const SELECTED = 1;
+const MULTI = 2;
+const NOTES_OPEN = 4;
+const LEAVING = 8;
+const ADVANCING = 16;
+
 export const TaskRow = memo(function TaskRow({ row, query = '', context = false, draggable = false }: Props) {
+  // What this row reads from the store, in four subscriptions that each return a plain value
+  // (compared at once): every store change runs them for every row, so they stay cheap. The
+  // on/off states are packed into one number (speed pass 2026-10-17).
   const task = useAppStore((s) => findTask(s.tasks, row.id));
   const editing = useAppStore((s) => (s.editingId === row.id ? s.editingField : null));
-  const selected = useAppStore((s) => s.selectedId === row.id);
-  const multi = useAppStore((s) => !!s.selection?.includes(row.id));
-  const notesOpen = useAppStore((s) => s.expandedNotes.includes(row.id));
-  const leaving = useAppStore((s) => s.lingering.some((l) => isInSubtree(s.tasks, row.id, l)));
-  const advancing = useAppStore((s) => s.advancing.includes(row.id));
   const gain = useAppStore((s) => (s.lastGain?.id === row.id ? s.lastGain.xp : 0));
+  const flags = useAppStore(
+    (s) =>
+      (s.selectedId === row.id ? SELECTED : 0) |
+      (s.selection?.includes(row.id) ? MULTI : 0) |
+      (s.expandedNotes.includes(row.id) ? NOTES_OPEN : 0) |
+      (s.lingering.length > 0 && s.lingering.some((l) => isInSubtree(s.tasks, row.id, l)) ? LEAVING : 0) |
+      (s.advancing.includes(row.id) ? ADVANCING : 0),
+  );
+  const selected = (flags & SELECTED) !== 0;
+  const multi = (flags & MULTI) !== 0;
+  const notesOpen = (flags & NOTES_OPEN) !== 0;
+  const leaving = (flags & LEAVING) !== 0;
+  const advancing = (flags & ADVANCING) !== 0;
   const actions = useActions();
   const { store } = useStoreBundle();
   const openMenu = useOpenMenu();
@@ -291,4 +310,4 @@ export const TaskRow = memo(function TaskRow({ row, query = '', context = false,
       </div>
     </div>
   );
-});
+}, (a, b) => sameRow(a.row, b.row) && a.query === b.query && a.context === b.context && a.draggable === b.draggable);

@@ -9,10 +9,11 @@
  * rows are on screen (arrow keys move the selection). Each task's
  * objectives sit in one block that folds open and shut smoothly (RowTree).
  */
-import { useEffect } from 'react';
+import { useCallback, useDeferredValue, useEffect } from 'react';
 
+import type { Row } from '@/lib/flatten';
 import type { FoundRow } from '@/lib/search';
-import { useAppStore, useSelectors } from '@/store/react';
+import { useAppStore, useAppStoreShallow, useSelectors } from '@/store/react';
 
 import { DragArea } from './drag';
 import { RowTree, settledRows } from './Fold';
@@ -22,9 +23,19 @@ import { Prompted } from './Prompted';
 
 export function QuestList() {
   const selectors = useSelectors();
-  const rows = useAppStore((s) => selectors.activeRows(s));
-  const query = useAppStore((s) => (s.search.active.open ? s.search.active.query : ''));
+  const live = useAppStoreShallow((s) => ({ rows: selectors.activeRows(s), query: s.search.active.open ? s.search.active.query : '' }));
+  // Searching, the results follow the typing a moment behind (React renders them between
+  // keystrokes), so the field stays instant however long the list (speed pass 2026-10-17).
+  // Otherwise the rows are always current: folds and exits are timed against them.
+  const deferred = useDeferredValue(live);
+  const { rows, query } = live.query ? deferred : live;
   const zoomed = useAppStore((s) => s.ui.zoomRootId !== null);
+
+  // The same function while the query is: unchanged rows are then skipped (RowTree).
+  const render = useCallback(
+    (row: Row) => <TaskRow key={row.id} row={row} query={query} context={'context' in row && (row as FoundRow).context} draggable={!query} />,
+    [query],
+  );
 
   const folding = useAppStore((s) => s.folding);
   // The arrow keys skip objectives that are folding away (still listed only to close smoothly).
@@ -41,13 +52,7 @@ export function QuestList() {
     <DragArea>
       {/* quest-list: tucks the first quest's divider out of sight (see app.css). */}
       <div className="list quest-list" role="list">
-        <RowTree
-          rows={rows}
-          still={!!query}
-          render={(row) => (
-            <TaskRow key={row.id} row={row} query={query} context={'context' in row && (row as FoundRow).context} draggable={!query} />
-          )}
-        />
+        <RowTree rows={rows} still={!!query} render={render} />
       </div>
     </DragArea>
   );

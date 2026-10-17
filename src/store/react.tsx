@@ -8,6 +8,7 @@
  */
 import { createContext, type ReactNode, useContext } from 'react';
 import { useStore } from 'zustand';
+import { useShallow } from 'zustand/react/shallow';
 
 import type { AppStore, AppStoreInstance } from './createStore';
 import { makeSelectors } from './selectors';
@@ -45,6 +46,16 @@ export function useStoreBundle(): StoreBundle {
  */
 export function useAppStore<T>(selector: (s: AppStore) => T): T {
   return useStore(useStoreBundle().store, selector);
+}
+
+/**
+ * Several values from the store in one subscription, as an object compared
+ * key by key: the component re-renders only when one of them changes. For
+ * components drawn many times over (a list row reads eight values; one
+ * subscription each made every store change run thousands of them).
+ */
+export function useAppStoreShallow<T extends object>(selector: (s: AppStore) => T): T {
+  return useStore(useStoreBundle().store, useShallow(selector));
 }
 
 /** Actions and imperative reads (event handlers): `useActions().addTask(…)`. */

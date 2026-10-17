@@ -10,7 +10,7 @@
  * where it lands, at that depth; the dragged rows dim. Dropping applies one
  * move (undoable); Esc, or dropping where it started, does nothing.
  */
-import { createContext, type PointerEvent as ReactPointerEvent, type ReactNode, useContext, useEffect, useRef, useState } from 'react';
+import { createContext, type PointerEvent as ReactPointerEvent, type ReactNode, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 
 import { type DragRow, dropOp, dropTarget, type DropTarget } from '@/lib/dnd';
 import { findTask } from '@/lib/taskMap';
@@ -72,14 +72,20 @@ export function DragArea({ children }: { children: ReactNode }) {
     setDrag(next);
   };
 
-  const start: DragApi['start'] = (id, depth, e) => {
-    if (e.button !== 0 || !box.current) return;
-    e.preventDefault();
-    e.stopPropagation();
-    const hidden = new Set(subtreeIds(store.getState().tasks, id));
-    store.getState().setEditing(null);
-    update({ id, startDepth: depth, startX: e.clientX, rows: measure(box.current, hidden), target: null, hidden, x: e.clientX, y: e.clientY, line: null });
-  };
+  // The same function for the list's whole life: every row reads it from the context.
+  const start = useCallback<DragApi['start']>(
+    (id, depth, e) => {
+      if (e.button !== 0 || !box.current) return;
+      e.preventDefault();
+      e.stopPropagation();
+      const hidden = new Set(subtreeIds(store.getState().tasks, id));
+      store.getState().setEditing(null);
+      const next: DragState = { id, startDepth: depth, startX: e.clientX, rows: measure(box.current, hidden), target: null, hidden, x: e.clientX, y: e.clientY, line: null };
+      live.current = next;
+      setDrag(next);
+    },
+    [store],
+  );
 
   useEffect(() => {
     if (!drag) return;
@@ -120,11 +126,17 @@ export function DragArea({ children }: { children: ReactNode }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [drag !== null, store]);
 
+  // The context changes only when a drag starts or ends (the hidden rows), not as the pointer
+  // moves or the list re-renders: every row reads it, and a new value re-rendered them all
+  // (speed pass 2026-10-17).
+  const dragging = drag?.hidden ?? EMPTY;
+  const api = useMemo(() => ({ start, dragging }), [start, dragging]);
+
   const line = drag?.line ?? null;
   const title = drag ? findTask(store.getState().tasks, drag.id)?.title : '';
 
   return (
-    <DragContext.Provider value={{ start, dragging: drag?.hidden ?? EMPTY }}>
+    <DragContext.Provider value={api}>
       <div ref={box} className={drag ? 'drag-area dragging' : 'drag-area'}>
         {children}
         {/* Placed by transform (no layout as the pointer moves); `left` only changes with the depth. */}
