@@ -10,12 +10,26 @@ import { createAppStore, installPersistence } from './createStore';
 import { openIdbKV } from './idbKV';
 import { bundleStore, type StoreBundle } from './react';
 
+/** The running store, and how to close it (another window takes the tasks: store/instance.ts). */
+export interface StartedStore {
+  bundle: StoreBundle;
+  /** Saves everything still pending, stops saving, and resolves once it's all in IndexedDB. */
+  close(): Promise<void>;
+}
+
 /** Opens storage and creates the app's store. */
-export async function startStore(): Promise<StoreBundle> {
+export async function startStore(): Promise<StartedStore> {
   const kv = await openIdbKV();
   const store = createAppStore({ kv, now: Date.now, newId: () => crypto.randomUUID() });
-  installPersistence(store, kv);
+  const persistence = installPersistence(store, kv);
   // Best effort: Chrome grants it to installed apps; nothing breaks if it doesn't.
   void navigator.storage?.persist?.().catch(() => false);
-  return bundleStore(store);
+  return {
+    bundle: bundleStore(store),
+    async close() {
+      persistence.flush();
+      persistence();
+      await kv.flush();
+    },
+  };
 }

@@ -414,6 +414,34 @@ try {
     await shot('18-alt-enter');
   });
 
+  await path('a second window opens nothing until USE HERE; the first saves and steps aside', async () => {
+    // V1 pass 2026-10-17: two windows writing the same storage lost each other's changes.
+    await nav('ALL QUESTS').click();
+    await addQuest('Made in the first window');
+    const second = await context.newPage();
+    try {
+      await second.goto(URL);
+      await second.getByText('QUEST_LOG IS OPEN IN ANOTHER WINDOW.').waitFor({ timeout: 4000 });
+      if (await second.locator('.row').count()) throw new Error('the second window shows tasks before USE HERE');
+      await second.getByRole('button', { name: /USE HERE/ }).click();
+      await see('QUEST_LOG MOVED TO ANOTHER WINDOW.');
+      await second.locator('.sidebar .nav-item', { hasText: 'ALL QUESTS' }).first().click();
+      await second.locator('.row', { hasText: 'Made in the first window' }).first().waitFor({ timeout: 4000 });
+      await second.screenshot({ path: join(shots, '20-second-window.png') });
+      // And back: the first window takes them again (a reload, then USE HERE).
+      await page.getByRole('button', { name: /USE HERE/ }).click();
+      await see('QUEST_LOG IS OPEN IN ANOTHER WINDOW.');
+      await page.getByRole('button', { name: /USE HERE/ }).click();
+      await second.getByText('QUEST_LOG MOVED TO ANOTHER WINDOW.').waitFor({ timeout: 4000 });
+      await row('Made in the first window').waitFor({ timeout: 4000 }).catch(async () => {
+        await nav('ALL QUESTS').click();
+        await row('Made in the first window').waitFor({ timeout: 4000 });
+      });
+    } finally {
+      await second.close();
+    }
+  });
+
   await path('a narrow window: the sidebar becomes a drawer', async () => {
     await page.setViewportSize({ width: 820, height: 800 });
     await page.keyboard.press('Escape');
