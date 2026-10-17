@@ -61,6 +61,19 @@
   --bright-08: rgba(182, 255, 176, 0.08);
   --accent-deep: #1f8f2c;
   --flash: #ffffff;
+  /* A lit frame: the accent at about 35% over black, as a solid colour (the phone's lineLit). */
+  --line-lit: #145907;
+
+  /* The phosphor effects (aesthetic pass 2026-10-17, shared with the phone):
+     the lit screen's soft light from its top-left corner, its scanlines (a
+     1 px line every 3 px), a rule lit in the middle, and a heading's rule
+     that fades out (plain, or lit on a page). The gradients are static: the
+     masthead's drift moves its layer, never the gradient. */
+  --phosphor: radial-gradient(130% 100% at 0% 0%, var(--accent-10), transparent 62%);
+  --scanlines: repeating-linear-gradient(to bottom, var(--accent-05) 0 1px, transparent 1px 3px);
+  --lit-rule: linear-gradient(90deg, transparent, var(--line) 15%, var(--accent-35) 50%, var(--line) 85%, transparent);
+  --fade-rule: linear-gradient(90deg, var(--line), transparent);
+  --fade-rule-lit: linear-gradient(90deg, var(--accent-35), transparent);
 
   /* Type: one family; sizes a step denser than the phone (a desktop reads closer). */
   --font: 'JetBrains Mono', ui-monospace, monospace;
@@ -100,6 +113,9 @@
   /* Layout. */
   --sidebar: 264px;
   --detail: 380px;
+  /* The header band: the centre's header and the detail pane's head are both
+     this tall, so their dividers make one line across the window. */
+  --head: 56px;
   /* The detail pane minimized: a strip with its « button. */
   --detail-min: 40px;
 

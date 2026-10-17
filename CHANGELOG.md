@@ -2,6 +2,17 @@
 
 quest_log desktop. Each version gets one section, newest first. The heading's build number is shown in Settings and written into backups.
 
+## 0.7.0 (build 12)
+
+A visual pass, to match the phone app's new look.
+
+- **Every view and page opens on a lit screen.** The header above the list (ALL QUESTS, TODAY, UPCOMING, an area, Settings, Help, Trash) has the same faint green light and scanlines as the title panel, and the line under it is lit in the middle.
+- **One straight line across the top.** The details pane's header is now as tall as the list's, so their dividing lines meet in one line across the window.
+- **Long lists fade out** at the bottom of the window instead of being cut off mid-row. Scrolled to the end, the last quest shows in full.
+- **The right-click menu** has a lit top edge.
+- **Settings and Help read more clearly:** their section headings are brighter, with a lit rule after them.
+- **Sidebar items** show the same faint left edge as list rows when you point at them.
+
 ## 0.6.0 (build 11)
 
 - **Alt+Enter adds objectives as you type.** While editing a quest's title, Alt+Enter saves it and starts a new objective under it. While editing an objective, Alt+Enter starts the next one right below it, so you can list them one after another without touching the mouse. Pressing it on an empty objective does nothing, so blank ones don't pile up. If the quest was folded, it opens.

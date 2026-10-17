@@ -5,25 +5,32 @@ The same terminal look as the phone app (the phone's `DESIGN.md` is the source),
 ## Tokens
 - **Colour:** the phone's green-on-black palette.
   - Background: `--bg` #000, `--surface`, `--surface-raised`.
-  - Lines: `--line`.
+  - Lines: `--line`, and `--line-lit` (the accent at about 35% over black, the phone's `lineLit`).
   - Text, quietest to loudest: `--text-dim` (meta), `--text` (body), `--accent` #39ff14 (selection, focus, checks), `--text-bright` (titles).
 - **Glow:** `--glow`, `--glow-faint`, `--glow-bright` and `--glow-inset` for boxes; `--glow-text-faint`, `--glow-text` and `--glow-text-bright` for text. **Accent tints** `--accent-05` … `--accent-60` (and `--bright-08`, `--accent-deep`, `--flash`) are the accent at fixed strengths, for washes, hover edges and rules. Glow stays subtle and marks state:
   - the selected sidebar item;
   - the focused field;
   - the brand;
   - the XP bar.
+- **Phosphor effects** (aesthetic pass 2026-10-17, shared with the phone's `theme/effects.ts`): the chrome reads as a lit terminal screen. All are static gradients, green at low strength, and never inside list rows.
+  - `--phosphor`: a soft light from the top-left corner (the accent at 10%, fading out by 62%);
+  - `--scanlines`: a 1 px line of the accent at 5% every 3 px;
+  - `--lit-rule`: a hairline from transparent through `--line` to the accent at 35% in the middle and back;
+  - `--fade-rule` / `--fade-rule-lit`: a heading's rule, fading out from `--line`, or from the accent at 35%.
+  Where they go: the masthead (phosphor, drifting scanlines); every view's and page's header (phosphor, still scanlines, a lit divider); the sidebar's section dividers and the context menu's top edge (lit rules); section headings (fading rules: lit for OVERDUE and on pages).
 - **Type:** JetBrains Mono (bundled TTFs in `src/assets/fonts`).
   - Sizes: `--fs-title` 22, `--fs-display` 18, `--fs-body` 14, `--fs-quest` 13, `--fs-meta` 12, `--fs-small` 11.
   - Labels and headings are UPPERCASE with letter spacing; task titles keep their case.
 - **Space:** `--s-xs` 4, `--s-sm` 8, `--s-md` 12, `--s-lg` 16, `--s-xl` 24. Also `--indent` 28 per nesting level, `--radius` 2, `--hairline` 1.
 - **Accents** (subtle accents pass 2026-10-12). Accents mark state or meaning, never decoration for its own sake, and always come from the tokens: the glows, `--glow-text-faint`, and the accent tints `--accent-05` … `--accent-60`. `app.css` has no raw colours.
-  - **Hover:** a field's or button's frame brightens a step (`--text-dim`), or for framed icon buttons lights (`--accent-35` and `--glow-faint`). List rows get a faint 2 px edge (`--accent-20`); menu items get the selected row's lit edge. Sidebar items brighten and their icon glows. The date and time icons and the select arrows turn accent.
+  - **Hover:** a field's or button's frame brightens a step (`--text-dim`), or for framed icon buttons lights (`--accent-35` and `--glow-faint`). List rows and sidebar items get a faint 2 px edge (`--accent-20`); menu items get the selected row's lit edge. Sidebar items brighten and their icon glows. The date and time icons and the select arrows turn accent.
   - **Pressed:** a brief `--accent-10` wash on framed buttons.
   - **Focus:** the field's frame turns accent (as before), and its label lights up with it (`:focus-within`).
   - **Selected row:** the 2 px bar plus a soft glow spilling a few pixels into the row.
-  - **Headings:** `>` prompts in titles and empty states are accent (`Prompted`); view titles and the details pane's quest title get `--glow-text-faint`; section headings run on into a hairline rule that fades out (accent for OVERDUE).
+  - **Headings:** `>` prompts in titles and empty states are accent (`Prompted`); view titles and the details pane's quest title get `--glow-text-faint`; section headings run on into a hairline rule that fades out (accent for OVERDUE). On pages (Settings, Help, Trash) the headings name the sections: `--text-bright`, with the lit rule.
   - **Meaning:** TODAY's count turns accent while anything is overdue; a date due later today is one step brighter than other dates (overdue stays accent); `!!!` and overdue dates glow faintly.
-  - **Overlays:** the toast has a lit left edge and a faint glow; a dialog's frame is lightly lit.
+  - **Overlays:** the toast has a lit left edge and a faint glow; a dialog's frame is lightly lit; the context menu's top edge is lit in the middle (drawn in the border's place, like the phone's sheets).
+  - **The list's end:** a long list fades out over the last 24 px at the window's bottom edge instead of being cut off (a sticky gradient at the end of the scrolling content; it rests after the last row once you've scrolled to the end).
   - **Themed controls:** select arrows are the theme's own `▼` (CSS gradients from tokens), and the date and time picker icons are redrawn in the theme colour with a mask.
   - **Motion:** colours, borders and box glows ease in over `--fast`. Text glows change at once, because an animated `text-shadow` relays text every frame. List rows and menu items switch at once too: they change on clicks that also render other things.
 - **Alignment grid** (alignment pass 2026-10-12; tokens in `theme.css`):
@@ -61,6 +68,7 @@ The same terminal look as the phone app (the phone's `DESIGN.md` is the source),
 └──────────────┴──────────────────────────────────┴───────────────────┘
 ```
 - **Three columns** in a CSS grid (`--sidebar`, flexible, `--detail`), separated by hairlines.
+- **The header band:** the list's header and the detail pane's head are both `--head` (56 px) tall, so their dividers make one line across the window. The list's header (every view and page) is a lit screen like the masthead: the phosphor light under still scanlines, with its divider lit in the middle. The detail pane's head keeps a plain hairline, so the light stays on the view you're in.
 - **The sidebar** opens with the masthead: a lit `--surface` panel with faint scanlines that drift slowly down (and a soft refresh band passing every 7 s), a green glow from the top-left corner and two accent corner brackets. In it:
   - `<level>_quest_log`; the level pops on a level up;
   - the XP bar: a terminal gauge `[▮▮▮▮▯▯▯]`, 10 px tall: 20 block cells between dim brackets (a fixed mask cuts the track into cells), filled to the nearest whole cell, no cursor; the totals centred beneath. A gain brightens the number; a level up runs the fill to the end, pops the level number, and the full bar fades while the new level grows in from zero.
@@ -70,7 +78,7 @@ The same terminal look as the phone app (the phone's `DESIGN.md` is the source),
 - **Under 900 px:** the sidebar becomes a drawer, opened with `≡`.
 
 ## Interaction
-- **Hover:** rows and sidebar items get `--surface-raised`. The drag handle `⋮` shows on hover.
+- **Hover:** rows and sidebar items get `--surface` and a faint left edge. The drag handle `⋮` shows on hover.
 - **Selection:** one selected task shows a left accent bar and drives the detail pane. Several (Ctrl/Shift+click) show the selection bar with bulk actions.
 - **Editing:** double-click or `Enter` edits a title inline. Shorthand chips (`◔ TOMORROW 10:00`, `!!`, `↻ WEEKLY`) float **above** the text being typed, small and quiet, the same in quick-add and in inline editing.
 - **Completion:**

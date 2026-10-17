@@ -172,9 +172,7 @@ mark {
   padding: var(--s-md) calc(var(--nav-x) - var(--hairline));
   border: var(--hairline) solid var(--line);
   border-radius: var(--radius);
-  background:
-    radial-gradient(130% 100% at 0% 0%, var(--accent-10), transparent 62%),
-    var(--surface);
+  background: var(--phosphor), var(--surface);
 }
 /* The scanlines, drifting slowly down, under the title block's contents. */
 .masthead-scan {
@@ -193,7 +191,7 @@ mark {
   content: '';
   position: absolute;
   inset: -3px 0 0;
-  background: repeating-linear-gradient(to bottom, var(--accent-05) 0 1px, transparent 1px 3px);
+  background: var(--scanlines);
   animation: scan-drift 1.8s linear infinite;
   animation-play-state: var(--loops);
   will-change: transform;
@@ -402,7 +400,7 @@ mark {
   left: var(--s-sm);
   right: var(--s-sm);
   height: var(--hairline);
-  background: linear-gradient(90deg, transparent, var(--line) 15%, var(--accent-35) 50%, var(--line) 85%, transparent);
+  background: var(--lit-rule);
 }
 /* SYSTEM: set off by a plain hairline border (as it first was), not the lit divider. */
 .nav-section.bottom {
@@ -502,6 +500,8 @@ mark {
 .nav-item:hover {
   background: var(--surface);
   color: var(--text-bright);
+  /* The faint edge of a row under the pointer, as in the list and the menus (aesthetic pass 2026-10-17). */
+  box-shadow: inset 2px 0 0 var(--accent-20);
 }
 .nav-item:hover .nav-glyph {
   text-shadow: var(--glow-text-bright);
@@ -607,13 +607,29 @@ mark {
   min-width: 0;
   min-height: 0;
 }
+/* The header of every view and page: a lit terminal screen, like the
+   masthead and the phone's pages (aesthetic pass 2026-10-17): the phosphor
+   light from the top-left corner under still scanlines, and its divider lit
+   in the middle. */
 .center-head {
+  position: relative;
   display: flex;
   align-items: center;
   gap: var(--s-md);
-  min-height: 56px;
+  min-height: var(--head);
   padding: var(--s-sm) var(--s-lg);
   border-bottom: var(--hairline) solid var(--line);
+  background: var(--scanlines), var(--phosphor);
+}
+.center-head::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: calc(-1 * var(--hairline));
+  height: var(--hairline);
+  background: var(--lit-rule);
+  pointer-events: none;
 }
 .view-title {
   flex: 1;
@@ -627,10 +643,28 @@ mark {
   text-shadow: var(--glow-text-faint);
 }
 .center-body {
+  /* Room after the last row, so it can be scrolled clear of the window's edge. */
+  --list-end: 96px;
   flex: 1;
   min-height: 0;
   overflow-y: auto;
-  padding-bottom: 96px;
+  padding-bottom: var(--list-end);
+}
+/* A long list fades out at the window's bottom edge instead of being cut off
+   (aesthetic pass 2026-10-17). Sticky at the end of the content: it rides the
+   bottom edge while there's more below, and rests after the last row (in the
+   bottom padding, over nothing) once the list is scrolled to its end. It
+   takes no room (its negative margin). A sticky box keeps clear of its
+   scroller's padding, so the inset reaches back over it to the real edge. */
+.center-body::after {
+  content: '';
+  position: sticky;
+  bottom: calc(-1 * var(--list-end));
+  display: block;
+  height: var(--s-xl);
+  margin-bottom: calc(-1 * var(--s-xl));
+  background: linear-gradient(to bottom, transparent, var(--bg));
+  pointer-events: none;
 }
 .switch {
   display: flex;
@@ -1063,14 +1097,14 @@ textarea.title {
   content: '';
   flex: 1;
   height: var(--hairline);
-  background: linear-gradient(90deg, var(--line), transparent);
+  background: var(--fade-rule);
 }
 .section-title.overdue {
   color: var(--accent);
   text-shadow: var(--glow-text-faint);
 }
 .section-title.overdue::after {
-  background: linear-gradient(90deg, var(--accent-35), transparent);
+  background: var(--fade-rule-lit);
 }
 .plan-row .due {
   flex: none;
@@ -1297,11 +1331,17 @@ textarea.title {
   gap: var(--s-md);
   padding: var(--s-md) var(--s-lg) var(--s-xl);
 }
+/* The pane's head: a band as tall as the centre's header and edge to edge
+   (out of the pane's padding), so their dividers make one line across the
+   window (aesthetic pass 2026-10-17). */
 .detail-head {
   display: flex;
   align-items: center;
   gap: var(--s-sm);
-  min-height: var(--control);
+  min-height: var(--head);
+  margin: calc(-1 * var(--s-md)) calc(-1 * var(--s-lg)) 0;
+  padding: var(--s-sm) var(--s-lg);
+  border-bottom: var(--hairline) solid var(--line);
 }
 .detail-path {
   flex: 1;
@@ -1629,7 +1669,13 @@ input.area-name {
   padding: var(--s-xs) 0;
   border: var(--hairline) solid var(--line);
   border-radius: var(--radius);
-  background: var(--surface-raised);
+  /* Its top edge is lit in the middle, like the phone's sheets (aesthetic pass
+     2026-10-17): drawn in the border's place, over the frame's own colour. */
+  border-top-color: transparent;
+  background:
+    var(--lit-rule) top / 100% var(--hairline) no-repeat border-box,
+    linear-gradient(var(--line), var(--line)) top / 100% var(--hairline) no-repeat border-box,
+    var(--surface-raised);
   box-shadow: var(--glow);
   animation: rise var(--fast) var(--ease);
 }
@@ -1829,8 +1875,14 @@ input.area-name {
 .page-body p.small {
   max-width: none;
 }
+/* A page's headings name its sections: brighter, with a lit rule (as on the
+   phone's Settings; aesthetic pass 2026-10-17). */
 .page .section-title {
   padding-left: 0;
+  color: var(--text-bright);
+}
+.page .section-title::after {
+  background: var(--fade-rule-lit);
 }
 .settings-group {
   display: flex;
