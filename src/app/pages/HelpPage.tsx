@@ -11,7 +11,7 @@ const SHORTCUTS: [string, string][] = [
   ['N', 'New quest (the field at the top of the list)'],
   ['/', 'Search the list shown'],
   ['T · U · A', 'TODAY · UPCOMING · ALL QUESTS'],
-  ['↑ ↓', 'Move the selection'],
+  ['↑ ↓ · Home · End', 'Move the selection; to the first or the last task'],
   ['Enter', 'Edit the selected task’s title'],
   ['Alt+Enter', 'While editing: save, then start a new objective (in a quest) or the next one below (in an objective)'],
   ['Space', 'Complete (or restore) the selected task'],

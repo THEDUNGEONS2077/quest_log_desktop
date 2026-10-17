@@ -2,7 +2,7 @@
  * src/app/Toast.tsx: the message at the bottom (`COMPLETED · +18 XP  UNDO`).
  *
  * Layer: UI. Shows the store's toast for 5 s; UNDO undoes the step it
- * describes (Ctrl+Z does too). It slides in, and slides back down and
+ * describes (Ctrl+Z does too), and the toast then says UNDONE with REDO. It slides in, and slides back down and
  * fades when it goes (usePresence), never vanishing in one frame.
  *
  * Its clock (V1.1 pass 2026-10-17):
@@ -106,15 +106,13 @@ export function Toast() {
         </button>
       )}
       {shown.undo && (
-        <button
-          type="button"
-          className="text-btn primary"
-          onClick={() => {
-            actions.undo();
-            actions.dismissToast(shown.key);
-          }}
-        >
+        <button type="button" className="text-btn primary" onClick={() => actions.undoWithNotice()}>
           UNDO
+        </button>
+      )}
+      {shown.redo && (
+        <button type="button" className="text-btn primary" onClick={() => actions.redoWithNotice()}>
+          REDO
         </button>
       )}
       {/* The clock: shrinks over TOAST_MS, stops while held (app.css .toast-clock). */}

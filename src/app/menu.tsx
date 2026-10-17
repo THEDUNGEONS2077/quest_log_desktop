@@ -37,6 +37,8 @@ export interface DialogState {
   input?: { value: string; placeholder?: string; maxLength?: number };
   /** Choices; OK passes the chosen value. */
   choices?: { value: string; label: string }[];
+  /** The choice selected (and focused) as the dialog opens; the first one if not given. */
+  initial?: string;
   ok: string;
   onOk: (value: string) => void;
   /**

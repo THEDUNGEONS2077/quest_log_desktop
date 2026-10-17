@@ -47,13 +47,13 @@ export function useShortcuts({ store }: StoreBundle, blocked: boolean, openMenuA
       // Undo / redo work anywhere outside a field.
       if (mod && e.key.toLowerCase() === 'z') {
         handled();
-        if (e.shiftKey) s.redo();
-        else s.undo();
+        if (e.shiftKey) s.redoWithNotice();
+        else s.undoWithNotice();
         return;
       }
       if (mod && e.key.toLowerCase() === 'y') {
         handled();
-        s.redo();
+        s.redoWithNotice();
         return;
       }
       // Alt goes with the arrows only (Alt+↑↓ move a task, Alt+←→ indent and outdent it).
@@ -105,6 +105,18 @@ export function useShortcuts({ store }: StoreBundle, blocked: boolean, openMenuA
           else if (s.selectedId) s.select(null);
           else s.backStep();
           return;
+        case 'Home':
+        case 'End': {
+          // A page (Help, Settings) scrolls with them as usual; a list jumps to its first or last task.
+          if (s.page !== null) return;
+          const ids = visibleRows();
+          if (!ids.length) return;
+          handled();
+          const id = e.key === 'Home' ? ids[0]! : ids[ids.length - 1]!;
+          s.select(id);
+          document.querySelector(`[data-id="${CSS.escape(id)}"]`)?.scrollIntoView({ block: 'nearest' });
+          return;
+        }
         case 'ArrowDown':
         case 'ArrowUp': {
           handled();

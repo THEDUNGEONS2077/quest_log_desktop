@@ -108,3 +108,20 @@ describe('the backup reminder', () => {
     expect(store.getState().toast?.message).toBe('UPDATED TO v1.0.0');
   });
 });
+
+describe('undo and redo say what they did (V1.1 refinement)', () => {
+  it('UNDONE offers REDO, REDONE offers UNDO, and an empty history says so', () => {
+    const store = makeStore();
+    store.getState().undoWithNotice();
+    expect(store.getState().toast).toMatchObject({ message: 'NOTHING TO UNDO', undo: false });
+    store.getState().addTask(null, 'A quest');
+    store.getState().undoWithNotice();
+    expect(store.getState().toast).toMatchObject({ message: 'UNDONE', redo: true });
+    expect(taskCount(store.getState().tasks)).toBe(0);
+    store.getState().redoWithNotice();
+    expect(store.getState().toast).toMatchObject({ message: 'REDONE', undo: true });
+    expect(taskCount(store.getState().tasks)).toBe(1);
+    store.getState().redoWithNotice();
+    expect(store.getState().toast?.message).toBe('NOTHING TO REDO');
+  });
+});

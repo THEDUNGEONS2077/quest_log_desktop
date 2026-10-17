@@ -26,7 +26,7 @@ const FOCUSABLE = 'input:not(:disabled), button:not(:disabled)';
 
 /** The dialog; `leaving` while it fades out after closing (app/usePresence.ts). */
 export function Dialog({ dialog, onClose, leaving = false }: { dialog: DialogState; onClose: () => void; leaving?: boolean }) {
-  const [value, setValue] = useState(dialog.input?.value ?? dialog.choices?.[0]?.value ?? '');
+  const [value, setValue] = useState(dialog.input?.value ?? dialog.initial ?? dialog.choices?.[0]?.value ?? '');
   const layer = useRef<HTMLDivElement>(null);
   const cancel = useRef<HTMLButtonElement>(null);
   const ok = useRef<HTMLButtonElement>(null);
@@ -86,7 +86,14 @@ export function Dialog({ dialog, onClose, leaving = false }: { dialog: DialogSta
             <div className="dialog-choices" role="radiogroup" aria-label={dialog.title}>
               {dialog.choices.map((c, i) => (
                 <label key={c.value} className="dialog-choice">
-                  <input type="radio" name="choice" value={c.value} checked={value === c.value} autoFocus={i === 0} onChange={() => setValue(c.value)} />
+                  <input
+                    type="radio"
+                    name="choice"
+                    value={c.value}
+                    checked={value === c.value}
+                    autoFocus={dialog.initial === undefined ? i === 0 : c.value === dialog.initial}
+                    onChange={() => setValue(c.value)}
+                  />
                   {c.label}
                 </label>
               ))}

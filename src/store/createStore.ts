@@ -91,6 +91,8 @@ export interface Toast {
   open?: Page;
   /** Show BACK UP (the backup reminder): saves a backup file. */
   backup?: boolean;
+  /** Show REDO (after an undo): redoes the step just undone. */
+  redo?: boolean;
 }
 
 /** What a checkbox tap did, so the UI can pick the haptic (PLAN §9.18). */
@@ -251,6 +253,13 @@ export interface AppStore {
   dispatch(op: ops.Op, options?: DispatchOptions): void;
   undo(): boolean;
   redo(): boolean;
+  /**
+   * Undo, and say so: UNDONE with REDO, or NOTHING TO UNDO (V1.1 refinement:
+   * Ctrl+Z was silent, so an undo off screen looked like nothing happened).
+   */
+  undoWithNotice(): void;
+  /** Redo, and say so: REDONE with UNDO, or NOTHING TO REDO. */
+  redoWithNotice(): void;
   /** Adds a task and returns its new ID. `index` defaults to the end. */
   addTask(parentId: ID | null, title: string, index?: number): ID;
   /** Typing in a title: one undo step per editing session. */
@@ -753,6 +762,18 @@ export function createAppStore(deps: StoreDeps) {
         return true;
       },
 
+      undoWithNotice() {
+        const done = get().undo();
+        const key = (get().toast?.key ?? 0) + 1;
+        set({ toast: done ? { key, message: 'UNDONE', undo: false, redo: true } : { key, message: 'NOTHING TO UNDO', undo: false } });
+      },
+
+      redoWithNotice() {
+        const done = get().redo();
+        const key = (get().toast?.key ?? 0) + 1;
+        set({ toast: done ? { key, message: 'REDONE', undo: true } : { key, message: 'NOTHING TO REDO', undo: false } });
+      },
+
       redo() {
         const { past, future } = get().history;
         const entry = future[future.length - 1];
@@ -1214,7 +1235,7 @@ export function createAppStore(deps: StoreDeps) {
 
       setQuestCategory(id, category) {
         get().dispatch(ops.editTask(get().tasks, id, { category }, now()));
-        get().showToast(`MOVED TO ${areaName(get().tasks, category)}`, true);
+        get().showToast(`MOVED TO ${areaName(get().tasks, category).toUpperCase()}`, true);
       },
       setZoom: (zoomRootId) => set({ ui: { ...get().ui, zoomRootId } }),
       setEditing: (editingId, caret = null, field = 'title') => {

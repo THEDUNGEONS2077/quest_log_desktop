@@ -17,7 +17,8 @@ import { memo, useEffect, useId } from 'react';
 
 import { addDays, formatDue, formatTime, isSameDay } from '@/lib/dates';
 import type { PlanDay, PlanRow } from '@/lib/plan';
-import { findTask } from '@/lib/taskMap';
+import { findTask, forEachTask } from '@/lib/taskMap';
+import type { TasksState } from '@/lib/types';
 import { shownTitle } from '@/lib/title';
 import { useActions, useAppStore, useSelectors } from '@/store/react';
 
@@ -29,6 +30,19 @@ import { TitleEditor } from './TitleEditor';
 import { useMinute } from './useMinute';
 import { Prompted } from './Prompted';
 import { useBlank, Welcome } from './Welcome';
+
+/** Tasks completed on `now`'s day, counted once per task tree and minute (a new tree after each change). */
+const doneCounts = new WeakMap<TasksState, { at: number; n: number }>();
+function doneOn(tasks: TasksState, now: number): number {
+  const hit = doneCounts.get(tasks);
+  if (hit && hit.at === now) return hit.n;
+  let n = 0;
+  forEachTask(tasks, (t) => {
+    if (t.done && t.deletedAt === null && t.doneAt !== null && isSameDay(t.doneAt, now)) n++;
+  });
+  doneCounts.set(tasks, { at: now, n });
+  return n;
+}
 
 const DAY = new Intl.DateTimeFormat('en-GB', { weekday: 'short', day: 'numeric', month: 'short' });
 
@@ -42,11 +56,21 @@ export function TodayList() {
   const selectors = useSelectors();
   const now = useMinute();
   const rows = useAppStore((s) => selectors.todayRows(s, now));
+  const doneToday = useAppStore((s) => doneOn(s.tasks, now));
   const blank = useBlank();
   useEffect(() => setVisibleRows(rows.map((r) => r.id)), [rows]);
   const overdue = rows.filter((r) => r.overdue);
   const today = rows.filter((r) => !r.overdue);
   if (blank) return <Welcome />;
+  // Nothing left, after a day's work: say so, not "give tasks a date" (V1.1 refinement).
+  if (!rows.length && doneToday > 0)
+    return (
+      <p className="empty all-clear">
+        <Prompted>
+          ALL CLEAR FOR TODAY · {doneToday} {doneToday === 1 ? 'TASK' : 'TASKS'} DONE
+        </Prompted>
+      </p>
+    );
   if (!rows.length) return <p className="empty"><Prompted>NOTHING DUE TODAY. GIVE TASKS A DATE (@fri, @today 3pm) TO SEE THEM HERE.</Prompted></p>;
   return (
     <div className="list plan">

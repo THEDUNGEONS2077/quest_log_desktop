@@ -17,10 +17,18 @@ import { findTask } from '@/lib/taskMap';
 import { subtreeIds } from '@/lib/tree';
 import { useStoreBundle } from '@/store/react';
 
-/** The indent per level, in px (theme --indent: --check 20 + --s-sm 8). */
-const INDENT = 28;
-/** Where a depth-0 title starts in a row (theme: --s-lg + --caret + --s-sm + --check + --s-sm): the drop line starts there. */
-const TITLE_X = 16 + 24 + 8 + 20 + 8;
+/**
+ * The row grid as laid out now, in px: the indent per level (theme --indent:
+ * --check + --s-sm) and where a depth-0 title starts (--s-lg + --caret +
+ * --s-sm + --check + --s-sm), where the drop line starts. The caret
+ * (24 × scale) and checkbox (27 × scale − 6) columns grow with Text size
+ * (--text-scale, set on <html>), the gaps don't. Mirrors theme.css.
+ */
+function rowGrid(): { indent: number; titleX: number } {
+  const scale = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--text-scale')) || 1;
+  const check = 27 * scale - 6;
+  return { indent: check + 8, titleX: 16 + 24 * scale + 8 + check + 8 };
+}
 
 interface DragState {
   id: string;
@@ -93,13 +101,14 @@ export function DragArea({ children }: { children: ReactNode }) {
       const d = live.current;
       if (!d || !box.current) return;
       const rows = measure(box.current, d.hidden);
-      const target = dropTarget(rows, e.clientY, d.startDepth, e.clientX - d.startX, INDENT);
+      const grid = rowGrid();
+      const target = dropTarget(rows, e.clientY, d.startDepth, e.clientX - d.startX, grid.indent);
       // The drop line: the gap's top edge, indented to the depth.
       const above = rows[target.gap - 1];
       const below = rows[target.gap];
       const y = below ? below.top : above ? above.top + above.height : 0;
       const origin = box.current.getBoundingClientRect();
-      const line = { top: y - origin.top, left: TITLE_X + target.depth * INDENT };
+      const line = { top: y - origin.top, left: grid.titleX + target.depth * grid.indent };
       update({ ...d, rows, x: e.clientX, y: e.clientY, target, line });
     };
     const up = () => {

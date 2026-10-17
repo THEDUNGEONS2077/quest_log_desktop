@@ -47,7 +47,14 @@ export function QuestList() {
   if (!rows.length) {
     return (
       <p className="empty">
-        <Prompted>{query ? 'NO MATCHES.' : zoomed ? 'NOTHING HERE YET. TYPE ABOVE TO ADD AN OBJECTIVE' : 'NO OPEN QUESTS HERE. TYPE ABOVE TO BEGIN'}</Prompted>
+        {/* A search that finds nothing says what was searched and the way out (V1.1 refinement). */}
+        <Prompted>
+          {query
+            ? `NO MATCHES FOR “${query.trim().toUpperCase()}”. ESC CLEARS THE SEARCH.`
+            : zoomed
+              ? 'NOTHING HERE YET. TYPE ABOVE TO ADD AN OBJECTIVE'
+              : 'NO OPEN QUESTS HERE. TYPE ABOVE TO BEGIN'}
+        </Prompted>
       </p>
     );
   }

@@ -116,6 +116,11 @@ export function QuestMeter({ task, done, total }: { task: Task; done: number; to
   );
 }
 
+/** A repeating task's streak in words: "On time 4 times in a row: ×1.4 XP (a late one starts it again)". */
+export function streakNote(streak: number): string {
+  return `On time ${streak} ${streak === 1 ? 'time' : 'times in a row'}: ×${repeatMultiplier(streak).toFixed(1)} XP (a late one starts it again)`;
+}
+
 /** The details line under a title: priority, streak, notes, due date, progress. */
 export function RowMeta({ task, row }: { task: Task; row?: Row }) {
   const now = useMinute();
@@ -123,7 +128,13 @@ export function RowMeta({ task, row }: { task: Task; row?: Row }) {
   const actions = useActions();
   const parts: ReactNode[] = [];
   if (task.priority > 0) parts.push(<span key="p" className={cx('prio', `prio-${task.priority}`)}>{G.priority.repeat(task.priority)}</span>);
-  if (task.repeat && (task.streak ?? 0) > 0) parts.push(<span key="s" className="accent">×{repeatMultiplier(task.streak!).toFixed(1)}</span>);
+  if (task.repeat && (task.streak ?? 0) > 0)
+    parts.push(
+      // The multiplier says nothing on its own: the tooltip says what earned it (V1.1 refinement).
+      <span key="s" className="accent" title={streakNote(task.streak!)}>
+        ×{repeatMultiplier(task.streak!).toFixed(1)}
+      </span>,
+    );
   if (task.notes)
     parts.push(
       <button

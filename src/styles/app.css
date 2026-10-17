@@ -139,6 +139,11 @@ mark {
   padding: var(--s-xl) var(--s-lg);
   color: var(--text-dim);
 }
+/* TODAY with everything done: the good news is lit. */
+.empty.all-clear {
+  color: var(--accent);
+  text-shadow: var(--glow-text-faint);
+}
 
 /* The first-run welcome (Welcome.tsx): on the list's gutters, prose at a
    readable measure, the first keys in two columns like Help's. */
@@ -211,8 +216,21 @@ mark {
   gap: var(--s-xs);
   padding: var(--s-md) var(--s-sm) var(--s-sm);
   border-right: var(--hairline) solid var(--line);
-  overflow-y: auto;
+  overflow: hidden;
   background: var(--bg);
+}
+/* VIEWS, AREAS and ARCHIVE scroll between the title block and SYSTEM, which stay put. */
+.sidebar-scroll {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: var(--s-xs);
+  min-height: 0;
+  overflow-y: auto;
+  /* Out to the sidebar's edges (its padding moves inside), with a little room above and below,
+     so a selected item's glow and the focus ring aren't clipped by the scrolling box. */
+  margin: 0 calc(-1 * var(--s-sm));
+  padding: var(--s-xs) var(--s-sm);
 }
 
 /* The title block: a lit panel with scanlines, corner brackets, the title,
@@ -1567,10 +1585,11 @@ textarea.title {
   align-items: flex-start;
   gap: var(--s-sm);
 }
-/* The checkbox centred on the title's first line (border + padding + 22 px line = 28). */
+/* The checkbox centred on the title's first line (border + padding + the 22 px line = 28; the
+   line grows with Text size). */
 .detail-title-row > .check {
-  height: 28px;
-  line-height: 28px;
+  height: calc(6px + 22px * var(--text-scale));
+  line-height: calc(6px + 22px * var(--text-scale));
 }
 .detail-title {
   flex: 1;
@@ -1582,8 +1601,14 @@ textarea.title {
   padding: 2px var(--s-xs);
   color: var(--text-bright);
   font-size: calc(16px * var(--text-scale));
-  line-height: 22px;
+  line-height: calc(22px * var(--text-scale));
   field-sizing: content;
+  cursor: text;
+}
+/* Editable: under the pointer its frame shows faintly, so it reads as a field before a click
+   (V1.1 refinement: the title and an area's name looked like plain text). */
+.detail-title:hover:not(:focus) {
+  border-color: var(--line);
 }
 .detail-title:focus {
   border-color: var(--accent);
@@ -1711,10 +1736,16 @@ input[type='time']::-webkit-calendar-picker-indicator:hover {
 /* TODAY · TOMORROW · NEXT WEEK · CLEAR spread edge to edge under the inputs. */
 .presets {
   display: flex;
+  flex-wrap: wrap;
   justify-content: space-between;
   align-items: center;
+  gap: 0 var(--s-sm);
   min-height: var(--control);
   font-size: var(--fs-small);
+}
+/* A preset is one phrase ("NEXT WEEK" never splits); at a larger Text size the row wraps instead. */
+.presets > .link {
+  white-space: nowrap;
 }
 /* Priority: four equal buttons across the column. */
 .seg {
@@ -1756,11 +1787,17 @@ input[type='time']::-webkit-calendar-picker-indicator:hover {
 .objectives .section-title {
   padding-left: 0;
 }
+/* An objective in the details: its box on the title's first line, however many lines the
+   title wraps to (both on the body line height). */
 .objective {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: var(--s-sm);
-  min-height: 28px;
+  padding: 4px 0;
+}
+.objective > .check,
+.objective > .objective-title {
+  line-height: var(--lh-body);
 }
 .objective.done .objective-title {
   color: var(--text-dim);
@@ -2208,6 +2245,11 @@ input.area-name {
 }
 .keys > div:hover {
   background: var(--surface);
+}
+/* The tables keep a readable line, like the prose: a key column and about 80 characters of
+   description (V1.1 refinement: on a wide window a description ran 1,100 px). */
+.keys {
+  max-width: calc(240px + var(--s-md) + 80ch);
 }
 
 /* --- Narrower windows ----------------------------------------------------- */

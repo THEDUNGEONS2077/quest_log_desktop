@@ -26,7 +26,7 @@
  *   AREA                                               »
  *   CLIENT WORK                    ← its name, edited in place
  *   6 open quests · 2 completed
- *   PROJECTS  Q4 report 3 · Website 5 …
+ *   PROJECTS  Q4 report  3 open · Website  5 open … (no number when none are open)
  *   [ DELETE ]   ← to ARCHIVE (or RESTORE / DELETE FOREVER there)
  */
 import { type ReactNode, useState } from 'react';
@@ -39,11 +39,12 @@ import { findTask } from '@/lib/taskMap';
 import { shownTitle } from '@/lib/title';
 import { ancestors, liveChildIds } from '@/lib/tree';
 import type { Priority, RepeatRule, Task } from '@/lib/types';
-import { previewXp } from '@/lib/xp';
+import { previewXp, repeatMultiplier } from '@/lib/xp';
 import { useActions, useAppStore, useSelectors, useAppStoreShallow } from '@/store/react';
 import { NO_COUNTS } from '@/store/selectors';
 
 import { ago } from './ago';
+import { streakNote } from './TaskRow';
 import { cx } from './cx';
 import { G } from './glyphs';
 import { confirmDeleteForever, useOpenDialog } from './menu';
@@ -371,6 +372,11 @@ function Details({ task, onClose }: { task: Task; onClose: () => void }) {
           {/* (The spaces between the phrases are where the line may break.) */}
           {!task.done && isQuest && <span className="accent nowrap">+{previewXp(tasks, task.id, now)} XP on completion ·</span>}{' '}
           {task.done && !!task.xp && <span className="accent nowrap">earned +{task.xp} XP ·</span>}{' '}
+          {task.repeat && (task.streak ?? 0) > 0 && (
+            <span className="accent nowrap" title={streakNote(task.streak!)}>
+              streak {task.streak} (×{repeatMultiplier(task.streak!).toFixed(1)} XP) ·
+            </span>
+          )}{' '}
           <span className="nowrap">made {ago(task.createdAt, now)} ·</span> <span className="nowrap">changed {ago(task.updatedAt, now)}</span>
         </p>
         <div className="detail-actions">
@@ -454,9 +460,10 @@ function AreaDetails({ id }: { id: string }) {
         <section className="area-projects">
           <h2 className="section-title">PROJECTS</h2>
           {projects.map((p) => (
-            <button key={p.id} type="button" className="area-project" onClick={() => actions.openProject(p.id)}>
+            <button key={p.id} type="button" className="area-project" title={`${p.title || 'Untitled'}: open this project`} onClick={() => actions.openProject(p.id)}>
               <span className="nav-label">{p.title || 'Untitled'}</span>
-              <span className="dim">{p.open}</span>
+              {/* Open objectives, said in words (a bare number read as anything). */}
+              {p.open > 0 && <span className="dim">{p.open} open</span>}
             </button>
           ))}
         </section>

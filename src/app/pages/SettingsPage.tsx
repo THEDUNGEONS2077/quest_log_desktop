@@ -26,6 +26,9 @@ import { useOpenDialog } from '../menu';
 import { useMinute } from '../useMinute';
 import { Page } from './Page';
 
+/** A backup's date in the import preview: "17 Oct 2026, 20:12". */
+const BACKUP_DATE = new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+
 declare const __APP_VERSION__: string;
 declare const __APP_BUILD__: number;
 
@@ -65,8 +68,9 @@ export function SettingsPage() {
     setError(null);
     try {
       const { doc, exportedAt } = parseBackup(await f.text());
-      const when = exportedAt ? new Date(exportedAt).toLocaleString() : 'an unknown date';
-      setIncoming({ doc, label: `From ${when}: ${countsLabel(countDocument(doc))}` });
+      // "Backup of 17 Oct 2026, 20:12": the day and the minute are what tell backups apart.
+      const when = exportedAt ? BACKUP_DATE.format(exportedAt) : 'an unknown date';
+      setIncoming({ doc, label: `Backup of ${when}: ${countsLabel(countDocument(doc))}` });
     } catch (err) {
       setError(err instanceof BackupError ? err.message : "That file isn't a quest_log backup.");
     }

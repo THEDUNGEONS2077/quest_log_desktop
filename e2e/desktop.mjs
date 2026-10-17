@@ -648,6 +648,73 @@ try {
     await page.keyboard.press('Escape');
   });
 
+  await path('undo and redo say what they did; Home / End jump the selection; a search that finds nothing says so', async () => {
+    await nav('ALL QUESTS').click();
+    await addQuest('Undo notice quest');
+    await page.keyboard.press('Escape');
+    await page.mouse.click(700, 880); // nowhere in particular: the keys go to the app
+    await page.keyboard.press('Control+z');
+    await page.locator('.toast', { hasText: 'UNDONE' }).waitFor({ timeout: 2000 });
+    await gone('UNDO NOTICE QUEST');
+    await page.locator('.toast').getByRole('button', { name: 'REDO' }).click();
+    await page.locator('.toast', { hasText: 'REDONE' }).waitFor({ timeout: 2000 });
+    await see('UNDO NOTICE QUEST');
+    // Home / End.
+    await row('UNDO NOTICE QUEST').click();
+    const ids = await page.locator('.quest-list .row').evaluateAll((rows) => rows.map((r) => r.dataset.id));
+    await page.keyboard.press('End');
+    if ((await page.locator('.row.selected').getAttribute('data-id')) !== ids[ids.length - 1]) throw new Error('End did not select the last task');
+    await page.keyboard.press('Home');
+    if ((await page.locator('.row.selected').getAttribute('data-id')) !== ids[0]) throw new Error('Home did not select the first task');
+    await page.keyboard.press('Escape');
+    // A search that finds nothing.
+    await page.keyboard.press('/');
+    await page.keyboard.type('qqqzzz');
+    await see('NO MATCHES FOR “QQQZZZ”. ESC CLEARS THE SEARCH.');
+    await page.keyboard.press('Escape');
+    await page.keyboard.press('Escape');
+  });
+
+  await path('many areas: a quest moves through a short choice, not a menu filling the window; the sidebar keeps its top and SYSTEM', async () => {
+    for (const name of ['Extra one', 'Extra two']) {
+      await page.locator('.sidebar .add-area').click();
+      await page.keyboard.type(name);
+      await page.keyboard.press('Enter');
+      await page.waitForTimeout(200);
+    }
+    await nav('ALL QUESTS').click();
+    await row('UNDO NOTICE QUEST').click({ button: 'right' });
+    await page.getByRole('menuitem', { name: /Move to area…/ }).click();
+    const dialog = page.getByRole('dialog');
+    await dialog.waitFor({ timeout: 2000 });
+    if (!(await dialog.locator('input[type=radio]:checked').evaluate((r) => r.closest('label').textContent.includes('MAIN')))) throw new Error('the current area is not the one chosen');
+    await dialog.getByText('EXTRA TWO').click();
+    await dialog.getByRole('button', { name: 'MOVE' }).click();
+    await page.locator('.sidebar .nav-item', { hasText: 'EXTRA TWO' }).first().click();
+    await see('UNDO NOTICE QUEST');
+    // A short window: the middle of the sidebar scrolls; the title block and HELP stay in view.
+    await page.setViewportSize({ width: 1440, height: 560 });
+    await page.locator('.sidebar-scroll').evaluate((el) => (el.scrollTop = el.scrollHeight));
+    await page.waitForTimeout(200);
+    const inView = async (sel) => page.locator(sel).first().evaluate((el) => { const r = el.getBoundingClientRect(); return r.top >= 0 && r.bottom <= innerHeight; });
+    if (!(await inView('.masthead'))) throw new Error('the title block scrolled away');
+    if (!(await inView('.sidebar .nav-section.bottom'))) throw new Error('SYSTEM is out of view');
+    await shot('28-short-window-sidebar');
+    await page.setViewportSize({ width: 1440, height: 900 });
+  });
+
+  await path('at 130% text, a checkbox keeps clear of its title; projects without open objectives show no 0', async () => {
+    await nav('SETTINGS').click();
+    await page.getByLabel('Text size').selectOption('130');
+    await nav('ALL QUESTS').click();
+    const gap = await page.locator('.quest-list .row').first().evaluate((r) => r.querySelector('.title').getBoundingClientRect().left - r.querySelector('.check').getBoundingClientRect().right);
+    if (gap < 4) throw new Error(`the checkbox ends ${gap.toFixed(1)} px from its title`);
+    await nav('SETTINGS').click();
+    await page.getByLabel('Text size').selectOption('100');
+    const zeros = await page.locator('.sidebar .nav-item.project .count').evaluateAll((cs) => cs.filter((c) => c.textContent.trim() === '0').length);
+    if (zeros) throw new Error(`${zeros} project(s) show a 0`);
+  });
+
   await path('a narrow window: the sidebar becomes a drawer', async () => {
     await page.setViewportSize({ width: 820, height: 800 });
     await page.keyboard.press('Escape');

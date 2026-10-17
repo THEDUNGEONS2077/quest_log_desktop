@@ -101,8 +101,12 @@
   /* List rows: [caret 24][s-sm][checkbox 20][s-sm][title]. One level of
      nesting is a checkbox plus its gap, so a child's checkbox sits exactly
      under its parent's title (alignment pass 2026-10-12; was 20 px). */
-  --caret: 24px;
-  --check: 20px;
+  /* The caret and checkbox columns grow with Text size (their glyphs do), so a box never
+     runs into its title (V1.1 refinement: at 130% "[ ]" overlapped). The gaps stay. The
+     checkbox column is its glyph's width: "[ ]" at 15 px × scale, a 0.6 em advance each,
+     less 2 px letter-spacing each = 27 px × scale − 6 px (21 px at 100%). */
+  --caret: calc(24px * var(--text-scale));
+  --check: calc(27px * var(--text-scale) - 6px);
   --indent: calc(var(--check) + var(--s-sm));
 
   /* Motion: durations and the two curves (arrive / leave). */

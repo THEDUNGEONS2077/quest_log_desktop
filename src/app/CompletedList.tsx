@@ -27,13 +27,20 @@ export function CompletedList() {
   const selectors = useSelectors();
   const rows = useAppStore((s) => selectors.completedRows(s));
   const searching = useAppStore((s) => s.search.completed.open && s.search.completed.query.trim() !== '');
+  const query = useAppStore((s) => s.search.completed.query.trim());
   const folding = useAppStore((s) => s.folding);
   // The arrow keys skip objectives that are folding away (still listed only to close smoothly).
   useEffect(() => setVisibleRows(settledRows(rows, folding).map((r) => r.id)), [rows, folding]);
   const first = rows[0]?.id;
   // The same function while the first row is: unchanged rows are then skipped (RowTree).
   const render = useCallback((row: Row) => <CompletedRow key={row.id} row={row} first={row.id === first} />, [first]);
-  if (!rows.length) return <p className="empty"><Prompted>NOTHING COMPLETED YET.</Prompted></p>;
+  // Searching, "nothing completed yet" would be wrong: the search found nothing (V1.1 refinement).
+  if (!rows.length)
+    return (
+      <p className="empty">
+        <Prompted>{searching ? `NO MATCHES FOR “${query.toUpperCase()}”. ESC CLEARS THE SEARCH.` : 'NOTHING COMPLETED YET.'}</Prompted>
+      </p>
+    );
   return (
     <div className="list" role="list">
       <RowTree rows={rows} still={searching} render={render} />

@@ -2,6 +2,27 @@
 
 quest_log desktop. Each version gets one section, newest first. The heading's build number is shown in Settings and written into backups.
 
+## 1.2.0 (build 16)
+
+A refinement pass: the app holds up with many areas, larger text and long titles, and says more about what it's doing.
+
+- **The sidebar keeps its top and bottom.** The title, the XP bar and SYSTEM (Completed, Trash, Settings, Help) stay put; only the views and areas in between scroll, so with many areas nothing important scrolls out of reach. Long area names show in full when you point at them.
+- **Undo tells you what it did.** Ctrl+Z now says UNDONE, with REDO in case you change your mind; Ctrl+Shift+Z says REDONE. With nothing left to undo, it says so instead of doing nothing silently.
+- **Home and End** jump to the first and the last task in the list.
+- **Moving a quest with many areas:** with more than five areas, the right-click menu has one *Move to area…* item that opens a short list (the current area already selected), instead of a menu as tall as the window.
+- **Larger text fits:** at 115% and 130%, checkboxes no longer run into their titles, the date buttons wrap instead of squeezing, and an objective's box stays on its first line.
+- **Numbers that explain themselves:**
+  - a repeating task's ×1.4 tells you it's your on-time streak;
+  - the details show it too;
+  - the XP bar shows your day streak when you point at it;
+  - projects in the sidebar and the area panel show how many objectives are open, and nothing when none are.
+- **Clearer empty screens:** a search that finds nothing says what you searched for and that Esc clears it (on COMPLETED it used to say "nothing completed yet"). TODAY with everything done says **ALL CLEAR FOR TODAY**, with how many tasks you finished.
+- **Smaller touches:**
+  - the details' title and an area's name show a faint frame under the pointer, so you can tell they're editable;
+  - Help's shortcut tables keep a readable width;
+  - an imported backup shows its date as "17 Oct 2026, 20:12";
+  - "MOVED TO" messages name the area in capitals like the rest.
+
 ## 1.1.0 (build 15)
 
 A pass over the look and the feel: what matters stands out, and the keyboard and screen readers get everything right.

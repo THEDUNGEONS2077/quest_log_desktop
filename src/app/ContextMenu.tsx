@@ -38,7 +38,8 @@ export function ContextMenu({ menu, onClose, leaving = false }: Props) {
     const el = box.current;
     if (!el) return;
     const { width, height } = el.getBoundingClientRect();
-    setPos({ left: Math.min(menu.x, window.innerWidth - width - 8), top: Math.min(menu.y, window.innerHeight - height - 8) });
+    // Never above the window's top either: a menu taller than the window scrolls (app.css .menu).
+    setPos({ left: Math.max(8, Math.min(menu.x, window.innerWidth - width - 8)), top: Math.max(8, Math.min(menu.y, window.innerHeight - height - 8)) });
     el.querySelector<HTMLButtonElement>('button:not(:disabled)')?.focus();
   }, [menu]);
 
@@ -121,6 +122,9 @@ function PlainItems({ items, close }: { items: MenuItem[]; close: () => void }) 
   );
 }
 
+/** Up to this many areas, a quest's menu lists them; with more, one item opens a choice (the menu would fill the window). */
+const AREAS_INLINE = 5;
+
 /** `days` from now at the default time. Read when an item is picked, not while the menu draws. */
 function dueInDays(days: number, defaultTime: number): number {
   return atTimeOfDay(addDays(Date.now(), days), defaultTime);
@@ -132,6 +136,9 @@ function TaskItems({ id, close }: { id: string; close: () => void }) {
   const hasChildren = useAppStore((s) => liveChildIds(s.tasks, id).length > 0);
   const defaultTime = useAppStore((s) => s.settings.defaultTimeMinutes);
   const actions = useActions();
+  const openDialog = useOpenDialog();
+  // Live areas only: a quest moves out of ARCHIVE, not into it (delete its area for that).
+  const liveAreas = areas.filter((a) => a.archivedAt === undefined);
   if (!task) return null;
   const run = (f: () => void) => () => {
     close();
@@ -169,12 +176,28 @@ function TaskItems({ id, close }: { id: string; close: () => void }) {
       {isQuest && (
         <>
           <div className="menu-sep" role="separator" />
+          {liveAreas.length > AREAS_INLINE ? (
+            // Many areas: one item, and the choice in a short dialog (the menu would fill the window).
+            <Item
+              glyph={G.archives}
+              label={`Move to area…  (${(liveAreas.find((a) => a.id === task.category)?.name ?? '').toUpperCase()})`}
+              onPick={() => {
+                close();
+                openDialog({
+                  title: 'Move to area',
+                  choices: liveAreas.map((a) => ({ value: a.id, label: a.name.toUpperCase() })),
+                  initial: task.category,
+                  ok: 'MOVE',
+                  onOk: (v) => actions.setQuestCategory(id, v),
+                });
+              }}
+            />
+          ) : (
           <div role="group" aria-labelledby="context-menu-area">
             <div className="menu-heading" id="context-menu-area">
               AREA
             </div>
-            {/* Live areas only: a quest moves out of ARCHIVE, not into it (delete its area for that). */}
-            {areas.filter((a) => a.archivedAt === undefined).map((a) => (
+            {liveAreas.map((a) => (
               <Item
                 key={a.id}
                 glyph={task.category === a.id ? G.done : ''}
@@ -184,6 +207,7 @@ function TaskItems({ id, close }: { id: string; close: () => void }) {
               />
             ))}
           </div>
+          )}
         </>
       )}
       <div className="menu-sep" role="separator" />

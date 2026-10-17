@@ -38,7 +38,7 @@ import { type CSSProperties, type FormEvent, type ReactNode, useEffect, useMemo,
 
 import { trashed } from '@/lib/bulk';
 import type { TasksState } from '@/lib/types';
-import { levelInfo } from '@/lib/xp';
+import { currentDayStreak, dayMultiplier, levelInfo } from '@/lib/xp';
 import type { SidebarSection } from '@/store/uiState';
 import { useActions, useAppStore, useSelectors } from '@/store/react';
 
@@ -114,90 +114,104 @@ export function Sidebar() {
     <nav className="sidebar" aria-label="Views and areas">
       <Masthead />
 
-      <Section {...section('views')} title="VIEWS" active={page === null && (view !== 'list' || isOn('all'))}>
-        <NavItem glyph={G.today} label="TODAY" count={today} hot={overdue} on={page === null && view === 'today'} onClick={() => actions.setView('today')} shortcut="T" />
-        <NavItem glyph={G.upcoming} label="UPCOMING" count={upcoming} on={page === null && view === 'upcoming'} onClick={() => actions.setView('upcoming')} shortcut="U" />
-        <NavItem glyph={G.all} label="ALL QUESTS" count={counts.all?.active ?? 0} on={isOn('all')} onClick={() => showArea('all')} shortcut="A" />
-      </Section>
+      {/* The middle scrolls on its own: the title block stays on top and SYSTEM at the bottom,
+          however many areas there are or however many are open (V1.1 refinement pass). */}
+      <div className="sidebar-scroll">
+        <Section {...section('views')} title="VIEWS" active={page === null && (view !== 'list' || isOn('all'))}>
+          <NavItem glyph={G.today} label="TODAY" count={today} hot={overdue} on={page === null && view === 'today'} onClick={() => actions.setView('today')} shortcut="T" />
+          <NavItem glyph={G.upcoming} label="UPCOMING" count={upcoming} on={page === null && view === 'upcoming'} onClick={() => actions.setView('upcoming')} shortcut="U" />
+          <NavItem glyph={G.all} label="ALL QUESTS" count={counts.all?.active ?? 0} on={isOn('all')} onClick={() => showArea('all')} shortcut="A" />
+        </Section>
 
-      <Section {...section('areas')} title="AREAS" count={areas.length} active={showingIn(areas)}>
-        {areas.map((a) => {
-          const list = projects[a.id] ?? [];
-          const expanded = open.has(a.id);
-          return (
-            <div key={a.id}>
+        <Section {...section('areas')} title="AREAS" count={areas.length} active={showingIn(areas)}>
+          {areas.map((a) => {
+            const list = projects[a.id] ?? [];
+            const expanded = open.has(a.id);
+            return (
+              <div key={a.id}>
+                <div
+                  className={cx('nav-item', 'area', isOn(a.id) && 'on')}
+                  onContextMenu={(e) => {
+                    e.preventDefault();
+                    openMenuAt(e.clientX, e.clientY, { area: a.id });
+                  }}
+                >
+                  <button
+                    type="button"
+                    className={cx('caret', expanded && 'open', !list.length && 'hidden')}
+                    aria-label={`${expanded ? 'Hide' : 'Show'} the projects in ${a.name}`}
+                    onClick={() => toggleOpen(a.id)}
+                    disabled={!list.length}
+                  >
+                    {G.caret}
+                  </button>
+                  {/* The full name on hover: a long one is cut short with an ellipsis. */}
+                  <button type="button" className="nav-label" title={a.name.toUpperCase()} onClick={() => showArea(a.id)}>
+                    {a.name.toUpperCase()}
+                  </button>
+                  <span className="count" title="Open quests">
+                    {counts[a.id]?.active ?? 0}
+                  </span>
+                </div>
+                {expanded &&
+                  list.map((p) => (
+                    <button
+                      key={p.id}
+                      type="button"
+                      className={cx('nav-item', 'project', inList && zoom === p.id && 'on')}
+                      title={`${p.title || 'Untitled'}: open this project`}
+                      onClick={() => {
+                        showArea(a.id);
+                        actions.setZoom(p.id);
+                        actions.select(p.id);
+                      }}
+                    >
+                      <span className="nav-label">{p.title || 'Untitled'}</span>
+                      {/* Its open objectives; none, no number (a 0 beside every simple quest was noise). */}
+                      {p.open > 0 && (
+                        <span className="count" title={`${p.open} open ${p.open === 1 ? 'objective' : 'objectives'}`}>
+                          {p.open}
+                        </span>
+                      )}
+                    </button>
+                  ))}
+              </div>
+            );
+          })}
+          {adding ? (
+            <NewArea onDone={() => setAdding(false)} />
+          ) : (
+            <button type="button" className="nav-item add-area" onClick={() => setAdding(true)}>
+              <span className="nav-glyph">{G.add}</span>
+              <span className="nav-label">AREA</span>
+            </button>
+          )}
+        </Section>
+
+        <Section {...section('archive')} title="ARCHIVE" count={archived.length} active={showingIn(archived)} className="archive">
+          {archived.length ? (
+            archived.map((a) => (
               <div
-                className={cx('nav-item', 'area', isOn(a.id) && 'on')}
+                key={a.id}
+                className={cx('nav-item', 'archived-area', isOn(a.id) && 'on')}
                 onContextMenu={(e) => {
                   e.preventDefault();
                   openMenuAt(e.clientX, e.clientY, { area: a.id });
                 }}
               >
-                <button
-                  type="button"
-                  className={cx('caret', expanded && 'open', !list.length && 'hidden')}
-                  aria-label={`${expanded ? 'Hide' : 'Show'} the projects in ${a.name}`}
-                  onClick={() => toggleOpen(a.id)}
-                  disabled={!list.length}
-                >
-                  {G.caret}
-                </button>
-                <button type="button" className="nav-label" onClick={() => showArea(a.id)}>
+                <button type="button" className="nav-label" title={a.name.toUpperCase()} onClick={() => showArea(a.id)}>
                   {a.name.toUpperCase()}
                 </button>
-                <span className="count">{counts[a.id]?.active ?? 0}</span>
+                <span className="count" title="Open quests">
+                  {counts[a.id]?.active ?? 0}
+                </span>
               </div>
-              {expanded &&
-                list.map((p) => (
-                  <button
-                    key={p.id}
-                    type="button"
-                    className={cx('nav-item', 'project', inList && zoom === p.id && 'on')}
-                    title="Open this project"
-                    onClick={() => {
-                      showArea(a.id);
-                      actions.setZoom(p.id);
-                      actions.select(p.id);
-                    }}
-                  >
-                    <span className="nav-label">{p.title || 'Untitled'}</span>
-                    <span className="count">{p.open}</span>
-                  </button>
-                ))}
-            </div>
-          );
-        })}
-        {adding ? (
-          <NewArea onDone={() => setAdding(false)} />
-        ) : (
-          <button type="button" className="nav-item add-area" onClick={() => setAdding(true)}>
-            <span className="nav-glyph">{G.add}</span>
-            <span className="nav-label">AREA</span>
-          </button>
-        )}
-      </Section>
-
-      <Section {...section('archive')} title="ARCHIVE" count={archived.length} active={showingIn(archived)} className="archive">
-        {archived.length ? (
-          archived.map((a) => (
-            <div
-              key={a.id}
-              className={cx('nav-item', 'archived-area', isOn(a.id) && 'on')}
-              onContextMenu={(e) => {
-                e.preventDefault();
-                openMenuAt(e.clientX, e.clientY, { area: a.id });
-              }}
-            >
-              <button type="button" className="nav-label" onClick={() => showArea(a.id)}>
-                {a.name.toUpperCase()}
-              </button>
-              <span className="count">{counts[a.id]?.active ?? 0}</span>
-            </div>
-          ))
-        ) : (
-          <p className="nav-empty dim">NOTHING ARCHIVED</p>
-        )}
-      </Section>
+            ))
+          ) : (
+            <p className="nav-empty dim">NOTHING ARCHIVED</p>
+          )}
+        </Section>
+      </div>
 
       <Section
         {...section('system')}
@@ -238,8 +252,13 @@ export function Sidebar() {
  */
 function Masthead() {
   const xp = useAppStore((s) => s.tasks.progress.xp);
+  const progress = useAppStore((s) => s.tasks.progress);
+  const now = useMinute();
   const actions = useActions();
   const { level, into, needed, fraction } = levelInfo(xp);
+  // The day streak isn't drawn anywhere: the gauge's tooltip tells it (V1.1 refinement pass).
+  const days = currentDayStreak(progress, now);
+  const streakLine = days > 0 ? `Day streak: ${days} ${days === 1 ? 'day' : 'days'} (×${dayMultiplier(days).toFixed(1)} XP).` : 'Complete something today to start a day streak.';
   // Gains and level-ups as they happen (the previous-props pattern), so their
   // accents replay each time but never on the first render.
   const [seen, setSeen] = useState({ xp, level });
@@ -277,7 +296,7 @@ function Masthead() {
         <span className="brand-bracket">{'>'}</span>
         <span className="brand-name">_quest_log</span>
       </button>
-      <div className="xp" title={`Level ${level}: ${into} of ${needed} XP to level ${level + 1}`}>
+      <div className="xp" title={`Level ${level}: ${into} of ${needed} XP to level ${level + 1}. ${streakLine}`}>
         <div className="xp-bar">
           <span className="xp-bracket" aria-hidden>
             [
