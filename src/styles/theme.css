@@ -11,19 +11,19 @@
   font-family: 'JetBrains Mono';
   font-weight: 400;
   font-display: block;
-  src: url('../assets/fonts/JetBrainsMono-Regular.ttf') format('truetype');
+  src: url('../assets/fonts/JetBrainsMono-Regular.woff2') format('woff2');
 }
 @font-face {
   font-family: 'JetBrains Mono';
   font-weight: 500;
   font-display: block;
-  src: url('../assets/fonts/JetBrainsMono-Medium.ttf') format('truetype');
+  src: url('../assets/fonts/JetBrainsMono-Medium.woff2') format('woff2');
 }
 @font-face {
   font-family: 'JetBrains Mono';
   font-weight: 700;
   font-display: block;
-  src: url('../assets/fonts/JetBrainsMono-Bold.ttf') format('truetype');
+  src: url('../assets/fonts/JetBrainsMono-Bold.woff2') format('woff2');
 }
 
 :root {
