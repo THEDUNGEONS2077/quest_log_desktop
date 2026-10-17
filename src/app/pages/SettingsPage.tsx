@@ -112,6 +112,13 @@ export function SettingsPage() {
           </select>
         </label>
         <label className="setting">
+          <span>Shorthand hint in the new quest bar</span>
+          <select value={settings.quickAddHint ? 'on' : 'off'} onChange={(e) => actions.updateSettings({ quickAddHint: e.target.value === 'on' })}>
+            <option value="on">shown</option>
+            <option value="off">hidden</option>
+          </select>
+        </label>
+        <label className="setting">
           <span>Reduce motion</span>
           <select value={settings.reduceMotion} onChange={(e) => actions.updateSettings({ reduceMotion: e.target.value as 'system' | 'on' | 'off' })}>
             <option value="system">follow the system</option>

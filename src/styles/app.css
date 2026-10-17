@@ -211,6 +211,14 @@ mark {
 
 /* --- Sidebar ------------------------------------------------------------- */
 .sidebar {
+  /* Bigger text and glyphs in the sidebar (user request 2026-10-17): taller rows, a wider icon
+     column, larger labels, counts, headings and carets. Scoped here: menus share these tokens. */
+  --row: 36px;
+  --nav-icon: 20px;
+  --nav-fs: calc(15px * var(--text-scale));
+  --nav-glyph-fs: calc(17px * var(--text-scale));
+  --nav-count-fs: calc(13px * var(--text-scale));
+  --nav-head-fs: calc(12px * var(--text-scale));
   display: flex;
   flex-direction: column;
   gap: var(--s-xs);
@@ -494,7 +502,7 @@ mark {
   border: var(--hairline) solid transparent;
   border-radius: var(--radius);
   color: var(--text-dim);
-  font-size: var(--fs-small);
+  font-size: var(--nav-head-fs);
   font-weight: 700;
   letter-spacing: 1.5px;
   text-align: left;
@@ -504,8 +512,8 @@ mark {
 }
 .nav-section-head .caret {
   width: var(--nav-icon);
-  /* 14 px + 30% (user request 2026-10-12). */
-  font-size: calc(18.2px * var(--text-scale));
+  /* 14 px + 30% (user request 2026-10-12), then larger with the sidebar (2026-10-17). */
+  font-size: calc(21px * var(--text-scale));
   color: var(--accent);
   opacity: 0.7;
 }
@@ -567,7 +575,7 @@ mark {
   border-radius: var(--radius);
   color: var(--text);
   text-align: left;
-  font-size: var(--fs-quest);
+  font-size: var(--nav-fs);
   font-weight: 700;
   letter-spacing: 0.5px;
 }
@@ -589,6 +597,7 @@ mark {
 .nav-item .nav-glyph {
   flex: none;
   width: var(--nav-icon);
+  font-size: var(--nav-glyph-fs);
   text-align: center;
   color: var(--accent);
   text-shadow: var(--glow-text);
@@ -605,7 +614,7 @@ mark {
 .nav-item .count {
   color: var(--text-dim);
   font-weight: 400;
-  font-size: var(--fs-meta);
+  font-size: var(--nav-count-fs);
 }
 .nav-item.on .count {
   color: var(--accent);
@@ -618,7 +627,7 @@ mark {
 /* An area's caret sits in the icon column; 15 px + 30% (user request 2026-10-12). */
 .nav-item.area .caret {
   width: var(--nav-icon);
-  font-size: calc(19.5px * var(--text-scale));
+  font-size: calc(22px * var(--text-scale));
 }
 /* An area's projects: one step (--s-md) in from the area's label column. */
 .nav-item.project {
@@ -643,7 +652,7 @@ mark {
   align-items: center;
   min-height: var(--row);
   padding: 0 var(--nav-x) 0 calc(var(--nav-x) + var(--nav-icon) + var(--s-sm));
-  font-size: var(--fs-small);
+  font-size: var(--nav-head-fs);
 }
 .nav-item.add-area:hover {
   color: var(--accent);
@@ -897,9 +906,11 @@ mark {
 .quick-add {
   position: relative;
   display: flex;
+  flex: none;
   align-items: flex-start;
   gap: var(--s-sm);
-  margin: var(--s-md) var(--s-lg) var(--s-sm);
+  /* Under the list, at the window's bottom edge (user request 2026-10-17). */
+  margin: var(--s-sm) var(--s-lg) var(--s-md);
   /* The prompt on the rows' checkbox column, the text on their title column
      (the box starts where a row's caret does). */
   padding: var(--s-sm) var(--s-md) var(--s-sm) calc(var(--caret) + var(--s-sm) - var(--hairline));
@@ -2051,7 +2062,8 @@ input.area-name {
 .toast {
   position: fixed;
   left: 50%;
-  bottom: var(--s-xl);
+  /* Above the new quest bar at the bottom (its height and margins), not over it. */
+  bottom: calc(var(--control) + var(--s-lg) * 2 + var(--s-md) + var(--s-sm));
   z-index: 40;
   display: flex;
   align-items: center;
@@ -2303,6 +2315,10 @@ input.area-name {
   .drawer-open .sidebar {
     transform: none;
     box-shadow: var(--glow);
+  }
+  /* The new quest bar keeps clear of the ≡ button in the bottom-left corner. */
+  .quick-add {
+    margin-left: calc(var(--s-sm) + var(--control) + var(--s-sm));
   }
   .app > .drawer-btn {
     display: inline-flex;

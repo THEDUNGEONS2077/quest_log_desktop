@@ -8,7 +8,7 @@ import { G } from '../glyphs';
 import { Page } from './Page';
 
 const SHORTCUTS: [string, string][] = [
-  ['N', 'New quest (the field at the top of the list)'],
+  ['N', 'New quest (the bar at the bottom of the list)'],
   ['/', 'Search the list shown'],
   ['T · U · A', 'TODAY · UPCOMING · ALL QUESTS'],
   ['↑ ↓ · Home · End', 'Move the selection; to the first or the last task'],

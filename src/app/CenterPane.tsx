@@ -75,6 +75,7 @@ function ListPane() {
   const name = useAppStore((s) => (category === 'all' ? 'ALL QUESTS' : areaName(s.tasks, category)));
   // An area in ARCHIVE: looked through, not added to (restore it first).
   const archived = useAppStore((s) => s.tasks.areas.some((a) => a.id === category && a.archivedAt !== undefined));
+  const quickAddHint = useAppStore((s) => s.settings.quickAddHint);
   const selectors = useSelectors();
   const counts = useAppStore((s) => selectors.tabCounts(s)[category] ?? NO_COUNTS);
   const search = useAppStore((s) => s.search[s.ui.tab]);
@@ -127,8 +128,6 @@ function ListPane() {
       <SelectionBar />
       {search.open && <SearchField />}
       {tab === 'active' && zoom !== null && <Breadcrumb />}
-      {/* The placeholder teaches the shorthand where it's typed (V1.1 pass: it was only in Help). */}
-      {tab === 'active' && !archived && <QuickAdd placeholder={zoom ? 'new objective' : 'new quest   (try: !! priority · @fri 3pm due · // a note)'} />}
       {archived && (
         <p className="archived-note dim small">
           <Prompted>IN ARCHIVE.</Prompted>{' '}
@@ -139,6 +138,11 @@ function ListPane() {
         </p>
       )}
       <div className="center-body">{tab === 'active' ? <QuestList /> : <CompletedList />}</div>
+      {/* The new quest bar sits under the list, at the bottom of the window (user request 2026-10-17).
+          Its placeholder teaches the shorthand where it's typed, unless Settings turns the hint off. */}
+      {tab === 'active' && !archived && (
+        <QuickAdd placeholder={zoom ? 'new objective' : quickAddHint ? 'new quest   (try: !! priority · @fri 3pm due · // a note)' : 'new quest'} />
+      )}
     </main>
   );
 }

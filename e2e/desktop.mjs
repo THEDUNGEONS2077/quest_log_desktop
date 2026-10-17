@@ -715,6 +715,22 @@ try {
     if (zeros) throw new Error(`${zeros} project(s) show a 0`);
   });
 
+  await path('the new quest bar sits under the list; Settings can hide its shorthand hint', async () => {
+    await nav('ALL QUESTS').click();
+    const bar = await page.locator('.quick-add').boundingBox();
+    const list = await page.locator('.center-body').boundingBox();
+    if (bar.y < list.y + list.height - 1) throw new Error('the new quest bar is not under the list');
+    const hint = () => page.getByLabel('New quest').getAttribute('placeholder');
+    if (!(await hint()).includes('try:')) throw new Error('the hint is not shown by default');
+    await nav('SETTINGS').click();
+    await page.getByLabel('Shorthand hint in the new quest bar').selectOption('off');
+    await nav('ALL QUESTS').click();
+    if ((await hint()) !== 'new quest') throw new Error(`the placeholder still reads "${await hint()}"`);
+    await shot('29-bar-at-bottom');
+    await nav('SETTINGS').click();
+    await page.getByLabel('Shorthand hint in the new quest bar').selectOption('on');
+  });
+
   await path('a narrow window: the sidebar becomes a drawer', async () => {
     await page.setViewportSize({ width: 820, height: 800 });
     await page.keyboard.press('Escape');

@@ -2,6 +2,12 @@
 
 quest_log desktop. Each version gets one section, newest first. The heading's build number is shown in Settings and written into backups.
 
+## 1.3.0 (build 17)
+
+- **The new quest bar is at the bottom** of the list now, where your eyes land after reading down it. What you type still previews just above it, and messages appear above the bar instead of over it.
+- **A setting for the bar's hint:** Settings → *Shorthand hint in the new quest bar* hides the "(try: !! priority · @fri 3pm due · // a note)" text, leaving just "new quest".
+- **Bigger sidebar:** larger text, icons, counts and carets, with taller rows and a slightly wider sidebar. It still grows with Settings → Text size.
+
 ## 1.2.0 (build 16)
 
 A refinement pass: the app holds up with many areas, larger text and long titles, and says more about what it's doing.

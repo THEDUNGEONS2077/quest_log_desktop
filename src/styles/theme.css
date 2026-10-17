@@ -125,7 +125,8 @@
   --loops: running;
 
   /* Layout. */
-  --sidebar: 264px;
+  /* Wider for the sidebar's bigger text (2026-10-17; was 264). */
+  --sidebar: 288px;
   --detail: 380px;
   /* The header band: the centre's header and the detail pane's head are both
      this tall, so their dividers make one line across the window. */

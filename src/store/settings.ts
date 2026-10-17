@@ -21,6 +21,8 @@ export interface Settings {
   reduceMotion: 'system' | 'on' | 'off';
   /** Text size, in percent of the standard (desktop V1 pass 2026-10-17): every font grows, the layout stays. */
   textSize: TextSize;
+  /** The shorthand hint in the empty new quest bar ("(try: !! priority …)"); off: just "new quest" (user request 2026-10-17). */
+  quickAddHint: boolean;
 }
 
 /** The text sizes Settings offers (percent). */
@@ -36,4 +38,5 @@ export const DEFAULT_SETTINGS: Settings = {
   haptics: true,
   reduceMotion: 'system',
   textSize: 100,
+  quickAddHint: true,
 };
