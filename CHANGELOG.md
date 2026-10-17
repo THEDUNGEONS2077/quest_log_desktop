@@ -2,6 +2,10 @@
 
 quest_log desktop. Each version gets one section, newest first. The heading's build number is shown in Settings and written into backups.
 
+## 1.3.2 (build 19)
+
+- **Sidebar headings a touch smaller:** VIEWS, AREAS and ARCHIVE, with their arrows and counts, are 10% smaller than in 1.3.1 (still 17% bigger than before it).
+
 ## 1.3.1 (build 18)
 
 - **Bigger section headings in the sidebar:** VIEWS, AREAS and ARCHIVE, with their arrows and counts, are 30% larger.
